@@ -47,6 +47,17 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key_here
 
 See `.env.example` for a template. The app will work without these variables, but authentication features will be disabled.
 
+#### Setting up Supabase Authentication
+
+1. Create a project at [supabase.com](https://supabase.com)
+2. Go to **Authentication** > **Providers** in your Supabase dashboard
+3. Enable **Google** as an authentication provider
+4. Configure Google OAuth:
+   - Create OAuth credentials in [Google Cloud Console](https://console.cloud.google.com)
+   - Add your Supabase callback URL to authorized redirect URIs
+   - Copy the Client ID and Client Secret to Supabase
+5. Copy your project URL and anon key from **Settings** > **API** to your `.env` file
+
 ### Development
 
 Install dependencies:

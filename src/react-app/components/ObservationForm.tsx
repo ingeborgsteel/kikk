@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useCallback, useState} from 'react';
 import {X} from 'lucide-react';
 import {Button} from './ui/button';
 import {Input} from './ui/input';
@@ -34,13 +34,15 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
     }
   })
 
-  const save = (data: Observation) => {
+  const save = useCallback((data: Observation) => {
     if (data.id) {
       updateObservation(data.id, data);
     } else {
       const now = new Date().toISOString();
-      const random = Math.random();
-      const id = `obs_${now}_${random.toString(36).slice(2, 11)}`
+      const randomPart = typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID().slice(0, 11)
+        : `${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
+      const id = `obs_${now}_${randomPart}`
       addObservation({
         ...data,
         id,
@@ -49,24 +51,25 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
       });
     }
     onClose();
-  };
+  }, [addObservation, updateObservation, onClose]);
 
   return (
-    <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50">
+    <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 p-4">
       <div
         className="bg-sand dark:bg-bark w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg shadow-custom-2xl border-2 border-moss">
         <div className="sticky top-0 bg-forest text-sand p-lg border-b-2 border-moss flex justify-between items-center">
           <h2 className="text-xl font-bold">{observation ? "Rediger Observasjon" : "Opprett Observasjon"}</h2>
-          <button
+          <Button
+            variant={"accent"}
+            size={"icon"}
             onClick={onClose}
-            className="text-sand hover:text-sunlit transition-colors p-1"
             aria-label="Close"
           >
             <X size={24}/>
-          </button>
+          </Button>
         </div>
 
-        <form onSubmit={handleSubmit(save)} className="p-lg space-y-lg">
+        <form onSubmit={handleSubmit(save)} className="p-lg space-y-lg overflow-x-hidden">
           {/* Error Message */}
           {error && (
             <div className="bg-rust/10 border-2 border-rust text-rust p-md rounded-md flex items-start gap-sm">
@@ -127,7 +130,7 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
                   type="datetime-local"
                   value={value}
                   onChange={(e) => onChange(e.target.value)}
-                  className="mt-1"
+                  className="mt-1 max-w-full"
                 />
               </div>
             )}
@@ -232,14 +235,14 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
                                 className="font-medium text-bark dark:text-sand">{obs.species.PrefferedPopularname}</div>
                               <div className="text-sm text-slate italic">{obs.species.ValidScientificName}</div>
                             </div>
-                            <button
-                              type="button"
+                            <Button
+                              variant="accent"
+                              size={"icon"}
                               onClick={() => removeSpeciesObservation(index)}
-                              className="text-rust  dark:text-sand transition-colors p-1"
                               aria-label="Remove species"
                             >
                               <X size={20}/>
-                            </button>
+                            </Button>
                           </div>
 
                           <div className="grid grid-cols-2 gap-sm">

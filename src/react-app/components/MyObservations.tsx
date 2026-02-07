@@ -4,13 +4,15 @@ import {useObservations} from '../context/ObservationsContext';
 import {Button} from './ui/button';
 import ObservationForm from './ObservationForm.tsx';
 import {ThemeToggle} from './ThemeToggle';
+import {AuthButton} from './AuthButton';
 
 interface MyObservationsProps {
   onBack: () => void;
+  setShowLoginForm: (show: boolean) => void;
 }
 
-function MyObservations({onBack}: MyObservationsProps) {
-  const {observations, deleteObservation, isLoading} = useObservations();
+function MyObservations({onBack, setShowLoginForm}: MyObservationsProps) {
+  const {observations, deleteObservation} = useObservations();
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const formatDate = (dateString: string) => {
@@ -33,18 +35,21 @@ function MyObservations({onBack}: MyObservationsProps) {
   const editingObservation = observations.find(obs => obs.id === editingId);
 
   return (
-    <div className="w-full min-h-screen bg-sand dark:bg-bark">
+    <div className="w-full min-h-screen bg-sand dark:bg-bark pb-16 md:pb-0">
       <header className="bg-forest text-sand p-lg md:p-xl relative">
         <div className="max-w-4xl mx-auto ml-16">
-          <h1 className="text-sand m-0 text-[clamp(2rem,6vw,3rem)] tracking-wider">Mine Observasjoner</h1>
+          <h1 className="text-sand m-0 text-[clamp(2rem,6vw,3rem)] tracking-wider">kikket på</h1>
         </div>
         <div className="absolute left-lg top-1/2 -translate-y-1/2">
           <ThemeToggle/>
         </div>
+        <div className="absolute right-lg top-1/2 -translate-y-1/2 md:hidden flex items-center gap-2">
+          <AuthButton setShowLoginForm={setShowLoginForm}/>
+        </div>
       </header>
 
       <div className="max-w-4xl mx-auto p-lg md:p-xl">
-        <div className="mb-lg">
+        <div className="mb-lg hidden md:block">
           <Button onClick={onBack} variant="outline">
             ← Tilbake til kart
           </Button>
@@ -80,20 +85,22 @@ function MyObservations({onBack}: MyObservationsProps) {
                     </p>
                   </div>
                   <div className="flex gap-sm">
-                    <button
+                    <Button
+                      variant={"accent"}
+                      size={"icon"}
                       onClick={() => setEditingId(observation.id)}
-                      className="p-sm text-rust dark:text-sand transition-colors"
                       aria-label="Edit observation"
                     >
                       <Pencil size={18}/>
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant={"accent"}
+                      size={"icon"}
                       onClick={() => handleDelete(observation.id)}
-                      className="p-sm text-rust dark:text-sand  transition-colors"
                       aria-label="Delete observation"
                     >
                       <Trash2 size={18}/>
-                    </button>
+                    </Button>
                   </div>
                 </div>
 

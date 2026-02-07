@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LogIn, LogOut, Mail } from 'lucide-react';
+import { LogIn, LogOut, Mail, Lock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Button } from './ui/button';
 import { isSupabaseConfigured } from '../lib/supabase';
@@ -8,6 +8,7 @@ export function AuthButton() {
   const { user, signInWithEmail, signOut } = useAuth();
   const [showEmailInput, setShowEmailInput] = useState(false);
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -21,20 +22,24 @@ export function AuthButton() {
     setLoading(true);
     setMessage('');
 
-    const { error } = await signInWithEmail(email);
+    const { error } = await signInWithEmail(email, password);
     
     if (error) {
       // Map common errors to user-friendly Norwegian messages
       let errorMessage = 'Noe gikk galt. Prøv igjen.';
-      if (error.message.toLowerCase().includes('invalid email')) {
-        errorMessage = 'Ugyldig e-postadresse.';
+      if (error.message.toLowerCase().includes('invalid login credentials') || 
+          error.message.toLowerCase().includes('invalid email or password')) {
+        errorMessage = 'Ugyldig e-post eller passord.';
+      } else if (error.message.toLowerCase().includes('email not confirmed')) {
+        errorMessage = 'E-posten din er ikke bekreftet. Sjekk innboksen din.';
       } else if (error.message.toLowerCase().includes('rate limit')) {
         errorMessage = 'For mange forsøk. Vent litt før du prøver igjen.';
       }
       setMessage(errorMessage);
     } else {
-      setMessage('Sjekk e-posten din for innloggingslenken!');
       setEmail('');
+      setPassword('');
+      setShowEmailInput(false);
     }
     
     setLoading(false);
@@ -43,6 +48,8 @@ export function AuthButton() {
   const handleSignOut = async () => {
     await signOut();
     setShowEmailInput(false);
+    setEmail('');
+    setPassword('');
     setMessage('');
   };
 
@@ -76,6 +83,17 @@ export function AuthButton() {
             required
             className="px-3 py-2 border-2 border-slate-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-moss"
           />
+          <div className="relative">
+            <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-bark/50 dark:text-sand/50" />
+            <input
+              type="password"
+              placeholder="Passord"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full pl-10 pr-3 py-2 border-2 border-slate-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-moss"
+            />
+          </div>
           <div className="flex gap-2">
             <Button
               type="submit"
@@ -83,12 +101,14 @@ export function AuthButton() {
               size="sm"
               className="flex-1"
             >
-              {loading ? 'Sender...' : 'Send lenke'}
+              {loading ? 'Logger inn...' : 'Logg inn'}
             </Button>
             <Button
               type="button"
               onClick={() => {
                 setShowEmailInput(false);
+                setEmail('');
+                setPassword('');
                 setMessage('');
               }}
               variant="outline"

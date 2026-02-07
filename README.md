@@ -26,7 +26,7 @@ Built with modern web technologies for a fast, responsive experience:
 - 📝 **Detailed Observations** - Record species, gender, count, location uncertainty, and field notes
 - 📋 **Observation Management** - View, edit, and delete your observation records
 - 💾 **Local Storage** - Your observations are stored locally in your browser
-- 🔐 **Optional Authentication** - Sign in with email for enhanced features (passwordless magic link)
+- 🔐 **Optional Authentication** - Sign in with email and password for enhanced features
 - 📱 **Responsive Design** - Works seamlessly on desktop and mobile devices
 
 ## Getting Started
@@ -62,7 +62,7 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 6. In your Supabase project, configure Email Auth:
    - Go to Authentication > Providers
    - Enable Email provider
-   - Configure email templates as needed
+   - Disable "Confirm email" if you want to allow immediate login without email confirmation
 
 The app works fully without authentication - it's completely optional. Local storage will continue to work whether you're logged in or not.
 

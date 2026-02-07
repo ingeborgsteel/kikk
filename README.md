@@ -25,6 +25,7 @@ Built with modern web technologies for a fast, responsive experience:
 - 📝 **Detailed Observations** - Record species, gender, count, location uncertainty, and field notes
 - 📋 **Observation Management** - View, edit, and delete your observation records
 - 💾 **Local Storage** - Your observations are stored locally in your browser
+- 🔐 **Optional Authentication** - Sign in with Google for future cloud sync capabilities
 - 📱 **Responsive Design** - Works seamlessly on desktop and mobile devices
 
 ## Getting Started
@@ -33,6 +34,18 @@ Built with modern web technologies for a fast, responsive experience:
 
 - Node.js 18+ installed
 - npm or compatible package manager
+- (Optional) Supabase project for authentication features
+
+### Environment Variables
+
+To enable authentication features, create a `.env` file in the root directory with your Supabase credentials:
+
+```bash
+VITE_SUPABASE_URL=your_supabase_url_here
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+```
+
+See `.env.example` for a template. The app will work without these variables, but authentication features will be disabled.
 
 ### Development
 

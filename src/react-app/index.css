@@ -16,12 +16,21 @@
 	}
 
 	body {
-		@apply m-0 min-w-[320px] min-h-screen bg-sand text-bark;
+		margin: 0;
+		min-width: 320px;
+		min-height: 100vh;
+		background-color: #F2EFEA;
+		color: #4A3F35;
 		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
 			'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
 			sans-serif;
 		line-height: 1.6;
 		font-weight: 400;
+	}
+	
+	.dark body {
+		background-color: #4A3F35;
+		color: #F2EFEA;
 	}
 
 	a {
@@ -32,11 +41,21 @@
 	}
 
 	h1 {
-		@apply text-[clamp(1.8rem,5vw,3.2rem)] leading-tight font-bold text-bark m-0;
+		@apply text-[clamp(1.8rem,5vw,3.2rem)] leading-tight font-bold m-0;
+		color: #4A3F35;
+	}
+	
+	.dark h1 {
+		color: #F2EFEA;
 	}
 
 	h2 {
-		@apply text-[clamp(1.4rem,4vw,2rem)] font-semibold text-bark;
+		@apply text-[clamp(1.4rem,4vw,2rem)] font-semibold;
+		color: #4A3F35;
+	}
+	
+	.dark h2 {
+		color: #F2EFEA;
 	}
 
 	button {
@@ -56,13 +75,15 @@
 
 	@media (prefers-color-scheme: dark) {
 		:root {
-			@apply text-sand bg-[#1a1a1a];
+			color: #F2EFEA;
+			background-color: #4A3F35;
 		}
 		body {
-			@apply text-sand bg-[#1a1a1a];
+			color: #F2EFEA;
+			background-color: #4A3F35;
 		}
 		h1, h2 {
-			@apply text-sand;
+			color: #F2EFEA;
 		}
 	}
 }

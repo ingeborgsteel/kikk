@@ -3,6 +3,7 @@ import {MapPin, Pencil, Trash2} from 'lucide-react';
 import {useObservations} from '../context/ObservationsContext';
 import {Button} from './ui/button';
 import ObservationForm from './ObservationForm.tsx';
+import {ThemeToggle} from './ThemeToggle';
 
 interface MyObservationsProps {
   onBack: () => void;
@@ -32,10 +33,13 @@ function MyObservations({onBack}: MyObservationsProps) {
   const editingObservation = observations.find(obs => obs.id === editingId);
 
   return (
-    <div className="w-full min-h-screen bg-sand">
-      <header className="bg-forest text-sand p-lg md:p-xl">
+    <div className="w-full min-h-screen bg-sand dark:bg-bark">
+      <header className="bg-forest text-sand p-lg md:p-xl relative">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-sand m-0 text-[clamp(2rem,6vw,3rem)] tracking-wider">Mine Observasjoner</h1>
+        </div>
+        <div className="absolute left-lg top-1/2 -translate-y-1/2">
+          <ThemeToggle />
         </div>
       </header>
 

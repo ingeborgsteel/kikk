@@ -1,15 +1,15 @@
-import { useState } from 'react';
-import { Pencil, Trash2, MapPin } from 'lucide-react';
-import { useObservations } from '../context/ObservationsContext';
-import { Button } from './ui/button';
-import EditObservationForm from './EditObservationForm';
+import {useState} from 'react';
+import {MapPin, Pencil, Trash2} from 'lucide-react';
+import {useObservations} from '../context/ObservationsContext';
+import {Button} from './ui/button';
+import ObservationForm from './ObservationForm.tsx';
 
 interface MyObservationsProps {
   onBack: () => void;
 }
 
-function MyObservations({ onBack }: MyObservationsProps) {
-  const { observations, deleteObservation } = useObservations();
+function MyObservations({onBack}: MyObservationsProps) {
+  const {observations, deleteObservation} = useObservations();
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const formatDate = (dateString: string) => {
@@ -48,7 +48,7 @@ function MyObservations({ onBack }: MyObservationsProps) {
 
         {observations.length === 0 ? (
           <div className="text-center py-xxl">
-            <MapPin size={48} className="mx-auto text-slate mb-md" />
+            <MapPin size={48} className="mx-auto text-slate mb-md"/>
             <p className="text-lg text-slate">No observations yet</p>
             <p className="text-sm text-slate mt-sm">Click on the map to add your first observation!</p>
           </div>
@@ -62,7 +62,7 @@ function MyObservations({ onBack }: MyObservationsProps) {
                 <div className="flex justify-between items-start mb-md">
                   <div>
                     <div className="flex items-center gap-sm text-sm text-slate mb-xs">
-                      <MapPin size={16} />
+                      <MapPin size={16}/>
                       <span>
                         {observation.location.lat.toFixed(4)}, {observation.location.lng.toFixed(4)}
                       </span>
@@ -74,17 +74,17 @@ function MyObservations({ onBack }: MyObservationsProps) {
                   <div className="flex gap-sm">
                     <button
                       onClick={() => setEditingId(observation.id)}
-                      className="p-sm text-sky hover:text-forest transition-colors"
+                      className="p-sm text-rust dark:text-sand transition-colors"
                       aria-label="Edit observation"
                     >
-                      <Pencil size={18} />
+                      <Pencil size={18}/>
                     </button>
                     <button
                       onClick={() => handleDelete(observation.id)}
-                      className="p-sm text-rust hover:text-rust-dark transition-colors"
+                      className="p-sm text-rust dark:text-sand  transition-colors"
                       aria-label="Delete observation"
                     >
-                      <Trash2 size={18} />
+                      <Trash2 size={18}/>
                     </button>
                   </div>
                 </div>
@@ -93,8 +93,8 @@ function MyObservations({ onBack }: MyObservationsProps) {
                   <h3 className="font-semibold text-bark">Species Observed:</h3>
                   {observation.speciesObservations.map((speciesObs, idx) => (
                     <div key={idx} className="pl-md border-l-2 border-moss">
-                      <div className="font-medium text-bark">{speciesObs.species.vernacularName}</div>
-                      <div className="text-sm text-slate italic">{speciesObs.species.scientificName}</div>
+                      <div className="font-medium text-bark">{speciesObs.species.PrefferedPopularname}</div>
+                      <div className="text-sm text-slate italic">{speciesObs.species.ValidScientificName}</div>
                       <div className="text-sm text-slate">
                         Count: {speciesObs.count} • Gender: {speciesObs.gender}
                       </div>
@@ -118,7 +118,8 @@ function MyObservations({ onBack }: MyObservationsProps) {
       </div>
 
       {editingId && editingObservation && (
-        <EditObservationForm
+        <ObservationForm
+          location={editingObservation.location}
           observation={editingObservation}
           onClose={() => setEditingId(null)}
         />

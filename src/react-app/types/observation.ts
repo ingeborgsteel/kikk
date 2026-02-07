@@ -1,16 +1,10 @@
-export interface Species {
-  id: number;
-  scientificName: string;
-  vernacularName: string;
-  scientificNameId: number;
-  acceptedScientificName: string;
-}
+import {TaxonRecord} from "./artsdatabanken.ts";
 
 export interface SpeciesObservation {
-  species: Species;
+  species: TaxonRecord;
   gender: 'male' | 'female' | 'unknown';
   count: number;
-  comment: string; // Per-species comment
+  comment?: string; // Per-species comment
 }
 
 export interface Observation {
@@ -25,14 +19,4 @@ export interface Observation {
   comment: string;
   createdAt: string;
   updatedAt: string;
-}
-
-export interface TaxonSearchResponse {
-  items: Array<{
-    id: number;
-    scientificName: string;
-    vernacularName: string;
-    scientificNameId: number;
-    acceptedScientificName: string;
-  }>;
 }

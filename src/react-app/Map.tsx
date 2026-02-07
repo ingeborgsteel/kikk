@@ -50,6 +50,14 @@ function Map({ onLocationSelect }: MapProps) {
 				'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
 		}).addTo(map.current);
 
+		// Ensure the map container is properly sized
+		// This is necessary when the container size is not immediately available
+		setTimeout(() => {
+			if (map.current) {
+				map.current.invalidateSize();
+			}
+		}, 100);
+
 		// Add click handler to select location
 		const mapInstance = map.current;
 		mapInstance.on("click", (e: L.LeafletMouseEvent) => {
@@ -190,7 +198,7 @@ function Map({ onLocationSelect }: MapProps) {
 					</span>
 				</div>
 			)}
-			<div ref={mapContainer} className="w-full h-full border-none rounded-t-lg overflow-hidden" />
+			<div ref={mapContainer} className="absolute inset-0 w-full h-full border-none rounded-t-lg overflow-hidden" />
 		</div>
 	);
 }

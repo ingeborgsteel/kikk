@@ -33,7 +33,6 @@
 	color: var(--text-primary);
 	animation: slideDown 0.3s ease;
 	max-width: 90%;
-	backdrop-filter: blur(10px);
 	border: 2px solid var(--secondary-color);
 }
 

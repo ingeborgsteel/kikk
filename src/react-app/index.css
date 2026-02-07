@@ -1,10 +1,12 @@
 :root {
 	/* Outdoorsy color palette for bird counting app */
 	--primary-color: #2F5D50; /* Forest Green */
+	--primary-hover: #254A3E; /* Darker Forest Green for hover */
 	--secondary-color: #6B8F71; /* Moss Green */
 	--bg-primary: #F2EFEA; /* Warm Sand */
 	--text-primary: #4A3F35; /* Bark Brown */
 	--accent-primary: #C76D4B; /* Rust - primary action */
+	--accent-primary-hover: #B05D3B; /* Darker Rust for hover */
 	--accent-info: #7FAFC5; /* Sky Blue - info/links */
 	--accent-yellow: #E3C770; /* Sunlit Yellow - utility */
 	--accent-slate: #8A9088; /* Muted Slate - utility */
@@ -106,7 +108,7 @@ button {
 	box-shadow: 0 2px 8px var(--shadow-color);
 }
 button:hover {
-	background: #B05D3B;
+	background: var(--accent-primary-hover);
 	transform: translateY(-2px);
 	box-shadow: 0 4px 12px var(--shadow-color);
 }
@@ -122,5 +124,8 @@ button:focus-visible {
 @media (prefers-color-scheme: dark) {
 	button {
 		background: var(--accent-primary);
+	}
+	button:hover {
+		background: var(--accent-primary-hover);
 	}
 }

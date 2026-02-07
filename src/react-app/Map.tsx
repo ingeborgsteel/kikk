@@ -29,6 +29,11 @@ function Map({ onLocationSelect }: MapProps) {
 	} | null>(null);
 	const markerRef = useRef<L.Marker | null>(null);
 	const [isLocating, setIsLocating] = useState(false);
+	const [locationError, setLocationError] = useState<string | null>(null);
+	const [userLocation, setUserLocation] = useState<{
+		lat: number;
+		lng: number;
+	} | null>(null);
 
 	useEffect(() => {
 		if (!mapContainer.current || map.current) return;
@@ -71,25 +76,43 @@ function Map({ onLocationSelect }: MapProps) {
 		// Try to get user's current location
 		if ("geolocation" in navigator) {
 			setIsLocating(true);
+			setLocationError(null);
 			// eslint-disable-next-line react-hooks/exhaustive-deps
 			navigator.geolocation.getCurrentPosition(
 				(position) => {
 					const { latitude, longitude } = position.coords;
+					setUserLocation({ lat: latitude, lng: longitude });
 					if (mapInstance) {
 						mapInstance.setView([latitude, longitude], 13);
 					}
 					setIsLocating(false);
+					setLocationError(null);
 				},
 				(error) => {
-					console.log("Geolocation not available:", error);
+					let errorMessage = "Unable to get your location";
+					switch (error.code) {
+						case error.PERMISSION_DENIED:
+							errorMessage = "Location permission denied. Please enable location access in your browser settings.";
+							break;
+						case error.POSITION_UNAVAILABLE:
+							errorMessage = "Location information is unavailable.";
+							break;
+						case error.TIMEOUT:
+							errorMessage = "Location request timed out. Please try again.";
+							break;
+					}
+					console.log("Geolocation error:", error.message);
+					setLocationError(errorMessage);
 					setIsLocating(false);
 				},
 				{
 					enableHighAccuracy: true,
-					timeout: 5000,
+					timeout: 10000,
 					maximumAge: 0,
 				},
 			);
+		} else {
+			setLocationError("Geolocation is not supported by your browser.");
 		}
 
 		// Cleanup
@@ -110,6 +133,38 @@ function Map({ onLocationSelect }: MapProps) {
 				<div className="location-loading">
 					<div className="loading-spinner"></div>
 					<span>Finding your location...</span>
+				</div>
+			)}
+			{locationError && (
+				<div className="location-error">
+					<svg
+						width="20"
+						height="20"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="2"
+					>
+						<circle cx="12" cy="12" r="10" />
+						<line x1="12" y1="8" x2="12" y2="12" />
+						<line x1="12" y1="16" x2="12.01" y2="16" />
+					</svg>
+					<span>{locationError}</span>
+				</div>
+			)}
+			{userLocation && !selectedLocation && (
+				<div className="location-success">
+					<svg
+						width="16"
+						height="16"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="2"
+					>
+						<path d="M20 6L9 17l-5-5" />
+					</svg>
+					<span>Centered on your location</span>
 				</div>
 			)}
 			{selectedLocation && (

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LogIn, LogOut, Mail, Lock } from 'lucide-react';
+import { LogIn, LogOut, Mail, Lock, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Button } from './ui/button';
 import { isSupabaseConfigured } from '../lib/supabase';
@@ -68,61 +68,100 @@ export function AuthButton() {
 
   if (showEmailInput) {
     return (
-      <div className="relative z-[100]">
-        <form onSubmit={handleSignIn} className="flex flex-col gap-2 bg-sand dark:bg-bark p-4 rounded-md shadow-custom absolute right-0 top-full mt-2 min-w-[280px]">
-          <div className="flex items-center gap-2 mb-2">
-            <Mail size={16} />
-            <span className="text-sm font-semibold">Logg inn med e-post</span>
+      <>
+        <Button
+          onClick={() => setShowEmailInput(false)}
+          variant="secondary"
+          className="flex items-center gap-2"
+        >
+          <LogIn size={16} />
+          Logg inn
+        </Button>
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50">
+          <div className="bg-sand dark:bg-bark w-full max-w-md rounded-lg shadow-custom-2xl border-2 border-moss">
+            <div className="bg-forest text-sand p-lg border-b-2 border-moss flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <Mail size={20} />
+                <h2 className="text-xl font-bold">Logg inn</h2>
+              </div>
+              <button
+                onClick={() => {
+                  setShowEmailInput(false);
+                  setEmail('');
+                  setPassword('');
+                  setMessage('');
+                }}
+                className="text-sand hover:text-sunlit transition-colors p-1"
+                aria-label="Close"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSignIn} className="p-lg space-y-lg">
+              {message && (
+                <div className="bg-rust/10 border-2 border-rust text-rust p-md rounded-md text-sm">
+                  {message}
+                </div>
+              )}
+              
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-bark dark:text-sand mb-1">
+                  E-post
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  placeholder="din@epost.no"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full px-3 py-2 border-2 border-slate-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-moss"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-bark dark:text-sand mb-1">
+                  Passord
+                </label>
+                <div className="relative">
+                  <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-bark/50 dark:text-sand/50" />
+                  <input
+                    id="password"
+                    type="password"
+                    placeholder="Passord"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="w-full pl-10 pr-3 py-2 border-2 border-slate-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-moss"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex gap-md justify-end pt-md">
+                <Button
+                  type="button"
+                  onClick={() => {
+                    setShowEmailInput(false);
+                    setEmail('');
+                    setPassword('');
+                    setMessage('');
+                  }}
+                  variant="outline"
+                >
+                  Avbryt
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={loading}
+                >
+                  {loading ? 'Logger inn...' : 'Logg inn'}
+                </Button>
+              </div>
+            </form>
           </div>
-          <input
-            type="email"
-            placeholder="din@epost.no"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="px-3 py-2 border-2 border-slate-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-moss"
-          />
-          <div className="relative">
-            <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-bark/50 dark:text-sand/50" />
-            <input
-              type="password"
-              placeholder="Passord"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full pl-10 pr-3 py-2 border-2 border-slate-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-moss"
-            />
-          </div>
-          <div className="flex gap-2">
-            <Button
-              type="submit"
-              disabled={loading}
-              size="sm"
-              className="flex-1"
-            >
-              {loading ? 'Logger inn...' : 'Logg inn'}
-            </Button>
-            <Button
-              type="button"
-              onClick={() => {
-                setShowEmailInput(false);
-                setEmail('');
-                setPassword('');
-                setMessage('');
-              }}
-              variant="outline"
-              size="sm"
-            >
-              Avbryt
-            </Button>
-          </div>
-          {message && (
-            <p className="text-xs mt-1 text-bark dark:text-sand">
-              {message}
-            </p>
-          )}
-        </form>
-      </div>
+        </div>
+      </>
     );
   }
 

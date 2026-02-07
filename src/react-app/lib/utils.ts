@@ -37,3 +37,58 @@ export function getRecentSpecies(observations: Observation[], limit = 5): TaxonR
     .slice(0, limit)
     .map(entry => entry.species);
 }
+
+/**
+ * Reverse geocode coordinates to get a human-readable location name
+ * Uses OpenStreetMap Nominatim API
+ */
+export async function reverseGeocode(lat: number, lng: number): Promise<string | null> {
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=no`,
+      {
+        headers: {
+          'User-Agent': 'kikk-app/1.0' // Required by Nominatim usage policy
+        }
+      }
+    );
+    
+    if (!response.ok) {
+      return null;
+    }
+    
+    const data = await response.json();
+    
+    // Build a location name from available data
+    // Priority: village/town/city, municipality, county
+    const parts: string[] = [];
+    
+    if (data.address) {
+      const addr = data.address;
+      // Add locality (village, town, city, etc.)
+      const locality = addr.village || addr.town || addr.city || addr.hamlet || addr.suburb;
+      if (locality) parts.push(locality);
+      
+      // Add municipality if different from locality
+      if (addr.municipality && addr.municipality !== locality) {
+        parts.push(addr.municipality);
+      }
+      
+      // Add county
+      if (addr.county) parts.push(addr.county);
+    }
+    
+    // If we have parts, join them; otherwise use display_name
+    if (parts.length > 0) {
+      return parts.join(', ');
+    } else if (data.display_name) {
+      // Fallback to first part of display_name (usually the most specific)
+      return data.display_name.split(',')[0];
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Reverse geocoding failed:', error);
+    return null;
+  }
+}

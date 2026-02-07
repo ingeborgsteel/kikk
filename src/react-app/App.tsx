@@ -36,7 +36,7 @@ function App() {
             onClick={() => setCurrentView('observations')}
             variant="secondary"
           >
-            My Observations ({observations.length})
+            Mine Observasjoner ({observations.length})
           </Button>
         </div>
       </header>

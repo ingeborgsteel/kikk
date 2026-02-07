@@ -24,7 +24,7 @@ function MyObservations({onBack}: MyObservationsProps) {
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this observation?')) {
+    if (window.confirm('Er du sikker på at du vil slette denne observasjonen?')) {
       deleteObservation(id);
     }
   };
@@ -35,22 +35,22 @@ function MyObservations({onBack}: MyObservationsProps) {
     <div className="w-full min-h-screen bg-sand">
       <header className="bg-forest text-sand p-lg md:p-xl">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-sand m-0 text-[clamp(2rem,6vw,3rem)] tracking-wider">My Observations</h1>
+          <h1 className="text-sand m-0 text-[clamp(2rem,6vw,3rem)] tracking-wider">Mine Observasjoner</h1>
         </div>
       </header>
 
       <div className="max-w-4xl mx-auto p-lg md:p-xl">
         <div className="mb-lg">
           <Button onClick={onBack} variant="outline">
-            ← Back to Map
+            ← Tilbake til Kart
           </Button>
         </div>
 
         {observations.length === 0 ? (
           <div className="text-center py-xxl">
             <MapPin size={48} className="mx-auto text-slate mb-md"/>
-            <p className="text-lg text-slate">No observations yet</p>
-            <p className="text-sm text-slate mt-sm">Click on the map to add your first observation!</p>
+            <p className="text-lg text-slate">Ingen observasjoner ennå</p>
+            <p className="text-sm text-slate mt-sm">Klikk på kartet for å legge til din første observasjon!</p>
           </div>
         ) : (
           <div className="space-y-md">
@@ -90,7 +90,7 @@ function MyObservations({onBack}: MyObservationsProps) {
                 </div>
 
                 <div className="space-y-sm">
-                  <h3 className="font-semibold text-bark">Species Observed:</h3>
+                  <h3 className="font-semibold text-bark">Arter Observert:</h3>
                   {observation.speciesObservations.map((speciesObs, idx) => (
                     <div key={idx} className="pl-md border-l-2 border-moss">
                       <div className="font-medium text-bark">{speciesObs.species.PrefferedPopularname}</div>
@@ -107,7 +107,7 @@ function MyObservations({onBack}: MyObservationsProps) {
 
                 {observation.comment && (
                   <div className="mt-md pt-md border-t border-slate-border">
-                    <p className="text-sm font-medium text-bark mb-1">Overall Observation:</p>
+                    <p className="text-sm font-medium text-bark mb-1">Generell Observasjon:</p>
                     <p className="text-sm text-bark">{observation.comment}</p>
                   </div>
                 )}

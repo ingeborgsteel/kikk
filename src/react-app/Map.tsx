@@ -102,16 +102,16 @@ function Map({ onLocationSelect }: MapProps) {
 					}, 4000);
 				},
 				(error) => {
-					let errorMessage = "Unable to get your location";
+					let errorMessage = "Kunne ikke finne din posisjon";
 					switch (error.code) {
 						case error.PERMISSION_DENIED:
-							errorMessage = "Location permission denied. Please enable location access in your browser settings.";
+							errorMessage = "Plasseringstillatelse nektet. Vennligst aktiver posisjonstilgang i nettleserinnstillingene dine.";
 							break;
 						case error.POSITION_UNAVAILABLE:
-							errorMessage = "Location information is unavailable.";
+							errorMessage = "Posisjonsinformasjon er ikke tilgjengelig.";
 							break;
 						case error.TIMEOUT:
-							errorMessage = "Location request timed out. Please try again.";
+							errorMessage = "Posisjonsforespørsel tidsavbrutt. Vennligst prøv igjen.";
 							break;
 					}
 					console.log("Geolocation error:", error.message);
@@ -125,7 +125,7 @@ function Map({ onLocationSelect }: MapProps) {
 				},
 			);
 		} else {
-			setLocationError("Geolocation is not supported by your browser.");
+			setLocationError("Geolokalisering støttes ikke av nettleseren din.");
 		}
 
 		// Cleanup
@@ -145,7 +145,7 @@ function Map({ onLocationSelect }: MapProps) {
 			{isLocating && (
 				<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[2000] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-lg rounded-lg shadow-custom-2xl flex flex-col items-center gap-md font-medium text-bark dark:text-sand border-2 border-moss">
 					<div className="w-10 h-10 border-4 border-slate-border border-t-rust rounded-full animate-spin"></div>
-					<span>Finding your location...</span>
+					<span>Finner din posisjon...</span>
 				</div>
 			)}
 			{locationError && (
@@ -179,7 +179,7 @@ function Map({ onLocationSelect }: MapProps) {
 					>
 						<path d="M20 6L9 17l-5-5" />
 					</svg>
-					<span>Centered on your location</span>
+					<span>Sentrert på din posisjon</span>
 				</div>
 			)}
 			{selectedLocation && (

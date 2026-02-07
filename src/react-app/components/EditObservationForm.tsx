@@ -15,6 +15,7 @@ interface EditObservationFormProps {
 
 function EditObservationForm({ observation, onClose }: EditObservationFormProps) {
   const { updateObservation } = useObservations();
+  const [error, setError] = useState<string | null>(null);
   
   const [speciesObservations, setSpeciesObservations] = useState<SpeciesObservation[]>(
     observation.speciesObservations
@@ -35,10 +36,11 @@ function EditObservationForm({ observation, onClose }: EditObservationFormProps)
 
   const removeSpeciesObservation = (index: number) => {
     if (speciesObservations.length === 1) {
-      alert('An observation must have at least one species');
+      setError('An observation must have at least one species');
       return;
     }
     setSpeciesObservations(speciesObservations.filter((_, i) => i !== index));
+    setError(null);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -72,6 +74,26 @@ function EditObservationForm({ observation, onClose }: EditObservationFormProps)
         </div>
         
         <form onSubmit={handleSubmit} className="p-lg space-y-lg">
+          {/* Error Message */}
+          {error && (
+            <div className="bg-rust/10 border-2 border-rust text-rust p-md rounded-md flex items-start gap-sm">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="shrink-0 mt-0.5"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              <span>{error}</span>
+            </div>
+          )}
+          
           {/* Location Display (read-only) */}
           <div>
             <Label className="text-bark dark:text-sand">Location</Label>

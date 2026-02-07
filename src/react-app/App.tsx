@@ -28,7 +28,7 @@ function App() {
 	}) => {
 		const now = new Date().toISOString();
 		const observation: Observation = {
-			id: `obs_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+			id: `obs_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`,
 			...observationData,
 			createdAt: now,
 			updatedAt: now,

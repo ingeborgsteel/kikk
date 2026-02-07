@@ -25,6 +25,7 @@ function AddObservationForm({ location, onSave, onCancel }: AddObservationFormPr
   const [searchResults, setSearchResults] = useState<Species[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   const [speciesObservations, setSpeciesObservations] = useState<SpeciesObservation[]>([]);
   const [currentGender, setCurrentGender] = useState<'male' | 'female' | 'unknown'>('unknown');
@@ -73,6 +74,7 @@ function AddObservationForm({ location, onSave, onCancel }: AddObservationFormPr
     setShowResults(false);
     setCurrentCount('1');
     setCurrentGender('unknown');
+    setError(null); // Clear error when species is added
   };
 
   const removeSpeciesObservation = (index: number) => {
@@ -83,7 +85,7 @@ function AddObservationForm({ location, onSave, onCancel }: AddObservationFormPr
     e.preventDefault();
     
     if (speciesObservations.length === 0) {
-      alert('Please add at least one species observation');
+      setError('Please add at least one species observation');
       return;
     }
 
@@ -111,6 +113,26 @@ function AddObservationForm({ location, onSave, onCancel }: AddObservationFormPr
         </div>
         
         <form onSubmit={handleSubmit} className="p-lg space-y-lg">
+          {/* Error Message */}
+          {error && (
+            <div className="bg-rust/10 border-2 border-rust text-rust p-md rounded-md flex items-start gap-sm">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="shrink-0 mt-0.5"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              <span>{error}</span>
+            </div>
+          )}
+          
           {/* Location Display */}
           <div>
             <Label className="text-bark dark:text-sand">Location</Label>

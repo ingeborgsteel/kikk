@@ -28,12 +28,16 @@ function Map({ onLocationSelect }: MapProps) {
 		lng: number;
 	} | null>(null);
 	const markerRef = useRef<L.Marker | null>(null);
+	const [isLocating, setIsLocating] = useState(false);
 
 	useEffect(() => {
 		if (!mapContainer.current || map.current) return;
 
-		// Initialize map centered on Norway (since this is a Norwegian bird observation app)
-		map.current = L.map(mapContainer.current).setView([60.472, 8.4689], 6);
+		// Initialize map with default center (Norway)
+		const defaultCenter: [number, number] = [60.472, 8.4689];
+		const defaultZoom = 6;
+
+		map.current = L.map(mapContainer.current).setView(defaultCenter, defaultZoom);
 
 		// Add OpenStreetMap tiles
 		L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -41,6 +45,29 @@ function Map({ onLocationSelect }: MapProps) {
 			attribution:
 				'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
 		}).addTo(map.current);
+
+		// Try to get user's current location
+		if ("geolocation" in navigator) {
+			setIsLocating(true);
+			navigator.geolocation.getCurrentPosition(
+				(position) => {
+					const { latitude, longitude } = position.coords;
+					if (map.current) {
+						map.current.setView([latitude, longitude], 13);
+					}
+					setIsLocating(false);
+				},
+				(error) => {
+					console.log("Geolocation not available:", error);
+					setIsLocating(false);
+				},
+				{
+					enableHighAccuracy: true,
+					timeout: 5000,
+					maximumAge: 0,
+				},
+			);
+		}
 
 		// Add click handler to select location
 		map.current.on("click", (e: L.LeafletMouseEvent) => {
@@ -55,9 +82,6 @@ function Map({ onLocationSelect }: MapProps) {
 			// Add new marker at clicked location
 			if (map.current) {
 				markerRef.current = L.marker([lat, lng]).addTo(map.current);
-				markerRef.current.bindPopup(
-					`Location: ${lat.toFixed(4)}, ${lng.toFixed(4)}`,
-				).openPopup();
 			}
 
 			// Call callback if provided
@@ -80,21 +104,30 @@ function Map({ onLocationSelect }: MapProps) {
 
 	return (
 		<div className="map-wrapper">
-			<div className="map-info">
-				<h2>Select Your Location</h2>
-				<p>
-					Click on the map to select where you are making a bird observation
-				</p>
-				{selectedLocation && (
-					<div className="location-display">
-						<strong>Selected Location:</strong>
-						<br />
-						Latitude: {selectedLocation.lat.toFixed(6)}
-						<br />
-						Longitude: {selectedLocation.lng.toFixed(6)}
-					</div>
-				)}
-			</div>
+			{isLocating && (
+				<div className="location-loading">
+					<div className="loading-spinner"></div>
+					<span>Finding your location...</span>
+				</div>
+			)}
+			{selectedLocation && (
+				<div className="location-badge">
+					<svg
+						width="16"
+						height="16"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="2"
+					>
+						<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+						<circle cx="12" cy="10" r="3" />
+					</svg>
+					<span>
+						{selectedLocation.lat.toFixed(4)}, {selectedLocation.lng.toFixed(4)}
+					</span>
+				</div>
+			)}
 			<div ref={mapContainer} className="map-container" />
 		</div>
 	);

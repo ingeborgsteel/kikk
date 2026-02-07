@@ -29,7 +29,7 @@
 	}
 	
 	.dark body {
-		background-color: #1a1a1a;
+		background-color: #4A3F35;
 		color: #F2EFEA;
 	}
 
@@ -76,11 +76,11 @@
 	@media (prefers-color-scheme: dark) {
 		:root {
 			color: #F2EFEA;
-			background-color: #1a1a1a;
+			background-color: #4A3F35;
 		}
 		body {
 			color: #F2EFEA;
-			background-color: #1a1a1a;
+			background-color: #4A3F35;
 		}
 		h1, h2 {
 			color: #F2EFEA;

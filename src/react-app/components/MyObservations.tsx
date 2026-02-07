@@ -33,7 +33,7 @@ function MyObservations({onBack}: MyObservationsProps) {
   const editingObservation = observations.find(obs => obs.id === editingId);
 
   return (
-    <div className="w-full min-h-screen bg-sand dark:bg-dark-bg">
+    <div className="w-full min-h-screen bg-sand dark:bg-bark">
       <header className="bg-forest text-sand p-lg md:p-xl relative">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-sand m-0 text-[clamp(2rem,6vw,3rem)] tracking-wider">Mine Observasjoner</h1>

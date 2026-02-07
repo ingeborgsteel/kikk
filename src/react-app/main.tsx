@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "./index.css";
 import App from "./App.tsx";
 import { ObservationsProvider } from "./context/ObservationsContext.tsx";
+import { ThemeProvider } from "./context/ThemeContext.tsx";
 
 const queryClient = new QueryClient({
 	defaultOptions: {
@@ -17,9 +18,11 @@ const queryClient = new QueryClient({
 createRoot(document.getElementById("root")!).render(
 	<StrictMode>
 		<QueryClientProvider client={queryClient}>
-			<ObservationsProvider>
-				<App />
-			</ObservationsProvider>
+			<ThemeProvider>
+				<ObservationsProvider>
+					<App />
+				</ObservationsProvider>
+			</ThemeProvider>
 		</QueryClientProvider>
 	</StrictMode>,
 );

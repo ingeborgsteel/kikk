@@ -14,13 +14,44 @@ const DefaultIcon = L.icon({
   iconAnchor: [12, 41],
 });
 
-// Create a different icon for existing observations
-const ObservationIcon = L.icon({
-  iconUrl: icon,
+// Create custom SVG marker for rust color (new selection)
+const createRustMarkerSVG = () => {
+  return `data:image/svg+xml;base64,${btoa(`
+    <svg width="25" height="41" viewBox="0 0 25 41" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12.5 0C5.6 0 0 5.6 0 12.5c0 8.4 12.5 28.5 12.5 28.5S25 20.9 25 12.5C25 5.6 19.4 0 12.5 0z" 
+            fill="#C76D4B" stroke="#8B4513" stroke-width="1"/>
+      <circle cx="12.5" cy="12.5" r="4" fill="#FFF" opacity="0.3"/>
+    </svg>
+  `)}`;
+};
+
+// Create custom SVG marker for forest green (existing observations)
+const createForestGreenMarkerSVG = () => {
+  return `data:image/svg+xml;base64,${btoa(`
+    <svg width="25" height="41" viewBox="0 0 25 41" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12.5 0C5.6 0 0 5.6 0 12.5c0 8.4 12.5 28.5 12.5 28.5S25 20.9 25 12.5C25 5.6 19.4 0 12.5 0z" 
+            fill="#2F5D50" stroke="#1a3d32" stroke-width="1"/>
+      <circle cx="12.5" cy="12.5" r="4" fill="#FFF" opacity="0.3"/>
+    </svg>
+  `)}`;
+};
+
+// Create icon for new selection marker - rust color
+const SelectionIcon = L.icon({
+  iconUrl: createRustMarkerSVG(),
   shadowUrl: iconShadow,
   iconSize: [25, 41],
   iconAnchor: [12, 41],
-  className: 'observation-marker',
+  popupAnchor: [0, -41],
+});
+
+// Create icon for existing observations - forest green
+const ObservationIcon = L.icon({
+  iconUrl: createForestGreenMarkerSVG(),
+  shadowUrl: iconShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [0, -41],
 });
 
 L.Marker.prototype.options.icon = DefaultIcon;
@@ -84,9 +115,9 @@ function Map({onLocationSelect, observations = []}: MapProps) {
         markerRef.current.remove();
       }
 
-      // Add new marker at clicked location
+      // Add new marker at clicked location with rust color
       if (map.current) {
-        markerRef.current = L.marker([lat, lng]).addTo(map.current);
+        markerRef.current = L.marker([lat, lng], { icon: SelectionIcon }).addTo(map.current);
       }
 
       // Call callback if provided

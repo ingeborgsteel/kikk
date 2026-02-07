@@ -1,46 +1,40 @@
-# React + Vite + Hono + Cloudflare Workers
+# kikk
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/templates/tree/main/vite-react-template)
+A nature observation tracking application for recording and managing wildlife sightings. Track species observations with precise locations, dates, and detailed information about what you've seen in the field.
 
-This template provides a minimal setup for building a React application with TypeScript and Vite, designed to run on Cloudflare Workers. It features hot module replacement, ESLint integration, and the flexibility of Workers deployments.
+## About
 
-![React + TypeScript + Vite + Cloudflare Workers](https://imagedelivery.net/wSMYJvS3Xw-n339CbDyDIA/fc7b4b62-442b-4769-641b-ad4422d74300/public)
+kikk is a map-based observation tracker that helps nature enthusiasts, researchers, and wildlife observers document their field observations. The app provides an intuitive interface for recording species sightings with rich metadata including location, date, species details, gender, count, and field notes.
 
-<!-- dash-content-start -->
+### Technology Stack
 
-🚀 Supercharge your web development with this powerful stack:
+Built with modern web technologies for a fast, responsive experience:
 
-- [**React**](https://react.dev/) - A modern UI library for building interactive interfaces
+- [**React**](https://react.dev/) - Modern UI library
 - [**Vite**](https://vite.dev/) - Lightning-fast build tooling and development server
-- [**Hono**](https://hono.dev/) - Ultralight, modern backend framework
-- [**Cloudflare Workers**](https://developers.cloudflare.com/workers/) - Edge computing platform for global deployment
+- [**TypeScript**](https://www.typescriptlang.org/) - Type-safe development
+- [**Leaflet**](https://leafletjs.com/) - Interactive mapping
+- [**Hono**](https://hono.dev/) - Lightweight backend framework
+- [**Cloudflare Workers**](https://developers.cloudflare.com/workers/) - Edge deployment
+- [**Tailwind CSS**](https://tailwindcss.com/) - Utility-first styling
 
-### ✨ Key Features
+### ✨ Features
 
-- 🔥 Hot Module Replacement (HMR) for rapid development
-- 📦 TypeScript support out of the box
-- 🛠️ ESLint configuration included
-- ⚡ Zero-config deployment to Cloudflare's global network
-- 🎯 API routes with Hono's elegant routing
-- 🔄 Full-stack development setup
-- 🔎 Built-in Observability to monitor your Worker
-
-Get started in minutes with local development or deploy directly via the Cloudflare dashboard. Perfect for building modern, performant web applications at the edge.
-
-<!-- dash-content-end -->
+- 🗺️ **Interactive Map** - Click anywhere to record an observation location
+- 🔍 **Species Search** - Search species using Artsdatabanken (Norwegian Biodiversity Information Centre) database
+- 📝 **Detailed Observations** - Record species, gender, count, location uncertainty, and field notes
+- 📋 **Observation Management** - View, edit, and delete your observation records
+- 💾 **Local Storage** - Your observations are stored locally in your browser
+- 📱 **Responsive Design** - Works seamlessly on desktop and mobile devices
 
 ## Getting Started
 
-To start a new project with this template, run:
+### Prerequisites
 
-```bash
-npm create cloudflare@latest -- --template=cloudflare/templates/vite-react-template
-```
+- Node.js 18+ installed
+- npm or compatible package manager
 
-A live deployment of this template is available at:
-[https://react-vite-template.templates.workers.dev](https://react-vite-template.templates.workers.dev)
-
-## Development
+### Development
 
 Install dependencies:
 
@@ -48,7 +42,7 @@ Install dependencies:
 npm install
 ```
 
-Start the development server with:
+Start the development server:
 
 ```bash
 npm run dev
@@ -56,7 +50,7 @@ npm run dev
 
 Your application will be available at [http://localhost:5173](http://localhost:5173).
 
-## Production
+### Building & Linting
 
 Build your project for production:
 
@@ -64,23 +58,44 @@ Build your project for production:
 npm run build
 ```
 
-Preview your build locally:
+Run ESLint to check code quality:
+
+```bash
+npm run lint
+```
+
+Preview your production build locally:
 
 ```bash
 npm run preview
 ```
 
+## Deployment
+
 Deploy your project to Cloudflare Workers:
 
 ```bash
-npm run build && npm run deploy
+npm run deploy
 ```
 
-Monitor your workers:
+Monitor your deployed worker:
 
 ```bash
 npx wrangler tail
 ```
+
+## Usage
+
+1. **Add an Observation**: Click anywhere on the map to select a location
+2. **Enter Details**: 
+   - Search for and select species from the Artsdatabanken database
+   - Specify gender (male/female/unknown) and count
+   - Add location uncertainty radius in meters
+   - Set observation date and time
+   - Add field notes and per-species comments
+3. **Save**: Your observation is stored locally
+4. **View**: Click "My Observations" to see all your recorded observations
+5. **Manage**: Edit or delete observations as needed
 
 ## Additional Resources
 

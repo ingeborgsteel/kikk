@@ -56,7 +56,7 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
       <div
         className="bg-sand dark:bg-bark w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg shadow-custom-2xl border-2 border-moss">
         <div className="sticky top-0 bg-forest text-sand p-lg border-b-2 border-moss flex justify-between items-center">
-          <h2 className="text-xl font-bold">{observation ? "Edit Observation" : "Create Observation"}</h2>
+          <h2 className="text-xl font-bold">{observation ? "Rediger Observasjon" : "Opprett Observasjon"}</h2>
           <button
             onClick={onClose}
             className="text-sand hover:text-sunlit transition-colors p-1"
@@ -88,7 +88,7 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
           )}
 
           <div>
-            <Label className="text-bark dark:text-sand">Location</Label>
+            <Label className="text-bark dark:text-sand">Plassering</Label>
             <p className="text-sm text-slate mt-1">
               Lat: {location.lat.toFixed(4)}, Lng: {location.lng.toFixed(4)}
             </p>
@@ -100,7 +100,7 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
             render={({field: {value, onChange}}) => (
               <div>
                 <Label htmlFor="uncertainty" className="text-bark dark:text-sand">
-                  Uncertainty Radius (meters)
+                  Usikkerhetsradius (meter)
                 </Label>
                 <Input
                   id="uncertainty"
@@ -120,7 +120,7 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
             render={({field: {value, onChange}}) => (
               <div>
                 <Label htmlFor="date" className="text-bark dark:text-sand">
-                  Date and Time
+                  Dato og Tid
                 </Label>
                 <Input
                   id="date"
@@ -167,7 +167,7 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
 
               const removeSpeciesObservation = (index: number) => {
                 if (speciesObservations.length === 1) {
-                  setError('An observation must have at least one species');
+                  setError('En observasjon må ha minst én art');
                   return;
                 }
                 onChange(speciesObservations.filter((_, i) => i !== index));
@@ -178,13 +178,13 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
                 <>
                   <div>
                     <Label htmlFor="species-search" className="text-bark dark:text-sand">
-                      Search for Species
+                      Søk etter Art
                     </Label>
                     <div className="relative mt-1">
                       <Input
                         id="species-search"
                         type="text"
-                        placeholder="Type to search..."
+                        placeholder="Skriv for å søke..."
                         value={searchTerm}
                         onChange={(e) => {
                           setSearchTerm(e.target.value);
@@ -223,7 +223,7 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
                     </div>
                   </div>
                   <div>
-                    <Label className="text-bark dark:text-sand">Species Observations</Label>
+                    <Label className="text-bark dark:text-sand">Artsobservasjoner</Label>
                     <div className="mt-1 space-y-md">
                       {speciesObservations.map((obs, index) => (
                         <div
@@ -249,7 +249,7 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
                           <div className="grid grid-cols-2 gap-sm">
                             <div>
                               <Label htmlFor={`gender-${index}`} className="text-bark dark:text-sand text-xs">
-                                Gender
+                                Kjønn
                               </Label>
                               <Select
                                 id={`gender-${index}`}
@@ -257,14 +257,14 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
                                 onChange={(e) => updateSpeciesObservation(index, 'gender', e.target.value)}
                                 className="mt-1"
                               >
-                                <option value="unknown">Unknown</option>
+                                <option value="unknown">Ukjent</option>
                                 <option value="male">Male</option>
                                 <option value="female">Female</option>
                               </Select>
                             </div>
                             <div>
                               <Label htmlFor={`count-${index}`} className="text-bark dark:text-sand text-xs">
-                                Count
+                                Antall
                               </Label>
                               <Input
                                 id={`count-${index}`}
@@ -279,11 +279,11 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
 
                           <div>
                             <Label htmlFor={`species-comment-${index}`} className="text-bark dark:text-sand text-xs">
-                              Species Comment
+                              Artskommentar
                             </Label>
                             <Textarea
                               id={`species-comment-${index}`}
-                              placeholder="Notes about this specific species..."
+                              placeholder="Notater om denne spesifikke arten..."
                               value={obs.comment}
                               onChange={(e) => updateSpeciesObservation(index, 'comment', e.target.value)}
                               className="mt-1"
@@ -305,11 +305,11 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
             render={({field: {value, onChange}}) => (
               <div>
                 <Label htmlFor="comment" className="text-bark dark:text-sand">
-                  Overall Observation Comment (optional)
+                  Generell Observasjonskommentar (valgfritt)
                 </Label>
                 <Textarea
                   id="comment"
-                  placeholder="Add notes about the overall observation..."
+                  placeholder="Legg til notater om den generelle observasjonen..."
                   value={value}
                   onChange={(e) => onChange(e.target.value)}
                   className="mt-1"
@@ -321,10 +321,10 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
 
           <div className="flex gap-md justify-end pt-md">
             <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
+              Avbryt
             </Button>
             <Button type="submit">
-              {"Save"}
+              Lagre
             </Button>
           </div>
         </form>

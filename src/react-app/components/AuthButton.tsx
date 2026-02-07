@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { LogIn, LogOut, Mail, Lock, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Button } from './ui/button';
@@ -25,6 +25,13 @@ export function AuthButton() {
     }
   }, [showEmailInput]);
 
+  const handleCloseModal = useCallback(() => {
+    setShowEmailInput(false);
+    setEmail('');
+    setPassword('');
+    setMessage('');
+  }, []);
+
   // Handle Escape key to close modal
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -35,7 +42,7 @@ export function AuthButton() {
     
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, [showEmailInput]);
+  }, [showEmailInput, handleCloseModal]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,13 +70,6 @@ export function AuthButton() {
     }
     
     setLoading(false);
-  };
-
-  const handleCloseModal = () => {
-    setShowEmailInput(false);
-    setEmail('');
-    setPassword('');
-    setMessage('');
   };
 
   const handleSignOut = async () => {

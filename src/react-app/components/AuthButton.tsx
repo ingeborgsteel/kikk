@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { LogIn, LogOut, Mail } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Button } from './ui/button';
+import { isSupabaseConfigured } from '../lib/supabase';
 
 export function AuthButton() {
   const { user, signInWithEmail, signOut } = useAuth();
@@ -9,6 +10,11 @@ export function AuthButton() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+
+  // Don't render if Supabase is not configured
+  if (!isSupabaseConfigured()) {
+    return null;
+  }
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,9 +24,16 @@ export function AuthButton() {
     const { error } = await signInWithEmail(email);
     
     if (error) {
-      setMessage(error.message);
+      // Map common errors to user-friendly Norwegian messages
+      let errorMessage = 'Noe gikk galt. Prøv igjen.';
+      if (error.message.toLowerCase().includes('invalid email')) {
+        errorMessage = 'Ugyldig e-postadresse.';
+      } else if (error.message.toLowerCase().includes('rate limit')) {
+        errorMessage = 'For mange forsøk. Vent litt før du prøver igjen.';
+      }
+      setMessage(errorMessage);
     } else {
-      setMessage('Check your email for the login link!');
+      setMessage('Sjekk e-posten din for innloggingslenken!');
       setEmail('');
     }
     

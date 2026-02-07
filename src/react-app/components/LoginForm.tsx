@@ -71,13 +71,14 @@ export function LoginForm({closeLoginForm, showLoginForm}: { closeLoginForm: () 
         className="bg-sand dark:bg-bark w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg shadow-custom-2xl border-2 border-moss">
         <div className="sticky top-0 bg-forest text-sand p-lg border-b-2 border-moss flex justify-between items-center">
           <h2 className="text-xl font-bold">{"Logg inn"}</h2>
-          <button
+          <Button
+            variant={"accent"}
+            size={"icon"}
             onClick={closeLoginForm}
-            className="text-sand hover:text-sunlit transition-colors p-1"
             aria-label="Close"
           >
             <X size={24}/>
-          </button>
+          </Button>
         </div>
         <form onSubmit={handleSignIn} className="p-lg space-y-lg">
           <Input

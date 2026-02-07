@@ -1,4 +1,4 @@
-import {useState, useCallback} from 'react';
+import {useCallback, useState} from 'react';
 import {X} from 'lucide-react';
 import {Button} from './ui/button';
 import {Input} from './ui/input';
@@ -39,7 +39,7 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
       updateObservation(data.id, data);
     } else {
       const now = new Date().toISOString();
-      const randomPart = typeof crypto !== 'undefined' && crypto.randomUUID 
+      const randomPart = typeof crypto !== 'undefined' && crypto.randomUUID
         ? crypto.randomUUID().slice(0, 11)
         : `${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
       const id = `obs_${now}_${randomPart}`
@@ -59,13 +59,14 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
         className="bg-sand dark:bg-bark w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg shadow-custom-2xl border-2 border-moss">
         <div className="sticky top-0 bg-forest text-sand p-lg border-b-2 border-moss flex justify-between items-center">
           <h2 className="text-xl font-bold">{observation ? "Rediger Observasjon" : "Opprett Observasjon"}</h2>
-          <button
+          <Button
+            variant={"accent"}
+            size={"icon"}
             onClick={onClose}
-            className="text-sand hover:text-sunlit transition-colors p-1"
             aria-label="Close"
           >
             <X size={24}/>
-          </button>
+          </Button>
         </div>
 
         <form onSubmit={handleSubmit(save)} className="p-lg space-y-lg overflow-x-hidden">
@@ -234,14 +235,14 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
                                 className="font-medium text-bark dark:text-sand">{obs.species.PrefferedPopularname}</div>
                               <div className="text-sm text-slate italic">{obs.species.ValidScientificName}</div>
                             </div>
-                            <button
-                              type="button"
+                            <Button
+                              variant="accent"
+                              size={"icon"}
                               onClick={() => removeSpeciesObservation(index)}
-                              className="text-rust  dark:text-sand transition-colors p-1"
                               aria-label="Remove species"
                             >
                               <X size={20}/>
-                            </button>
+                            </Button>
                           </div>
 
                           <div className="grid grid-cols-2 gap-sm">

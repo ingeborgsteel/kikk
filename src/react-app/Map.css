@@ -1,0 +1,50 @@
+.map-wrapper {
+	width: 100%;
+	max-width: 1200px;
+	margin: 0 auto;
+}
+
+.map-info {
+	text-align: center;
+	margin-bottom: 1rem;
+}
+
+.map-info h2 {
+	font-size: 2em;
+	margin-bottom: 0.5rem;
+}
+
+.map-info p {
+	color: #888;
+	margin-bottom: 1rem;
+}
+
+.location-display {
+	background-color: rgba(100, 108, 255, 0.1);
+	border: 1px solid #646cff;
+	border-radius: 8px;
+	padding: 1rem;
+	margin-top: 1rem;
+	text-align: left;
+	display: inline-block;
+}
+
+.map-container {
+	width: 100%;
+	height: 600px;
+	border-radius: 8px;
+	overflow: hidden;
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+	.map-container {
+		height: 400px;
+	}
+}
+
+@media (prefers-color-scheme: light) {
+	.location-display {
+		background-color: rgba(100, 108, 255, 0.05);
+	}
+}

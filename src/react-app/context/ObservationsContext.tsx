@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Observation, SpeciesObservation } from '../types/observation';
+import { Observation } from '../types/observation';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { DbObservation, DbSpeciesObservation } from '../types/database';
 import { useAuth } from './AuthContext';

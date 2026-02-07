@@ -1,4 +1,6 @@
 // Database types for Supabase tables
+import { TaxonRecord } from './artsdatabanken';
+
 export interface DbObservation {
   id: string;
   user_id: string | null;
@@ -14,7 +16,7 @@ export interface DbObservation {
 export interface DbSpeciesObservation {
   id: string;
   observation_id: string;
-  species_data: any; // JSONB field containing TaxonRecord
+  species_data: TaxonRecord; // JSONB field containing TaxonRecord
   gender: 'male' | 'female' | 'unknown';
   count: number;
   comment: string | null;

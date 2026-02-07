@@ -35,7 +35,7 @@ function Map({ onLocationSelect }: MapProps) {
 		// Initialize map centered on Norway (since this is a Norwegian bird observation app)
 		map.current = L.map(mapContainer.current).setView([60.472, 8.4689], 6);
 
-		// Add OpenStreetMap tiles with topographic styling
+		// Add OpenStreetMap tiles
 		L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 			maxZoom: 19,
 			attribution:
@@ -71,6 +71,9 @@ function Map({ onLocationSelect }: MapProps) {
 			if (map.current) {
 				map.current.remove();
 				map.current = null;
+			}
+			if (markerRef.current) {
+				markerRef.current = null;
 			}
 		};
 	}, [onLocationSelect]);

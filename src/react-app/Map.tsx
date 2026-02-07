@@ -151,7 +151,7 @@ function Map({onLocationSelect, observations = []}: MapProps) {
       }
       observationMarkersRef.current = [];
     };
-  }, [onLocationSelect]);
+  }, []);
 
   // Effect to handle observation markers
   useEffect(() => {
@@ -166,14 +166,14 @@ function Map({onLocationSelect, observations = []}: MapProps) {
       if (map.current) {
         const marker = L.marker(
           [observation.location.lat, observation.location.lng],
-          { icon: ObservationIcon }
+          {icon: ObservationIcon}
         ).addTo(map.current);
 
         // Create popup content
         const speciesList = observation.speciesObservations
           .map(so => so.species.PrefferedPopularname || so.species.ValidScientificName)
           .join(', ');
-        
+
         const popupContent = `
           <div style="min-width: 150px;">
             <strong>${speciesList}</strong><br/>
@@ -181,7 +181,7 @@ function Map({onLocationSelect, observations = []}: MapProps) {
             <small>±${observation.uncertaintyRadius}m</small>
           </div>
         `;
-        
+
         marker.bindPopup(popupContent);
 
         observationMarkersRef.current.push(marker);

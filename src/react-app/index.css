@@ -1,131 +1,68 @@
-:root {
-	/* Outdoorsy color palette for bird counting app */
-	--primary-color: #2F5D50; /* Forest Green */
-	--primary-hover: #254A3E; /* Darker Forest Green for hover */
-	--secondary-color: #6B8F71; /* Moss Green */
-	--bg-primary: #F2EFEA; /* Warm Sand */
-	--text-primary: #4A3F35; /* Bark Brown */
-	--accent-primary: #C76D4B; /* Rust - primary action */
-	--accent-primary-hover: #B05D3B; /* Darker Rust for hover */
-	--accent-info: #7FAFC5; /* Sky Blue - info/links */
-	--accent-yellow: #E3C770; /* Sunlit Yellow - utility */
-	--accent-slate: #8A9088; /* Muted Slate - utility */
-	
-	/* Derived colors */
-	--text-secondary: #8A9088;
-	--bg-secondary: #E8E5E0;
-	--border-color: #D5D0C8;
-	--shadow-color: rgba(74, 63, 53, 0.1);
-	
-	/* Typography */
-	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-		'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-		sans-serif;
-	line-height: 1.6;
-	font-weight: 400;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-	/* Spacing system */
-	--spacing-xs: 0.25rem;
-	--spacing-sm: 0.5rem;
-	--spacing-md: 1rem;
-	--spacing-lg: 1.5rem;
-	--spacing-xl: 2rem;
-	--spacing-xxl: 3rem;
-	
-	/* Border radius */
-	--radius-sm: 8px;
-	--radius-md: 12px;
-	--radius-lg: 16px;
-	--radius-round: 50%;
-	
-	color-scheme: light;
-	color: var(--text-primary);
-	background-color: var(--bg-primary);
-
-	font-synthesis: none;
-	text-rendering: optimizeLegibility;
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
 	:root {
-		--text-primary: #F2EFEA;
-		--text-secondary: #C5C1B8;
-		--bg-primary: #1a1a1a;
-		--bg-secondary: #2c2c2c;
-		--border-color: #3a3a3a;
-		--shadow-color: rgba(0, 0, 0, 0.3);
+		color-scheme: light;
+		font-synthesis: none;
+		text-rendering: optimizeLegibility;
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
 	}
-}
 
-a {
-	font-weight: 500;
-	color: var(--accent-info);
-	text-decoration: inherit;
-	transition: color 0.2s ease;
-}
-a:hover {
-	color: var(--primary-color);
-}
+	* {
+		box-sizing: border-box;
+	}
 
-* {
-	box-sizing: border-box;
-}
+	body {
+		@apply m-0 min-w-[320px] min-h-screen bg-sand text-bark;
+		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+			'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+			sans-serif;
+		line-height: 1.6;
+		font-weight: 400;
+	}
 
-body {
-	margin: 0;
-	min-width: 320px;
-	min-height: 100vh;
-	background-color: var(--bg-primary);
-}
+	a {
+		@apply font-medium text-sky no-underline transition-colors duration-200;
+	}
+	a:hover {
+		@apply text-forest;
+	}
 
-h1 {
-	font-size: clamp(1.8rem, 5vw, 3.2rem);
-	line-height: 1.1;
-	font-weight: 700;
-	color: var(--text-primary);
-	margin: 0;
-}
+	h1 {
+		@apply text-[clamp(1.8rem,5vw,3.2rem)] leading-tight font-bold text-bark m-0;
+	}
 
-h2 {
-	font-size: clamp(1.4rem, 4vw, 2rem);
-	font-weight: 600;
-	color: var(--text-primary);
-}
+	h2 {
+		@apply text-[clamp(1.4rem,4vw,2rem)] font-semibold text-bark;
+	}
 
-button {
-	border-radius: var(--radius-md);
-	border: 2px solid transparent;
-	padding: 0.75em 1.5em;
-	font-size: 1em;
-	font-weight: 600;
-	font-family: inherit;
-	background: var(--accent-primary);
-	color: white;
-	cursor: pointer;
-	transition: all 0.3s ease;
-	box-shadow: 0 2px 8px var(--shadow-color);
-}
-button:hover {
-	background: var(--accent-primary-hover);
-	transform: translateY(-2px);
-	box-shadow: 0 4px 12px var(--shadow-color);
-}
-button:active {
-	transform: translateY(0);
-}
-button:focus,
-button:focus-visible {
-	outline: 3px solid var(--accent-yellow);
-	outline-offset: 2px;
-}
-
-@media (prefers-color-scheme: dark) {
 	button {
-		background: var(--accent-primary);
+		@apply rounded-md border-2 border-transparent px-6 py-3 text-base font-semibold bg-rust text-white cursor-pointer transition-all duration-300 shadow-custom;
+		font-family: inherit;
 	}
 	button:hover {
-		background: var(--accent-primary-hover);
+		@apply bg-rust-dark -translate-y-0.5 shadow-custom-lg;
+	}
+	button:active {
+		@apply translate-y-0;
+	}
+	button:focus,
+	button:focus-visible {
+		@apply outline outline-[3px] outline-sunlit outline-offset-2;
+	}
+
+	@media (prefers-color-scheme: dark) {
+		:root {
+			@apply text-sand bg-[#1a1a1a];
+		}
+		body {
+			@apply text-sand bg-[#1a1a1a];
+		}
+		h1, h2 {
+			@apply text-sand;
+		}
 	}
 }

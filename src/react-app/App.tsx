@@ -1,7 +1,6 @@
 // src/App.tsx
 
 import Map from "./Map";
-import "./App.css";
 
 function App() {
 	const handleLocationSelect = (lat: number, lng: number) => {
@@ -9,9 +8,9 @@ function App() {
 	};
 
 	return (
-		<div className="app-container">
-			<header className="app-header">
-				<h1 className="app-title">kikk</h1>
+		<div className="w-full min-h-screen p-0 flex flex-col bg-sand">
+			<header className="text-center p-lg md:p-xl bg-forest relative">
+				<h1 className="text-sand m-0 text-[clamp(2rem,6vw,3rem)] tracking-wider">kikk</h1>
 			</header>
 			<Map onLocationSelect={handleLocationSelect} />
 		</div>

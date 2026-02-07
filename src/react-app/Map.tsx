@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import "./Map.css";
 
 // Fix for default marker icons in Leaflet with bundlers
 import icon from "leaflet/dist/images/marker-icon.png";
@@ -77,7 +76,6 @@ function Map({ onLocationSelect }: MapProps) {
 		if ("geolocation" in navigator) {
 			setIsLocating(true);
 			setLocationError(null);
-			// eslint-disable-next-line react-hooks/exhaustive-deps
 			navigator.geolocation.getCurrentPosition(
 				(position) => {
 					const { latitude, longitude } = position.coords;
@@ -132,15 +130,15 @@ function Map({ onLocationSelect }: MapProps) {
 	}, [onLocationSelect]);
 
 	return (
-		<div className="map-wrapper">
+		<div className="w-full h-[calc(100vh-80px)] relative flex-1 overflow-hidden">
 			{isLocating && (
-				<div className="location-loading">
-					<div className="loading-spinner"></div>
+				<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[2000] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-lg rounded-lg shadow-custom-2xl flex flex-col items-center gap-md font-medium text-bark dark:text-sand border-2 border-moss">
+					<div className="w-10 h-10 border-4 border-slate-border border-t-rust rounded-full animate-spin"></div>
 					<span>Finding your location...</span>
 				</div>
 			)}
 			{locationError && (
-				<div className="location-error">
+				<div className="absolute top-md left-1/2 -translate-x-1/2 z-[1000] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-md md:p-xl rounded-lg shadow-custom-xl flex items-start gap-sm text-sm md:text-base font-medium text-rust dark:text-rust animate-[slideDown_0.3s_ease] max-w-[90%] border-2 border-rust leading-relaxed">
 					<svg
 						width="20"
 						height="20"
@@ -148,6 +146,7 @@ function Map({ onLocationSelect }: MapProps) {
 						fill="none"
 						stroke="currentColor"
 						strokeWidth="2"
+						className="shrink-0 mt-0.5"
 					>
 						<circle cx="12" cy="12" r="10" />
 						<line x1="12" y1="8" x2="12" y2="12" />
@@ -157,7 +156,7 @@ function Map({ onLocationSelect }: MapProps) {
 				</div>
 			)}
 			{userLocation && !selectedLocation && (
-				<div className="location-success">
+				<div className="absolute top-md left-1/2 -translate-x-1/2 z-[1000] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-sm md:p-md px-lg md:px-xl rounded-lg shadow-custom-xl flex items-center gap-sm text-sm md:text-base font-semibold text-moss dark:text-moss animate-[slideDown_0.3s_ease] max-w-[90%] border-2 border-moss">
 					<svg
 						width="16"
 						height="16"
@@ -165,6 +164,7 @@ function Map({ onLocationSelect }: MapProps) {
 						fill="none"
 						stroke="currentColor"
 						strokeWidth="2"
+						className="shrink-0"
 					>
 						<path d="M20 6L9 17l-5-5" />
 					</svg>
@@ -172,7 +172,7 @@ function Map({ onLocationSelect }: MapProps) {
 				</div>
 			)}
 			{selectedLocation && (
-				<div className="location-badge">
+				<div className="absolute top-md left-1/2 -translate-x-1/2 z-[1000] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-sm md:p-md px-lg md:px-xl rounded-lg shadow-custom-xl flex items-center gap-sm text-sm md:text-base font-semibold text-bark dark:text-sand animate-[slideDown_0.3s_ease] max-w-[90%] border-2 border-moss">
 					<svg
 						width="16"
 						height="16"
@@ -180,6 +180,7 @@ function Map({ onLocationSelect }: MapProps) {
 						fill="none"
 						stroke="currentColor"
 						strokeWidth="2"
+						className="text-rust shrink-0"
 					>
 						<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
 						<circle cx="12" cy="10" r="3" />
@@ -189,7 +190,7 @@ function Map({ onLocationSelect }: MapProps) {
 					</span>
 				</div>
 			)}
-			<div ref={mapContainer} className="map-container" />
+			<div ref={mapContainer} className="w-full h-full border-none rounded-t-lg overflow-hidden" />
 		</div>
 	);
 }

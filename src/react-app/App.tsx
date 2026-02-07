@@ -16,17 +16,30 @@ function App() {
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [showLoginForm, setShowLoginForm] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingObservationId, setEditingObservationId] = useState<string | null>(null);
   const {observations} = useObservations();
 
   const handleLocationSelect = (lat: number, lng: number) => {
     setSelectedLocation({lat, lng});
+    setEditingObservationId(null);
+    setShowAddForm(true);
+  };
+
+  const handleObservationClick = (observationId: string) => {
+    setEditingObservationId(observationId);
+    setSelectedLocation(null);
     setShowAddForm(true);
   };
 
   const onClose = () => {
     setShowAddForm(false);
     setSelectedLocation(null);
+    setEditingObservationId(null);
   };
+
+  const editingObservation = editingObservationId 
+    ? observations.find(obs => obs.id === editingObservationId)
+    : undefined;
 
   if (currentView === 'observations') {
     return (
@@ -58,11 +71,16 @@ function App() {
           </Button>
         </div>
       </header>
-      <Map onLocationSelect={handleLocationSelect} observations={observations}/>
+      <Map 
+        onLocationSelect={handleLocationSelect} 
+        observations={observations}
+        onObservationClick={handleObservationClick}
+      />
 
-      {showAddForm && selectedLocation && (
+      {showAddForm && (editingObservation || selectedLocation) && (
         <ObservationForm
-          location={selectedLocation}
+          location={editingObservation?.location || selectedLocation!}
+          observation={editingObservation}
           onClose={onClose}
         />
       )}

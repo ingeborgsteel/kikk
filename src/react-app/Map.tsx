@@ -64,9 +64,10 @@ const MAP_RESIZE_DELAY_MS = 100;
 interface MapProps {
   onLocationSelect?: (lat: number, lng: number) => void;
   observations?: Observation[];
+  onObservationClick?: (observationId: string) => void;
 }
 
-function Map({onLocationSelect, observations = []}: MapProps) {
+function Map({onLocationSelect, observations = [], onObservationClick}: MapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<{
@@ -217,10 +218,17 @@ function Map({onLocationSelect, observations = []}: MapProps) {
 
         marker.bindPopup(popupContent);
 
+        // Add click handler to open edit form
+        marker.on('click', () => {
+          if (onObservationClick) {
+            onObservationClick(observation.id);
+          }
+        });
+
         observationMarkersRef.current.push(marker);
       }
     });
-  }, [observations]);
+  }, [observations, onObservationClick]);
 
   return (
     <div className="w-full h-[calc(100vh-80px)] relative flex-1 overflow-hidden bg-forest">

@@ -58,7 +58,6 @@ export function AuthButton() {
       <Button
         onClick={handleSignOut}
         variant="secondary"
-        size="sm"
         className="flex items-center gap-2"
       >
         <LogOut size={16} />
@@ -69,8 +68,8 @@ export function AuthButton() {
 
   if (showEmailInput) {
     return (
-      <div className="relative">
-        <form onSubmit={handleSignIn} className="flex flex-col gap-2 bg-sand dark:bg-bark p-4 rounded-md shadow-custom absolute right-0 top-full mt-2 min-w-[280px] z-50">
+      <div className="relative z-[100]">
+        <form onSubmit={handleSignIn} className="flex flex-col gap-2 bg-sand dark:bg-bark p-4 rounded-md shadow-custom absolute right-0 top-full mt-2 min-w-[280px]">
           <div className="flex items-center gap-2 mb-2">
             <Mail size={16} />
             <span className="text-sm font-semibold">Logg inn med e-post</span>
@@ -131,7 +130,6 @@ export function AuthButton() {
     <Button
       onClick={() => setShowEmailInput(true)}
       variant="secondary"
-      size="sm"
       className="flex items-center gap-2"
     >
       <LogIn size={16} />

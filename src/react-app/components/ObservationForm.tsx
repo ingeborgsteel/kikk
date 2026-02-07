@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useState, useCallback} from 'react';
 import {X} from 'lucide-react';
 import {Button} from './ui/button';
 import {Input} from './ui/input';
@@ -34,13 +34,15 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
     }
   })
 
-  const save = (data: Observation) => {
+  const save = useCallback((data: Observation) => {
     if (data.id) {
       updateObservation(data.id, data);
     } else {
       const now = new Date().toISOString();
-      const random = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
-      const id = `obs_${now}_${random.toString().slice(0, 11)}`
+      const randomPart = typeof crypto !== 'undefined' && crypto.randomUUID 
+        ? crypto.randomUUID().slice(0, 11)
+        : `${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
+      const id = `obs_${now}_${randomPart}`
       addObservation({
         ...data,
         id,
@@ -49,7 +51,7 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
       });
     }
     onClose();
-  };
+  }, [addObservation, updateObservation, onClose]);
 
   return (
     <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 p-4">

@@ -69,7 +69,7 @@ function AddObservationForm({ location, onSave, onCancel }: AddObservationFormPr
     e.preventDefault();
     
     if (speciesObservations.length === 0) {
-      setError('Please add at least one species observation');
+      setError('Vennligst legg til minst én artsobservasjon');
       return;
     }
 
@@ -86,11 +86,11 @@ function AddObservationForm({ location, onSave, onCancel }: AddObservationFormPr
     <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50">
       <div className="bg-sand dark:bg-bark w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg shadow-custom-2xl border-2 border-moss">
         <div className="sticky top-0 bg-forest text-sand p-lg border-b-2 border-moss flex justify-between items-center">
-          <h2 className="text-xl font-bold">Add Observation</h2>
+          <h2 className="text-xl font-bold">Legg til observasjon</h2>
           <button 
             onClick={onCancel}
             className="text-sand hover:text-sunlit transition-colors p-1"
-            aria-label="Close"
+            aria-label="Lukk"
           >
             <X size={24} />
           </button>
@@ -119,16 +119,16 @@ function AddObservationForm({ location, onSave, onCancel }: AddObservationFormPr
           
           {/* Location Display */}
           <div>
-            <Label className="text-bark dark:text-sand">Location</Label>
+            <Label className="text-bark dark:text-sand">Plassering</Label>
             <p className="text-sm text-slate mt-1">
-              Lat: {location.lat.toFixed(4)}, Lng: {location.lng.toFixed(4)}
+              Breddegrad: {location.lat.toFixed(4)}, Lengdegrad: {location.lng.toFixed(4)}
             </p>
           </div>
 
           {/* Uncertainty Radius */}
           <div>
             <Label htmlFor="uncertainty" className="text-bark dark:text-sand">
-              Uncertainty Radius (meters)
+              Usikkerhetsradius (meter)
             </Label>
             <Input
               id="uncertainty"
@@ -143,7 +143,7 @@ function AddObservationForm({ location, onSave, onCancel }: AddObservationFormPr
           {/* Date */}
           <div>
             <Label htmlFor="date" className="text-bark dark:text-sand">
-              Date and Time
+              Dato og klokkeslett
             </Label>
             <Input
               id="date"
@@ -157,13 +157,13 @@ function AddObservationForm({ location, onSave, onCancel }: AddObservationFormPr
           {/* Species Search */}
           <div>
             <Label htmlFor="species-search" className="text-bark dark:text-sand">
-              Search for Species
+              Søk etter art
             </Label>
             <div className="relative mt-1">
               <Input
                 id="species-search"
                 type="text"
-                placeholder="Type to search..."
+                placeholder="Skriv for å søke..."
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
@@ -204,7 +204,7 @@ function AddObservationForm({ location, onSave, onCancel }: AddObservationFormPr
           <div className="grid grid-cols-2 gap-md">
             <div>
               <Label htmlFor="gender" className="text-bark dark:text-sand">
-                Gender
+                Kjønn
               </Label>
               <Select
                 id="gender"
@@ -212,14 +212,14 @@ function AddObservationForm({ location, onSave, onCancel }: AddObservationFormPr
                 onChange={(e) => setCurrentGender(e.target.value as 'male' | 'female' | 'unknown')}
                 className="mt-1"
               >
-                <option value="unknown">Unknown</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
+                <option value="unknown">Ukjent</option>
+                <option value="male">Hann</option>
+                <option value="female">Hunn</option>
               </Select>
             </div>
             <div>
               <Label htmlFor="count" className="text-bark dark:text-sand">
-                Count
+                Antall
               </Label>
               <Input
                 id="count"
@@ -235,11 +235,11 @@ function AddObservationForm({ location, onSave, onCancel }: AddObservationFormPr
           {/* Per-species Comment (shown before adding species) */}
           <div>
             <Label htmlFor="species-comment" className="text-bark dark:text-sand">
-              Species Comment (optional)
+              Artskommentar (valgfritt)
             </Label>
             <Textarea
               id="species-comment"
-              placeholder="Notes about this specific species..."
+              placeholder="Notater om denne spesifikke arten..."
               value={currentSpeciesComment}
               onChange={(e) => setCurrentSpeciesComment(e.target.value)}
               className="mt-1"
@@ -250,7 +250,7 @@ function AddObservationForm({ location, onSave, onCancel }: AddObservationFormPr
           {/* Added Species List */}
           {speciesObservations.length > 0 && (
             <div>
-              <Label className="text-bark dark:text-sand">Added Species</Label>
+              <Label className="text-bark dark:text-sand">Lagt til arter</Label>
               <div className="mt-1 space-y-sm">
                 {speciesObservations.map((obs, index) => (
                   <div
@@ -261,7 +261,7 @@ function AddObservationForm({ location, onSave, onCancel }: AddObservationFormPr
                       <div className="flex-1">
                         <div className="font-medium text-bark dark:text-sand">{obs.species.vernacularName}</div>
                         <div className="text-sm text-slate">
-                          {obs.count} {obs.count === 1 ? 'individual' : 'individuals'} • {obs.gender}
+                          {obs.count} {obs.count === 1 ? 'individ' : 'individer'} • {obs.gender}
                         </div>
                         {obs.comment && (
                           <div className="text-sm text-bark dark:text-sand mt-1 italic">"{obs.comment}"</div>
@@ -271,7 +271,7 @@ function AddObservationForm({ location, onSave, onCancel }: AddObservationFormPr
                         type="button"
                         onClick={() => removeSpeciesObservation(index)}
                         className="text-rust hover:text-rust-dark transition-colors p-1"
-                        aria-label="Remove species"
+                        aria-label="Fjern art"
                       >
                         <X size={20} />
                       </button>
@@ -285,11 +285,11 @@ function AddObservationForm({ location, onSave, onCancel }: AddObservationFormPr
           {/* Overall Observation Comment */}
           <div>
             <Label htmlFor="comment" className="text-bark dark:text-sand">
-              Overall Observation Comment (optional)
+              Generell observasjonskommentar (valgfritt)
             </Label>
             <Textarea
               id="comment"
-              placeholder="Add notes about the overall observation..."
+              placeholder="Legg til notater om observasjonen generelt..."
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               className="mt-1"
@@ -300,10 +300,10 @@ function AddObservationForm({ location, onSave, onCancel }: AddObservationFormPr
           {/* Action Buttons */}
           <div className="flex gap-md justify-end pt-md">
             <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
+              Avbryt
             </Button>
             <Button type="submit">
-              Save Observation
+              Lagre observasjon
             </Button>
           </div>
         </form>

@@ -1,70 +1,70 @@
 # kikk
 
-A nature observation tracking application for recording and managing wildlife sightings. Track species observations with precise locations, dates, and detailed information about what you've seen in the field.
+En applikasjon for sporing av naturobservasjoner for å registrere og administrere observasjoner av dyreliv. Spor artsobservasjoner med nøyaktig plassering, dato og detaljert informasjon om det du har sett i felt.
 
-## About
+## Om
 
-kikk is a map-based observation tracker that helps nature enthusiasts, researchers, and wildlife observers document their field observations. The app provides an intuitive interface for recording species sightings with rich metadata including location, date, species details, gender, count, and field notes.
+kikk er en kartbasert observasjonssporer som hjelper naturentusiaster, forskere og dyrelivsobservatører med å dokumentere sine feltobservasjoner. Appen tilbyr et intuitivt grensesnitt for å registrere artsobservasjoner med rik metadata, inkludert plassering, dato, artsdetaljer, kjønn, antall og feltnotater.
 
-### Technology Stack
+### Teknologistakk
 
-Built with modern web technologies for a fast, responsive experience:
+Bygget med moderne webteknologier for en rask, responsiv opplevelse:
 
-- [**React**](https://react.dev/) - Modern UI library
-- [**Vite**](https://vite.dev/) - Lightning-fast build tooling and development server
-- [**TypeScript**](https://www.typescriptlang.org/) - Type-safe development
-- [**Leaflet**](https://leafletjs.com/) - Interactive mapping
-- [**Hono**](https://hono.dev/) - Lightweight backend framework
-- [**Cloudflare Workers**](https://developers.cloudflare.com/workers/) - Edge deployment
+- [**React**](https://react.dev/) - Moderne UI-bibliotek
+- [**Vite**](https://vite.dev/) - Lynrask byggeverktøy og utviklingsserver
+- [**TypeScript**](https://www.typescriptlang.org/) - Typesikker utvikling
+- [**Leaflet**](https://leafletjs.com/) - Interaktiv karttjeneste
+- [**Hono**](https://hono.dev/) - Lettvekts backend-rammeverk
+- [**Cloudflare Workers**](https://developers.cloudflare.com/workers/) - Edge-deployment
 - [**Tailwind CSS**](https://tailwindcss.com/) - Utility-first styling
 
-### ✨ Features
+### ✨ Funksjoner
 
-- 🗺️ **Interactive Map** - Click anywhere to record an observation location
-- 🔍 **Species Search** - Search species using Artsdatabanken (Norwegian Biodiversity Information Centre) database
-- 📝 **Detailed Observations** - Record species, gender, count, location uncertainty, and field notes
-- 📋 **Observation Management** - View, edit, and delete your observation records
-- 💾 **Local Storage** - Your observations are stored locally in your browser
-- 📱 **Responsive Design** - Works seamlessly on desktop and mobile devices
+- 🗺️ **Interaktivt kart** - Klikk hvor som helst for å registrere en observasjonsplassering
+- 🔍 **Artssøk** - Søk arter ved hjelp av Artsdatabanken (Norsk institutt for naturforskning) databasen
+- 📝 **Detaljerte observasjoner** - Registrer art, kjønn, antall, plasseringsusikkerhet og feltnotater
+- 📋 **Observasjonshåndtering** - Se, rediger og slett dine observasjonsregistre
+- 💾 **Lokal lagring** - Dine observasjoner lagres lokalt i nettleseren din
+- 📱 **Responsiv design** - Fungerer sømløst på stasjonær og mobil
 
-## Getting Started
+## Komme i gang
 
-### Prerequisites
+### Forutsetninger
 
-- Node.js 18+ installed
-- npm or compatible package manager
+- Node.js 18+ installert
+- npm eller kompatibel pakkehåndterer
 
-### Development
+### Utvikling
 
-Install dependencies:
+Installer avhengigheter:
 
 ```bash
 npm install
 ```
 
-Start the development server:
+Start utviklerserveren:
 
 ```bash
 npm run dev
 ```
 
-Your application will be available at [http://localhost:5173](http://localhost:5173).
+Applikasjonen vil være tilgjengelig på [http://localhost:5173](http://localhost:5173).
 
-### Building & Linting
+### Bygging og linting
 
-Build your project for production:
+Bygg prosjektet ditt for produksjon:
 
 ```bash
 npm run build
 ```
 
-Run ESLint to check code quality:
+Kjør ESLint for å sjekke kodekvalitet:
 
 ```bash
 npm run lint
 ```
 
-Preview your production build locally:
+Forhåndsvis produksjonsbygget ditt lokalt:
 
 ```bash
 npm run preview
@@ -72,34 +72,34 @@ npm run preview
 
 ## Deployment
 
-Deploy your project to Cloudflare Workers:
+Deploy prosjektet ditt til Cloudflare Workers:
 
 ```bash
 npm run deploy
 ```
 
-Monitor your deployed worker:
+Overvåk din deployede worker:
 
 ```bash
 npx wrangler tail
 ```
 
-## Usage
+## Bruk
 
-1. **Add an Observation**: Click anywhere on the map to select a location
-2. **Enter Details**: 
-   - Search for and select species from the Artsdatabanken database
-   - Specify gender (male/female/unknown) and count
-   - Add location uncertainty radius in meters
-   - Set observation date and time
-   - Add field notes and per-species comments
-3. **Save**: Your observation is stored locally
-4. **View**: Click "My Observations" to see all your recorded observations
-5. **Manage**: Edit or delete observations as needed
+1. **Legg til en observasjon**: Klikk hvor som helst på kartet for å velge en plassering
+2. **Legg inn detaljer**: 
+   - Søk etter og velg arter fra Artsdatabanken databasen
+   - Spesifiser kjønn (hann/hunn/ukjent) og antall
+   - Legg til usikkerhetsradius for plassering i meter
+   - Sett observasjonsdato og -klokkeslett
+   - Legg til feltnotater og kommentarer per art
+3. **Lagre**: Observasjonen din lagres lokalt
+4. **Se**: Klikk "Mine observasjoner" for å se alle dine registrerte observasjoner
+5. **Administrer**: Rediger eller slett observasjoner etter behov
 
-## Additional Resources
+## Tilleggsressurser
 
-- [Cloudflare Workers Documentation](https://developers.cloudflare.com/workers/)
-- [Vite Documentation](https://vitejs.dev/guide/)
-- [React Documentation](https://reactjs.org/)
-- [Hono Documentation](https://hono.dev/)
+- [Cloudflare Workers-dokumentasjon](https://developers.cloudflare.com/workers/)
+- [Vite-dokumentasjon](https://vitejs.dev/guide/)
+- [React-dokumentasjon](https://reactjs.org/)
+- [Hono-dokumentasjon](https://hono.dev/)

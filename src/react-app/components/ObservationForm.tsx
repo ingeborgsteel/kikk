@@ -39,8 +39,8 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
       updateObservation(data.id, data);
     } else {
       const now = new Date().toISOString();
-      const random = Math.random();
-      const id = `obs_${now}_${random.toString(36).slice(2, 11)}`
+      const random = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
+      const id = `obs_${now}_${random.toString().slice(0, 11)}`
       addObservation({
         ...data,
         id,
@@ -52,7 +52,7 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
   };
 
   return (
-    <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50">
+    <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 p-4">
       <div
         className="bg-sand dark:bg-bark w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg shadow-custom-2xl border-2 border-moss">
         <div className="sticky top-0 bg-forest text-sand p-lg border-b-2 border-moss flex justify-between items-center">
@@ -66,7 +66,7 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
           </button>
         </div>
 
-        <form onSubmit={handleSubmit(save)} className="p-lg space-y-lg">
+        <form onSubmit={handleSubmit(save)} className="p-lg space-y-lg overflow-x-hidden">
           {/* Error Message */}
           {error && (
             <div className="bg-rust/10 border-2 border-rust text-rust p-md rounded-md flex items-start gap-sm">
@@ -127,7 +127,7 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
                   type="datetime-local"
                   value={value}
                   onChange={(e) => onChange(e.target.value)}
-                  className="mt-1"
+                  className="mt-1 max-w-full"
                 />
               </div>
             )}

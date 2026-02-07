@@ -10,6 +10,7 @@ export interface SpeciesObservation {
   species: Species;
   gender: 'male' | 'female' | 'unknown';
   count: number;
+  comment: string; // Per-species comment
 }
 
 export interface Observation {

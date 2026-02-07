@@ -30,6 +30,8 @@ function EditObservationForm({ observation, onClose }: EditObservationFormProps)
       updated[index] = { ...updated[index], [field]: typeof value === 'number' ? value : parseInt(value) || 1 };
     } else if (field === 'gender') {
       updated[index] = { ...updated[index], [field]: value as 'male' | 'female' | 'unknown' };
+    } else if (field === 'comment') {
+      updated[index] = { ...updated[index], [field]: value as string };
     }
     setSpeciesObservations(updated);
   };
@@ -138,11 +140,11 @@ function EditObservationForm({ observation, onClose }: EditObservationFormProps)
               {speciesObservations.map((obs, index) => (
                 <div
                   key={index}
-                  className="bg-white p-md rounded-md border-2 border-moss space-y-sm"
+                  className="bg-white dark:bg-forest p-md rounded-md border-2 border-moss space-y-sm"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <div className="font-medium text-bark">{obs.species.vernacularName}</div>
+                      <div className="font-medium text-bark dark:text-sand">{obs.species.vernacularName}</div>
                       <div className="text-sm text-slate italic">{obs.species.scientificName}</div>
                     </div>
                     <button
@@ -157,7 +159,7 @@ function EditObservationForm({ observation, onClose }: EditObservationFormProps)
                   
                   <div className="grid grid-cols-2 gap-sm">
                     <div>
-                      <Label htmlFor={`gender-${index}`} className="text-bark text-xs">
+                      <Label htmlFor={`gender-${index}`} className="text-bark dark:text-sand text-xs">
                         Gender
                       </Label>
                       <Select
@@ -172,7 +174,7 @@ function EditObservationForm({ observation, onClose }: EditObservationFormProps)
                       </Select>
                     </div>
                     <div>
-                      <Label htmlFor={`count-${index}`} className="text-bark text-xs">
+                      <Label htmlFor={`count-${index}`} className="text-bark dark:text-sand text-xs">
                         Count
                       </Label>
                       <Input
@@ -185,19 +187,33 @@ function EditObservationForm({ observation, onClose }: EditObservationFormProps)
                       />
                     </div>
                   </div>
+                  
+                  <div>
+                    <Label htmlFor={`species-comment-${index}`} className="text-bark dark:text-sand text-xs">
+                      Species Comment
+                    </Label>
+                    <Textarea
+                      id={`species-comment-${index}`}
+                      placeholder="Notes about this specific species..."
+                      value={obs.comment}
+                      onChange={(e) => updateSpeciesObservation(index, 'comment', e.target.value)}
+                      className="mt-1"
+                      rows={2}
+                    />
+                  </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Comment */}
+          {/* Overall Observation Comment */}
           <div>
             <Label htmlFor="comment" className="text-bark dark:text-sand">
-              Comment (optional)
+              Overall Observation Comment (optional)
             </Label>
             <Textarea
               id="comment"
-              placeholder="Add any additional notes..."
+              placeholder="Add notes about the overall observation..."
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               className="mt-1"

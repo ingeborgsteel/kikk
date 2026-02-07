@@ -98,12 +98,16 @@ function MyObservations({ onBack }: MyObservationsProps) {
                       <div className="text-sm text-slate">
                         Count: {speciesObs.count} • Gender: {speciesObs.gender}
                       </div>
+                      {speciesObs.comment && (
+                        <div className="text-sm text-bark mt-1 italic">"{speciesObs.comment}"</div>
+                      )}
                     </div>
                   ))}
                 </div>
 
                 {observation.comment && (
                   <div className="mt-md pt-md border-t border-slate-border">
+                    <p className="text-sm font-medium text-bark mb-1">Overall Observation:</p>
                     <p className="text-sm text-bark">{observation.comment}</p>
                   </div>
                 )}

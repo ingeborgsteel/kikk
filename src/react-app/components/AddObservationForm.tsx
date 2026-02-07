@@ -30,6 +30,7 @@ function AddObservationForm({ location, onSave, onCancel }: AddObservationFormPr
   const [speciesObservations, setSpeciesObservations] = useState<SpeciesObservation[]>([]);
   const [currentGender, setCurrentGender] = useState<'male' | 'female' | 'unknown'>('unknown');
   const [currentCount, setCurrentCount] = useState('1');
+  const [currentSpeciesComment, setCurrentSpeciesComment] = useState('');
   
   const [uncertaintyRadius, setUncertaintyRadius] = useState('10');
   const [comment, setComment] = useState('');
@@ -48,6 +49,7 @@ function AddObservationForm({ location, onSave, onCancel }: AddObservationFormPr
       species,
       gender: currentGender,
       count,
+      comment: currentSpeciesComment,
     };
     
     setSpeciesObservations([...speciesObservations, newObservation]);
@@ -55,6 +57,7 @@ function AddObservationForm({ location, onSave, onCancel }: AddObservationFormPr
     setShowResults(false);
     setCurrentCount('1');
     setCurrentGender('unknown');
+    setCurrentSpeciesComment('');
     setError(null); // Clear error when species is added
   };
 
@@ -229,6 +232,21 @@ function AddObservationForm({ location, onSave, onCancel }: AddObservationFormPr
             </div>
           </div>
 
+          {/* Per-species Comment (shown before adding species) */}
+          <div>
+            <Label htmlFor="species-comment" className="text-bark dark:text-sand">
+              Species Comment (optional)
+            </Label>
+            <Textarea
+              id="species-comment"
+              placeholder="Notes about this specific species..."
+              value={currentSpeciesComment}
+              onChange={(e) => setCurrentSpeciesComment(e.target.value)}
+              className="mt-1"
+              rows={2}
+            />
+          </div>
+
           {/* Added Species List */}
           {speciesObservations.length > 0 && (
             <div>
@@ -237,36 +255,41 @@ function AddObservationForm({ location, onSave, onCancel }: AddObservationFormPr
                 {speciesObservations.map((obs, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between bg-white p-sm rounded-md border-2 border-moss"
+                    className="bg-white dark:bg-forest p-sm rounded-md border-2 border-moss"
                   >
-                    <div className="flex-1">
-                      <div className="font-medium text-bark">{obs.species.vernacularName}</div>
-                      <div className="text-sm text-slate">
-                        {obs.count} {obs.count === 1 ? 'individual' : 'individuals'} • {obs.gender}
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="font-medium text-bark dark:text-sand">{obs.species.vernacularName}</div>
+                        <div className="text-sm text-slate">
+                          {obs.count} {obs.count === 1 ? 'individual' : 'individuals'} • {obs.gender}
+                        </div>
+                        {obs.comment && (
+                          <div className="text-sm text-bark dark:text-sand mt-1 italic">"{obs.comment}"</div>
+                        )}
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => removeSpeciesObservation(index)}
+                        className="text-rust hover:text-rust-dark transition-colors p-1"
+                        aria-label="Remove species"
+                      >
+                        <X size={20} />
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => removeSpeciesObservation(index)}
-                      className="text-rust hover:text-rust-dark transition-colors p-1"
-                      aria-label="Remove species"
-                    >
-                      <X size={20} />
-                    </button>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Comment */}
+          {/* Overall Observation Comment */}
           <div>
             <Label htmlFor="comment" className="text-bark dark:text-sand">
-              Comment (optional)
+              Overall Observation Comment (optional)
             </Label>
             <Textarea
               id="comment"
-              placeholder="Add any additional notes..."
+              placeholder="Add notes about the overall observation..."
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               className="mt-1"

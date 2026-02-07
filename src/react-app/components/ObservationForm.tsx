@@ -26,6 +26,7 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
   const [expandedSpecies, setExpandedSpecies] = useState<Set<number>>(new Set());
   const [loadingLocationName, setLoadingLocationName] = useState(false);
   const [geocodingFailed, setGeocodingFailed] = useState(false);
+  const [formReady, setFormReady] = useState(!!observation); // Form is ready immediately if editing
 
   const {data: searchResults = [], isLoading} = useSpeciesSearch(searchTerm);
   
@@ -66,7 +67,10 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
           console.error('Failed to get location name:', err);
           setGeocodingFailed(true);
         })
-        .finally(() => setLoadingLocationName(false));
+        .finally(() => {
+          setLoadingLocationName(false);
+          setFormReady(true); // Form is ready after geocoding completes (success or failure)
+        });
     }
   }, [observation, location, setValue, getValues]);
 
@@ -117,7 +121,13 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
           </Button>
         </div>
 
-        <form onSubmit={handleSubmit(save)} className="p-lg space-y-lg overflow-x-hidden">
+        {!formReady ? (
+          <div className="p-xl flex flex-col items-center justify-center min-h-[300px]">
+            <div className="w-12 h-12 border-4 border-moss/30 border-t-moss rounded-full animate-spin mb-md"></div>
+            <p className="text-bark dark:text-sand text-lg">Henter stedsinformasjon...</p>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit(save)} className="p-lg space-y-lg overflow-x-hidden">
           {/* Error Message */}
           {error && (
             <div className="bg-rust/10 border-2 border-rust text-rust p-md rounded-md flex items-start gap-sm">
@@ -547,6 +557,7 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
             </Button>
           </div>
         </form>
+        )}
       </div>
     </div>
   );

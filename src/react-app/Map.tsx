@@ -1,6 +1,7 @@
 import {useEffect, useRef, useState} from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import {Observation} from "./types/observation";
 
 // Fix for default marker icons in Leaflet with bundlers
 import icon from "leaflet/dist/images/marker-icon.png";
@@ -13,6 +14,48 @@ const DefaultIcon = L.icon({
   iconAnchor: [12, 41],
 });
 
+// Create custom SVG marker for rust color (new selection)
+const createRustMarkerSVG = () => {
+  const svg = `
+    <svg width="25" height="41" viewBox="0 0 25 41" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12.5 0C5.6 0 0 5.6 0 12.5c0 8.4 12.5 28.5 12.5 28.5S25 20.9 25 12.5C25 5.6 19.4 0 12.5 0z" 
+            fill="#C76D4B" stroke="#8B4513" stroke-width="1"/>
+      <circle cx="12.5" cy="12.5" r="4" fill="#FFF" opacity="0.3"/>
+    </svg>
+  `;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+};
+
+// Create custom SVG marker for forest green (existing observations)
+const createForestGreenMarkerSVG = () => {
+  const svg = `
+    <svg width="25" height="41" viewBox="0 0 25 41" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12.5 0C5.6 0 0 5.6 0 12.5c0 8.4 12.5 28.5 12.5 28.5S25 20.9 25 12.5C25 5.6 19.4 0 12.5 0z" 
+            fill="#2F5D50" stroke="#1a3d32" stroke-width="1"/>
+      <circle cx="12.5" cy="12.5" r="4" fill="#FFF" opacity="0.3"/>
+    </svg>
+  `;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+};
+
+// Create icon for new selection marker - rust color
+const SelectionIcon = L.icon({
+  iconUrl: createRustMarkerSVG(),
+  shadowUrl: iconShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [0, -41],
+});
+
+// Create icon for existing observations - forest green
+const ObservationIcon = L.icon({
+  iconUrl: createForestGreenMarkerSVG(),
+  shadowUrl: iconShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [0, -41],
+});
+
 L.Marker.prototype.options.icon = DefaultIcon;
 
 // Delay for map resize after initialization to ensure container dimensions are available
@@ -20,9 +63,11 @@ const MAP_RESIZE_DELAY_MS = 100;
 
 interface MapProps {
   onLocationSelect?: (lat: number, lng: number) => void;
+  observations?: Observation[];
+  onObservationClick?: (observationId: string) => void;
 }
 
-function Map({onLocationSelect}: MapProps) {
+function Map({onLocationSelect, observations = [], onObservationClick}: MapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<{
@@ -30,6 +75,7 @@ function Map({onLocationSelect}: MapProps) {
     lng: number;
   } | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
+  const observationMarkersRef = useRef<L.Marker[]>([]);
   const [isLocating, setIsLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [userLocation, setUserLocation] = useState<{
@@ -72,9 +118,9 @@ function Map({onLocationSelect}: MapProps) {
         markerRef.current.remove();
       }
 
-      // Add new marker at clicked location
+      // Add new marker at clicked location with rust color
       if (map.current) {
-        markerRef.current = L.marker([lat, lng]).addTo(map.current);
+        markerRef.current = L.marker([lat, lng], { icon: SelectionIcon }).addTo(map.current);
       }
 
       // Call callback if provided
@@ -137,8 +183,52 @@ function Map({onLocationSelect}: MapProps) {
       if (markerRef.current) {
         markerRef.current = null;
       }
+      observationMarkersRef.current = [];
     };
-  }, [onLocationSelect]);
+  }, []);
+
+  // Effect to handle observation markers
+  useEffect(() => {
+    if (!map.current) return;
+
+    // Remove existing observation markers
+    observationMarkersRef.current.forEach(marker => marker.remove());
+    observationMarkersRef.current = [];
+
+    // Add markers for each observation
+    observations.forEach((observation) => {
+      if (map.current) {
+        const marker = L.marker(
+          [observation.location.lat, observation.location.lng],
+          {icon: ObservationIcon}
+        ).addTo(map.current);
+
+        // Create popup content
+        const speciesList = observation.speciesObservations
+          .map(so => so.species.PrefferedPopularname || so.species.ValidScientificName)
+          .join(', ');
+
+        const popupContent = `
+          <div style="min-width: 150px;">
+            <strong>${speciesList}</strong><br/>
+            <small>${new Date(observation.date).toLocaleDateString('no-NO')}</small><br/>
+            <small>±${observation.uncertaintyRadius}m</small>
+          </div>
+        `;
+
+        marker.bindPopup(popupContent);
+
+        // Add click handler to open edit form
+        marker.on('click', () => {
+          if (onObservationClick) {
+            onObservationClick(observation.id);
+          }
+        });
+
+        observationMarkersRef.current.push(marker);
+      }
+    });
+  }, [observations, onObservationClick]);
 
   return (
     <div className="w-full h-[calc(100vh-80px)] relative flex-1 overflow-hidden bg-forest">

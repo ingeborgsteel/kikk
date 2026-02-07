@@ -86,7 +86,11 @@ function Map({ onLocationSelect }: MapProps) {
 						mapInstance.setView([latitude, longitude], 13);
 					}
 					setIsLocating(false);
-					setLocationError(null);
+					
+					// Auto-dismiss success message after 4 seconds
+					setTimeout(() => {
+						setUserLocation(null);
+					}, 4000);
 				},
 				(error) => {
 					let errorMessage = "Unable to get your location";

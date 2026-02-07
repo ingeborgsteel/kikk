@@ -1,18 +1,19 @@
 :root {
-	/* Design system colors - modern and cute palette */
-	--primary-color: #ff6b9d;
-	--primary-light: #ffb3d1;
-	--primary-dark: #e64980;
-	--secondary-color: #4ecdc4;
-	--secondary-light: #95e1d3;
-	--accent-color: #ffd93d;
-	--success-color: #6bcf7f;
-	--text-primary: #2c3e50;
-	--text-secondary: #7f8c8d;
-	--bg-primary: #ffffff;
-	--bg-secondary: #f8f9fa;
-	--border-color: #e9ecef;
-	--shadow-color: rgba(0, 0, 0, 0.08);
+	/* Outdoorsy color palette for bird counting app */
+	--primary-color: #2F5D50; /* Forest Green */
+	--secondary-color: #6B8F71; /* Moss Green */
+	--bg-primary: #F2EFEA; /* Warm Sand */
+	--text-primary: #4A3F35; /* Bark Brown */
+	--accent-primary: #C76D4B; /* Rust - primary action */
+	--accent-info: #7FAFC5; /* Sky Blue - info/links */
+	--accent-yellow: #E3C770; /* Sunlit Yellow - utility */
+	--accent-slate: #8A9088; /* Muted Slate - utility */
+	
+	/* Derived colors */
+	--text-secondary: #8A9088;
+	--bg-secondary: #E8E5E0;
+	--border-color: #D5D0C8;
+	--shadow-color: rgba(74, 63, 53, 0.1);
 	
 	/* Typography */
 	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -47,8 +48,8 @@
 
 @media (prefers-color-scheme: dark) {
 	:root {
-		--text-primary: #f8f9fa;
-		--text-secondary: #adb5bd;
+		--text-primary: #F2EFEA;
+		--text-secondary: #C5C1B8;
 		--bg-primary: #1a1a1a;
 		--bg-secondary: #2c2c2c;
 		--border-color: #3a3a3a;
@@ -58,12 +59,12 @@
 
 a {
 	font-weight: 500;
-	color: var(--primary-color);
+	color: var(--accent-info);
 	text-decoration: inherit;
 	transition: color 0.2s ease;
 }
 a:hover {
-	color: var(--primary-dark);
+	color: var(--primary-color);
 }
 
 * {
@@ -98,13 +99,14 @@ button {
 	font-size: 1em;
 	font-weight: 600;
 	font-family: inherit;
-	background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+	background: var(--accent-primary);
 	color: white;
 	cursor: pointer;
 	transition: all 0.3s ease;
 	box-shadow: 0 2px 8px var(--shadow-color);
 }
 button:hover {
+	background: #B05D3B;
 	transform: translateY(-2px);
 	box-shadow: 0 4px 12px var(--shadow-color);
 }
@@ -113,12 +115,12 @@ button:active {
 }
 button:focus,
 button:focus-visible {
-	outline: 3px solid var(--primary-light);
+	outline: 3px solid var(--accent-yellow);
 	outline-offset: 2px;
 }
 
 @media (prefers-color-scheme: dark) {
 	button {
-		background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+		background: var(--accent-primary);
 	}
 }

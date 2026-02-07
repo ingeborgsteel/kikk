@@ -25,6 +25,7 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
   const [error, setError] = useState<string | null>(null);
   const [expandedSpecies, setExpandedSpecies] = useState<Set<number>>(new Set());
   const [loadingLocationName, setLoadingLocationName] = useState(false);
+  const [geocodingFailed, setGeocodingFailed] = useState(false);
 
   const {data: searchResults = [], isLoading} = useSpeciesSearch(searchTerm);
   
@@ -47,15 +48,24 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
 
   // Fetch location name when form opens for a new observation
   useEffect(() => {
-    if (!observation && !getValues('locationName')) {
+    const currentLocationName = getValues('locationName');
+    // Only fetch if this is a new observation and locationName is not yet set
+    if (!observation && currentLocationName === '') {
       setLoadingLocationName(true);
+      setGeocodingFailed(false);
       reverseGeocode(location.lat, location.lng)
         .then(name => {
           if (name) {
             setValue('locationName', name);
+            setGeocodingFailed(false);
+          } else {
+            setGeocodingFailed(true);
           }
         })
-        .catch(err => console.error('Failed to get location name:', err))
+        .catch(err => {
+          console.error('Failed to get location name:', err);
+          setGeocodingFailed(true);
+        })
         .finally(() => setLoadingLocationName(false));
     }
   }, [observation, location, setValue, getValues]);
@@ -160,7 +170,9 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
                   )}
                 </div>
                 <p className="text-xs text-slate mt-1">
-                  Foreslått basert på koordinater, kan redigeres
+                  {geocodingFailed 
+                    ? 'Kunne ikke hente stedsnavn automatisk. Vennligst fyll inn manuelt.' 
+                    : 'Foreslått basert på koordinater, kan redigeres'}
                 </p>
               </div>
             )}

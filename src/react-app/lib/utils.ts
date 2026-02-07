@@ -48,7 +48,7 @@ export async function reverseGeocode(lat: number, lng: number): Promise<string |
       `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=no`,
       {
         headers: {
-          'User-Agent': 'kikk-app/1.0' // Required by Nominatim usage policy
+          'User-Agent': 'kikk-app/1.0 (+https://github.com/ingeborgsteel/kikk)' // Required by Nominatim usage policy
         }
       }
     );

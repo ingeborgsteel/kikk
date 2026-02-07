@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { LogIn, LogOut, Mail, Lock, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Button } from './ui/button';
@@ -11,11 +11,19 @@ export function AuthButton() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   // Don't render if Supabase is not configured
   if (!isSupabaseConfigured()) {
     return null;
   }
+
+  // Focus close button when modal opens
+  useEffect(() => {
+    if (showEmailInput && closeButtonRef.current) {
+      closeButtonRef.current.focus();
+    }
+  }, [showEmailInput]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,21 +88,26 @@ export function AuthButton() {
             handleCloseModal();
           }
         }}
-        onKeyDown={(e) => {
-          // Close modal when pressing Escape
-          if (e.key === 'Escape') {
-            handleCloseModal();
-          }
-        }}
-        tabIndex={0}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="login-modal-title"
       >
-        <div className="bg-sand dark:bg-bark w-full max-w-md rounded-lg shadow-custom-2xl border-2 border-moss">
+        <div 
+          className="bg-sand dark:bg-bark w-full max-w-md rounded-lg shadow-custom-2xl border-2 border-moss"
+          onKeyDown={(e) => {
+            // Close modal when pressing Escape
+            if (e.key === 'Escape') {
+              handleCloseModal();
+            }
+          }}
+        >
           <div className="bg-forest text-sand p-lg border-b-2 border-moss flex justify-between items-center">
             <div className="flex items-center gap-2">
               <Mail size={20} />
-              <h2 className="text-xl font-bold">Logg inn</h2>
+              <h2 id="login-modal-title" className="text-xl font-bold">Logg inn</h2>
             </div>
             <button
+              ref={closeButtonRef}
               onClick={handleCloseModal}
               className="text-sand hover:text-sunlit transition-colors p-1"
               aria-label="Close"

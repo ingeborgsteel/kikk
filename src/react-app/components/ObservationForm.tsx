@@ -166,10 +166,6 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
               };
 
               const removeSpeciesObservation = (index: number) => {
-                if (speciesObservations.length === 1) {
-                  setError('En observasjon må ha minst én art');
-                  return;
-                }
                 onChange(speciesObservations.filter((_, i) => i !== index));
                 setError(null);
               };
@@ -279,7 +275,7 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
 
                           <div>
                             <Label htmlFor={`species-comment-${index}`} className="text-bark dark:text-sand text-xs">
-                              Artskommentar
+                              Notat
                             </Label>
                             <Textarea
                               id={`species-comment-${index}`}
@@ -305,7 +301,7 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
             render={({field: {value, onChange}}) => (
               <div>
                 <Label htmlFor="comment" className="text-bark dark:text-sand">
-                  Generell Observasjonskommentar (valgfritt)
+                  Kommentar
                 </Label>
                 <Textarea
                   id="comment"

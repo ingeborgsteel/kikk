@@ -1,4 +1,4 @@
-import {useCallback, useState} from 'react';
+import {useCallback, useState, useMemo} from 'react';
 import {X} from 'lucide-react';
 import {Button} from './ui/button';
 import {Input} from './ui/input';
@@ -10,6 +10,7 @@ import {Observation, SpeciesObservation} from '../types/observation';
 import {useSpeciesSearch} from "../hooks/useSpeciesSearch.ts";
 import {TaxonRecord} from "../types/artsdatabanken.ts";
 import {Controller, useForm} from "react-hook-form";
+import {getRecentSpecies} from "../lib/utils.ts";
 
 interface ObservationFormProps {
   observation?: Observation,
@@ -18,12 +19,15 @@ interface ObservationFormProps {
 }
 
 const ObservationForm = ({observation, onClose, location}: ObservationFormProps) => {
-  const {addObservation, updateObservation} = useObservations();
+  const {addObservation, updateObservation, observations} = useObservations();
   const [searchTerm, setSearchTerm] = useState('');
   const [showResults, setShowResults] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const {data: searchResults = [], isLoading} = useSpeciesSearch(searchTerm);
+  
+  // Get the 5 most recent unique species from all observations
+  const recentSpecies = useMemo(() => getRecentSpecies(observations, 5), [observations]);
 
   const {control, handleSubmit} = useForm<Observation>({
     defaultValues: {
@@ -179,6 +183,27 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
                     <Label htmlFor="species-search" className="text-bark dark:text-sand">
                       Søk etter Art
                     </Label>
+                    
+                    {/* Recently Observed Species */}
+                    {recentSpecies.length > 0 && (
+                      <div className="mt-2 mb-3">
+                        <div className="text-xs text-slate mb-2">Nylig observerte arter:</div>
+                        <div className="flex flex-wrap gap-2">
+                          {recentSpecies.map((species) => (
+                            <button
+                              key={species.Id}
+                              type="button"
+                              onClick={() => addSpeciesObservation(species)}
+                              className="px-3 py-1.5 bg-moss/10 hover:bg-moss/20 dark:bg-moss/20 dark:hover:bg-moss/30 text-bark dark:text-sand text-sm rounded-md border border-moss/30 dark:border-moss/40 transition-colors flex items-center gap-1.5"
+                              title={species.ValidScientificName}
+                            >
+                              <span className="font-medium">{species.PrefferedPopularname}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
                     <div className="relative mt-1">
                       <Input
                         id="species-search"

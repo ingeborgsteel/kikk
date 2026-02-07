@@ -17,6 +17,7 @@ Built with modern web technologies for a fast, responsive experience:
 - [**Hono**](https://hono.dev/) - Lightweight backend framework
 - [**Cloudflare Workers**](https://developers.cloudflare.com/workers/) - Edge deployment
 - [**Tailwind CSS**](https://tailwindcss.com/) - Utility-first styling
+- [**Supabase**](https://supabase.com/) - Optional authentication backend
 
 ### ✨ Features
 
@@ -25,6 +26,7 @@ Built with modern web technologies for a fast, responsive experience:
 - 📝 **Detailed Observations** - Record species, gender, count, location uncertainty, and field notes
 - 📋 **Observation Management** - View, edit, and delete your observation records
 - 💾 **Local Storage** - Your observations are stored locally in your browser
+- 🔐 **Optional Authentication** - Sign in with email and password for enhanced features
 - 📱 **Responsive Design** - Works seamlessly on desktop and mobile devices
 
 ## Getting Started
@@ -41,6 +43,28 @@ Install dependencies:
 ```bash
 npm install
 ```
+
+#### Optional: Supabase Authentication Setup
+
+To enable authentication features, you'll need to set up Supabase:
+
+1. Create a free account at [Supabase](https://supabase.com/)
+2. Create a new project
+3. Go to Project Settings > API
+4. Copy your project URL and anon/public key
+5. Create a `.env` file in the project root (copy from `.env.example`):
+
+```bash
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+6. In your Supabase project, configure Email Auth:
+   - Go to Authentication > Providers
+   - Enable Email provider
+   - Disable "Confirm email" if you want to allow immediate login without email confirmation
+
+The app works fully without authentication - it's completely optional. Local storage will continue to work whether you're logged in or not.
 
 Start the development server:
 

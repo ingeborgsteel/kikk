@@ -12,7 +12,7 @@ interface MyObservationsProps {
 }
 
 function MyObservations({onBack, setShowLoginForm}: MyObservationsProps) {
-  const {observations, deleteObservation} = useObservations();
+  const {observations, deleteObservation, isLoading} = useObservations();
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const formatDate = (dateString: string) => {

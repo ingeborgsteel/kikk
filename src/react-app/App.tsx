@@ -77,7 +77,7 @@ function App() {
         onObservationClick={handleObservationClick}
       />
 
-      {showAddForm && (editingObservation || selectedLocation) && (
+      {showAddForm && (editingObservation?.location || selectedLocation) && (
         <ObservationForm
           location={editingObservation?.location || selectedLocation!}
           observation={editingObservation}

@@ -15,6 +15,9 @@ const DefaultIcon = L.icon({
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
+// Delay for map resize after initialization to ensure container dimensions are available
+const MAP_RESIZE_DELAY_MS = 100;
+
 interface MapProps {
 	onLocationSelect?: (lat: number, lng: number) => void;
 }
@@ -49,6 +52,14 @@ function Map({ onLocationSelect }: MapProps) {
 			attribution:
 				'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
 		}).addTo(map.current);
+
+		// Ensure the map container is properly sized
+		// This is necessary when the container size is not immediately available
+		setTimeout(() => {
+			if (map.current) {
+				map.current.invalidateSize();
+			}
+		}, MAP_RESIZE_DELAY_MS);
 
 		// Add click handler to select location
 		const mapInstance = map.current;
@@ -190,7 +201,7 @@ function Map({ onLocationSelect }: MapProps) {
 					</span>
 				</div>
 			)}
-			<div ref={mapContainer} className="w-full h-full border-none rounded-t-lg overflow-hidden" />
+			<div ref={mapContainer} className="absolute inset-0 w-full h-full border-none rounded-t-lg overflow-hidden" />
 		</div>
 	);
 }

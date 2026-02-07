@@ -156,6 +156,12 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
                 setSearchTerm('');
                 setShowResults(false);
                 setError(null); // Clear error when species is added
+                // Automatically expand newly added species
+                setExpandedSpecies(prev => {
+                  const newSet = new Set(prev);
+                  newSet.add(speciesObservations.length); // Add the index of the new item
+                  return newSet;
+                });
               };
 
               const updateSpeciesObservation = (index: number, field: keyof SpeciesObservation, value: string | number) => {
@@ -176,10 +182,19 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
               const removeSpeciesObservation = (index: number) => {
                 onChange(speciesObservations.filter((_, i) => i !== index));
                 setError(null);
-                // Remove from expanded set if it was expanded
+                // Adjust expanded indices: remove the deleted index and shift down higher indices
                 setExpandedSpecies(prev => {
-                  const newSet = new Set(prev);
-                  newSet.delete(index);
+                  const newSet = new Set<number>();
+                  prev.forEach(expandedIndex => {
+                    if (expandedIndex < index) {
+                      // Keep indices below the removed item
+                      newSet.add(expandedIndex);
+                    } else if (expandedIndex > index) {
+                      // Shift down indices above the removed item
+                      newSet.add(expandedIndex - 1);
+                    }
+                    // Skip the removed index itself
+                  });
                   return newSet;
                 });
               };

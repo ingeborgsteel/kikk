@@ -45,12 +45,16 @@ export function AuthButton() {
     setLoading(false);
   };
 
-  const handleSignOut = async () => {
-    await signOut();
+  const handleCloseModal = () => {
     setShowEmailInput(false);
     setEmail('');
     setPassword('');
     setMessage('');
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    handleCloseModal();
   };
 
   if (user) {
@@ -73,21 +77,16 @@ export function AuthButton() {
         onClick={(e) => {
           // Close modal when clicking on backdrop
           if (e.target === e.currentTarget) {
-            setShowEmailInput(false);
-            setEmail('');
-            setPassword('');
-            setMessage('');
+            handleCloseModal();
           }
         }}
         onKeyDown={(e) => {
           // Close modal when pressing Escape
           if (e.key === 'Escape') {
-            setShowEmailInput(false);
-            setEmail('');
-            setPassword('');
-            setMessage('');
+            handleCloseModal();
           }
         }}
+        tabIndex={0}
       >
         <div className="bg-sand dark:bg-bark w-full max-w-md rounded-lg shadow-custom-2xl border-2 border-moss">
           <div className="bg-forest text-sand p-lg border-b-2 border-moss flex justify-between items-center">
@@ -96,12 +95,7 @@ export function AuthButton() {
               <h2 className="text-xl font-bold">Logg inn</h2>
             </div>
             <button
-              onClick={() => {
-                setShowEmailInput(false);
-                setEmail('');
-                setPassword('');
-                setMessage('');
-              }}
+              onClick={handleCloseModal}
               className="text-sand hover:text-sunlit transition-colors p-1"
               aria-label="Close"
             >
@@ -152,12 +146,7 @@ export function AuthButton() {
             <div className="flex gap-md justify-end pt-md">
               <Button
                 type="button"
-                onClick={() => {
-                  setShowEmailInput(false);
-                  setEmail('');
-                  setPassword('');
-                  setMessage('');
-                }}
+                onClick={handleCloseModal}
                 variant="outline"
               >
                 Avbryt

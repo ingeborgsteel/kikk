@@ -43,6 +43,15 @@ function AddObservationForm({ location, onSave, onCancel }: AddObservationFormPr
   };
   const [date, setDate] = useState(getDefaultDate());
 
+  const translateGender = (gender: 'male' | 'female' | 'unknown'): string => {
+    const translations = {
+      male: 'Hann',
+      female: 'Hunn',
+      unknown: 'Ukjent',
+    };
+    return translations[gender];
+  };
+
   const addSpeciesObservation = (species: Species) => {
     const count = parseInt(currentCount) || 1;
     const newObservation: SpeciesObservation = {
@@ -261,7 +270,7 @@ function AddObservationForm({ location, onSave, onCancel }: AddObservationFormPr
                       <div className="flex-1">
                         <div className="font-medium text-bark dark:text-sand">{obs.species.vernacularName}</div>
                         <div className="text-sm text-slate">
-                          {obs.count} {obs.count === 1 ? 'individ' : 'individer'} • {obs.gender}
+                          {obs.count} {obs.count === 1 ? 'individ' : 'individer'} • {translateGender(obs.gender)}
                         </div>
                         {obs.comment && (
                           <div className="text-sm text-bark dark:text-sand mt-1 italic">"{obs.comment}"</div>

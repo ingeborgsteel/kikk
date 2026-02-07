@@ -23,6 +23,15 @@ function MyObservations({ onBack }: MyObservationsProps) {
     });
   };
 
+  const translateGender = (gender: 'male' | 'female' | 'unknown'): string => {
+    const translations = {
+      male: 'Hann',
+      female: 'Hunn',
+      unknown: 'Ukjent',
+    };
+    return translations[gender];
+  };
+
   const handleDelete = (id: string) => {
     if (window.confirm('Er du sikker på at du vil slette denne observasjonen?')) {
       deleteObservation(id);
@@ -96,7 +105,7 @@ function MyObservations({ onBack }: MyObservationsProps) {
                       <div className="font-medium text-bark">{speciesObs.species.vernacularName}</div>
                       <div className="text-sm text-slate italic">{speciesObs.species.scientificName}</div>
                       <div className="text-sm text-slate">
-                        Antall: {speciesObs.count} • Kjønn: {speciesObs.gender}
+                        Antall: {speciesObs.count} • Kjønn: {translateGender(speciesObs.gender)}
                       </div>
                       {speciesObs.comment && (
                         <div className="text-sm text-bark mt-1 italic">"{speciesObs.comment}"</div>

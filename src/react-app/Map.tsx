@@ -46,31 +46,9 @@ function Map({ onLocationSelect }: MapProps) {
 				'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
 		}).addTo(map.current);
 
-		// Try to get user's current location
-		if ("geolocation" in navigator) {
-			setIsLocating(true);
-			navigator.geolocation.getCurrentPosition(
-				(position) => {
-					const { latitude, longitude } = position.coords;
-					if (map.current) {
-						map.current.setView([latitude, longitude], 13);
-					}
-					setIsLocating(false);
-				},
-				(error) => {
-					console.log("Geolocation not available:", error);
-					setIsLocating(false);
-				},
-				{
-					enableHighAccuracy: true,
-					timeout: 5000,
-					maximumAge: 0,
-				},
-			);
-		}
-
 		// Add click handler to select location
-		map.current.on("click", (e: L.LeafletMouseEvent) => {
+		const mapInstance = map.current;
+		mapInstance.on("click", (e: L.LeafletMouseEvent) => {
 			const { lat, lng } = e.latlng;
 			setSelectedLocation({ lat, lng });
 
@@ -89,6 +67,30 @@ function Map({ onLocationSelect }: MapProps) {
 				onLocationSelect(lat, lng);
 			}
 		});
+
+		// Try to get user's current location
+		if ("geolocation" in navigator) {
+			setIsLocating(true);
+			// eslint-disable-next-line react-hooks/exhaustive-deps
+			navigator.geolocation.getCurrentPosition(
+				(position) => {
+					const { latitude, longitude } = position.coords;
+					if (mapInstance) {
+						mapInstance.setView([latitude, longitude], 13);
+					}
+					setIsLocating(false);
+				},
+				(error) => {
+					console.log("Geolocation not available:", error);
+					setIsLocating(false);
+				},
+				{
+					enableHighAccuracy: true,
+					timeout: 5000,
+					maximumAge: 0,
+				},
+			);
+		}
 
 		// Cleanup
 		return () => {

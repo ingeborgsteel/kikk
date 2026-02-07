@@ -14,7 +14,7 @@ function App() {
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const {observations} = useObservations();
-  const {user, signInWithGoogle, signOut} = useAuth();
+  const {user, isConfigured, signInWithGoogle, signOut} = useAuth();
 
   const handleLocationSelect = (lat: number, lng: number) => {
     setSelectedLocation({lat, lng});
@@ -38,27 +38,29 @@ function App() {
           <ThemeToggle />
         </div>
         <div className="absolute right-lg top-1/2 -translate-y-1/2 flex gap-2">
-          {user ? (
-            <>
-              <span className="text-sand text-sm self-center hidden sm:inline">
-                {user.email}
-              </span>
+          {isConfigured && (
+            user ? (
+              <>
+                <span className="text-sand text-sm self-center hidden sm:inline">
+                  {user.email}
+                </span>
+                <Button
+                  onClick={() => signOut()}
+                  variant="secondary"
+                  size="sm"
+                >
+                  Logg ut
+                </Button>
+              </>
+            ) : (
               <Button
-                onClick={() => signOut()}
+                onClick={() => signInWithGoogle()}
                 variant="secondary"
                 size="sm"
               >
-                Logg ut
+                Logg inn
               </Button>
-            </>
-          ) : (
-            <Button
-              onClick={() => signInWithGoogle()}
-              variant="secondary"
-              size="sm"
-            >
-              Logg inn
-            </Button>
+            )
           )}
           <Button
             onClick={() => setCurrentView('observations')}

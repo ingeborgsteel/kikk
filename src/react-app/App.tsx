@@ -31,7 +31,7 @@ function App() {
 
   return (
     <div className="w-full min-h-screen p-0 flex flex-col bg-sand dark:bg-bark">
-      <header className="text-center p-lg md:p-xl bg-forest relative">
+      <header className="text-center p-lg md:p-xl bg-forest relative overflow-visible">
         <h1 className="text-sand m-0 text-[clamp(2rem,6vw,3rem)] tracking-wider">kikk</h1>
         <div className="absolute left-lg top-1/2 -translate-y-1/2">
           <ThemeToggle />

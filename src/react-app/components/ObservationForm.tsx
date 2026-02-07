@@ -1,4 +1,4 @@
-import {useCallback, useState, useMemo} from 'react';
+import {useCallback, useState, useMemo, useEffect} from 'react';
 import {X} from 'lucide-react';
 import {Button} from './ui/button';
 import {Input} from './ui/input';
@@ -10,7 +10,7 @@ import {Observation, SpeciesObservation} from '../types/observation';
 import {useSpeciesSearch} from "../hooks/useSpeciesSearch.ts";
 import {TaxonRecord} from "../types/artsdatabanken.ts";
 import {Controller, useForm} from "react-hook-form";
-import {getRecentSpecies} from "../lib/utils.ts";
+import {getRecentSpecies, reverseGeocode} from "../lib/utils.ts";
 
 interface ObservationFormProps {
   observation?: Observation,
@@ -24,24 +24,68 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
   const [showResults, setShowResults] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [expandedSpecies, setExpandedSpecies] = useState<Set<number>>(new Set());
+  const [loadingLocationName, setLoadingLocationName] = useState(false);
+  const [geocodingFailed, setGeocodingFailed] = useState(false);
+  const [formReady, setFormReady] = useState(!!observation); // Form is ready immediately if editing
 
   const {data: searchResults = [], isLoading} = useSpeciesSearch(searchTerm);
   
   // Get the 5 most recent unique species from all observations
   const recentSpecies = useMemo(() => getRecentSpecies(observations, 5), [observations]);
 
-  const {control, handleSubmit} = useForm<Observation>({
+  const defaultStartDate = new Date().toISOString().slice(0, 16);
+  
+  const {control, handleSubmit, setValue, getValues} = useForm<Observation>({
     defaultValues: {
-      date: new Date().toISOString().slice(0, 16),
+      startDate: observation?.startDate || observation?.date || defaultStartDate,
+      endDate: observation?.endDate || observation?.date || defaultStartDate,
+      locationName: observation?.locationName || '',
+      date: observation?.date || defaultStartDate, // Keep for backward compatibility
       location,
-      uncertaintyRadius: 10,
+      uncertaintyRadius: observation?.uncertaintyRadius || 10,
       ...observation
     }
   })
 
+  // Fetch location name when form opens for a new observation
+  useEffect(() => {
+    const currentLocationName = getValues('locationName');
+    // Only fetch if this is a new observation and locationName is not yet set
+    if (!observation && currentLocationName === '') {
+      setLoadingLocationName(true);
+      setGeocodingFailed(false);
+      reverseGeocode(location.lat, location.lng)
+        .then(name => {
+          if (name) {
+            setValue('locationName', name);
+            setGeocodingFailed(false);
+          } else {
+            setGeocodingFailed(true);
+          }
+        })
+        .catch(err => {
+          console.error('Failed to get location name:', err);
+          setGeocodingFailed(true);
+        })
+        .finally(() => {
+          setLoadingLocationName(false);
+          setFormReady(true); // Form is ready after geocoding completes (success or failure)
+        });
+    }
+  }, [observation, location, setValue, getValues]);
+
   const save = useCallback((data: Observation) => {
+    // Ensure backward compatibility: if only date is set, use it for startDate/endDate
+    const startDate = data.startDate || data.date;
+    const endDate = data.endDate || data.date;
+    
     if (data.id) {
-      updateObservation(data.id, data);
+      updateObservation(data.id, {
+        ...data,
+        startDate,
+        endDate,
+        date: startDate // Keep date field for backward compatibility
+      });
     } else {
       const now = new Date().toISOString();
       const randomPart = typeof crypto !== 'undefined' && crypto.randomUUID
@@ -51,6 +95,9 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
       addObservation({
         ...data,
         id,
+        startDate,
+        endDate,
+        date: startDate, // Keep date field for backward compatibility
         createdAt: now,
         updatedAt: now,
       });
@@ -74,7 +121,13 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
           </Button>
         </div>
 
-        <form onSubmit={handleSubmit(save)} className="p-lg space-y-lg overflow-x-hidden">
+        {!formReady ? (
+          <div className="p-xl flex flex-col items-center justify-center min-h-[300px]">
+            <div className="w-12 h-12 border-4 border-moss/30 border-t-moss rounded-full animate-spin mb-md"></div>
+            <p className="text-bark dark:text-sand text-lg">Henter stedsinformasjon...</p>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit(save)} className="p-lg space-y-lg overflow-x-hidden">
           {/* Error Message */}
           {error && (
             <div className="bg-rust/10 border-2 border-rust text-rust p-md rounded-md flex items-start gap-sm">
@@ -103,6 +156,39 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
           </div>
 
           <Controller
+            name={'locationName'}
+            control={control}
+            render={({field: {value, onChange}}) => (
+              <div>
+                <Label htmlFor="locationName" className="text-bark dark:text-sand">
+                  Stedsnavn
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="locationName"
+                    type="text"
+                    placeholder="F.eks. Oslo, Nordmarka"
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    className="mt-1"
+                  />
+                  {loadingLocationName && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <div
+                        className="w-4 h-4 border-2 border-slate-border border-t-rust rounded-full animate-spin"></div>
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-slate mt-1">
+                  {geocodingFailed 
+                    ? 'Kunne ikke hente stedsnavn automatisk. Vennligst fyll inn manuelt.' 
+                    : 'Foreslått basert på koordinater, kan redigeres'}
+                </p>
+              </div>
+            )}
+          />
+
+          <Controller
             name={'uncertaintyRadius'}
             control={control}
             render={({field: {value, onChange}}) => (
@@ -122,24 +208,45 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
             )}
           />
 
-          <Controller
-            name={'date'}
-            control={control}
-            render={({field: {value, onChange}}) => (
-              <div>
-                <Label htmlFor="date" className="text-bark dark:text-sand">
-                  Dato og Tid
-                </Label>
-                <Input
-                  id="date"
-                  type="datetime-local"
-                  value={value}
-                  onChange={(e) => onChange(e.target.value)}
-                  className="mt-1 max-w-full"
-                />
-              </div>
-            )}
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+            <Controller
+              name={'startDate'}
+              control={control}
+              render={({field: {value, onChange}}) => (
+                <div>
+                  <Label htmlFor="startDate" className="text-bark dark:text-sand">
+                    Starttid
+                  </Label>
+                  <Input
+                    id="startDate"
+                    type="datetime-local"
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    className="mt-1 max-w-full"
+                  />
+                </div>
+              )}
+            />
+
+            <Controller
+              name={'endDate'}
+              control={control}
+              render={({field: {value, onChange}}) => (
+                <div>
+                  <Label htmlFor="endDate" className="text-bark dark:text-sand">
+                    Sluttid
+                  </Label>
+                  <Input
+                    id="endDate"
+                    type="datetime-local"
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    className="mt-1 max-w-full"
+                  />
+                </div>
+              )}
+            />
+          </div>
 
           <Controller
             name={'speciesObservations'}
@@ -450,6 +557,7 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
             </Button>
           </div>
         </form>
+        )}
       </div>
     </div>
   );

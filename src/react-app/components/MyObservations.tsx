@@ -17,13 +17,41 @@ function MyObservations({onBack, setShowLoginForm}: MyObservationsProps) {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleString('en-US', {
+    return date.toLocaleString('no-NO', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
     });
+  };
+
+  const formatDateRange = (startDate?: string, endDate?: string, fallbackDate?: string) => {
+    // Use new fields if available, otherwise fall back to old date field
+    const start = startDate || fallbackDate;
+    const end = endDate || fallbackDate;
+    
+    if (!start) return 'Ukjent dato';
+    
+    // If start and end are the same or end is not set, show single date
+    if (!end || start === end) {
+      return formatDate(start);
+    }
+    
+    // Show date range
+    const startDateTime = new Date(start);
+    const endDateTime = new Date(end);
+    
+    // If same day, just show time range
+    if (startDateTime.toDateString() === endDateTime.toDateString()) {
+      return `${formatDate(start)} - ${endDateTime.toLocaleString('no-NO', {
+        hour: '2-digit',
+        minute: '2-digit',
+      })}`;
+    }
+    
+    // Different days, show full range
+    return `${formatDate(start)} - ${formatDate(end)}`;
   };
 
   const handleDelete = (id: string) => {
@@ -69,7 +97,12 @@ function MyObservations({onBack, setShowLoginForm}: MyObservationsProps) {
                 className="bg-white rounded-lg shadow-custom p-lg border-2 border-slate-border"
               >
                 <div className="flex justify-between items-start mb-md">
-                  <div>
+                  <div className="flex-1">
+                    {observation.locationName && (
+                      <div className="font-medium text-bark mb-xs">
+                        {observation.locationName}
+                      </div>
+                    )}
                     <div className="flex items-center gap-sm text-sm text-slate mb-xs">
                       <MapPin size={16}/>
                       <span>
@@ -77,7 +110,7 @@ function MyObservations({onBack, setShowLoginForm}: MyObservationsProps) {
                       </span>
                     </div>
                     <p className="text-sm text-slate">
-                      {formatDate(observation.date)} • ±{observation.uncertaintyRadius}m
+                      {formatDateRange(observation.startDate, observation.endDate, observation.date)} • ±{observation.uncertaintyRadius}m
                     </p>
                   </div>
                   <div className="flex gap-sm">

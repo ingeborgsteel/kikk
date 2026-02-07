@@ -16,9 +16,12 @@ export interface Observation {
     lat: number;
     lng: number;
   };
+  locationName?: string; // Optional human-readable location name
   uncertaintyRadius: number; // in meters
   speciesObservations: SpeciesObservation[];
-  date: string; // ISO date string
+  date: string; // ISO date string (kept for backward compatibility)
+  startDate?: string; // ISO date string for start time
+  endDate?: string; // ISO date string for end time
   comment: string;
   createdAt: string;
   updatedAt: string;

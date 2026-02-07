@@ -36,6 +36,8 @@ export function AuthButton() {
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && showEmailInput) {
+        e.preventDefault();
+        e.stopPropagation();
         handleCloseModal();
       }
     };
@@ -104,7 +106,10 @@ export function AuthButton() {
         aria-modal="true"
         aria-labelledby="login-modal-title"
       >
-        <div className="bg-sand dark:bg-bark w-full max-w-md rounded-lg shadow-custom-2xl border-2 border-moss">
+        <div 
+          className="bg-sand dark:bg-bark w-full max-w-md rounded-lg shadow-custom-2xl border-2 border-moss"
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="bg-forest text-sand p-lg border-b-2 border-moss flex justify-between items-center">
             <div className="flex items-center gap-2">
               <Mail size={20} />

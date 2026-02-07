@@ -15,6 +15,9 @@ const DefaultIcon = L.icon({
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
+// Delay for map resize after initialization to ensure container dimensions are available
+const MAP_RESIZE_DELAY_MS = 100;
+
 interface MapProps {
 	onLocationSelect?: (lat: number, lng: number) => void;
 }
@@ -56,7 +59,7 @@ function Map({ onLocationSelect }: MapProps) {
 			if (map.current) {
 				map.current.invalidateSize();
 			}
-		}, 100);
+		}, MAP_RESIZE_DELAY_MS);
 
 		// Add click handler to select location
 		const mapInstance = map.current;

@@ -35,18 +35,18 @@ function MyObservations({onBack}: MyObservationsProps) {
   return (
     <div className="w-full min-h-screen bg-sand dark:bg-bark">
       <header className="bg-forest text-sand p-lg md:p-xl relative">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto ml-16">
           <h1 className="text-sand m-0 text-[clamp(2rem,6vw,3rem)] tracking-wider">Mine Observasjoner</h1>
         </div>
         <div className="absolute left-lg top-1/2 -translate-y-1/2">
-          <ThemeToggle />
+          <ThemeToggle/>
         </div>
       </header>
 
       <div className="max-w-4xl mx-auto p-lg md:p-xl">
         <div className="mb-lg">
           <Button onClick={onBack} variant="outline">
-            ← Tilbake til Kart
+            ← Tilbake til kart
           </Button>
         </div>
 

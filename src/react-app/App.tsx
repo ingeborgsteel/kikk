@@ -7,6 +7,7 @@ import {Button} from "./components/ui/button";
 import {useObservations} from "./context/ObservationsContext";
 import ObservationForm from "./components/ObservationForm.tsx";
 import {ThemeToggle} from "./components/ThemeToggle";
+import {AuthButton} from "./components/AuthButton";
 
 function App() {
   const [currentView, setCurrentView] = useState<'map' | 'observations'>('map');
@@ -35,7 +36,8 @@ function App() {
         <div className="absolute left-lg top-1/2 -translate-y-1/2">
           <ThemeToggle />
         </div>
-        <div className="absolute right-lg top-1/2 -translate-y-1/2">
+        <div className="absolute right-lg top-1/2 -translate-y-1/2 flex items-center gap-2">
+          <AuthButton />
           <Button
             onClick={() => setCurrentView('observations')}
             variant="secondary"

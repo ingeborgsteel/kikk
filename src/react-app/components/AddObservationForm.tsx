@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { X } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Select } from './ui/select';
 import { Textarea } from './ui/textarea';
-import { searchSpecies } from '../api/species';
+import { useSpeciesSearch } from '../hooks/useSpeciesSearch';
 import { Species, SpeciesObservation } from '../types/observation';
 
 interface AddObservationFormProps {
@@ -22,10 +22,10 @@ interface AddObservationFormProps {
 
 function AddObservationForm({ location, onSave, onCancel }: AddObservationFormProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState<Species[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  const { results: searchResults, isSearching } = useSpeciesSearch(searchTerm);
   
   const [speciesObservations, setSpeciesObservations] = useState<SpeciesObservation[]>([]);
   const [currentGender, setCurrentGender] = useState<'male' | 'female' | 'unknown'>('unknown');
@@ -42,24 +42,6 @@ function AddObservationForm({ location, onSave, onCancel }: AddObservationFormPr
   };
   const [date, setDate] = useState(getDefaultDate());
 
-  // Search for species when search term changes
-  useEffect(() => {
-    const delayDebounce = setTimeout(async () => {
-      if (searchTerm.length >= 2) {
-        setIsSearching(true);
-        const results = await searchSpecies(searchTerm);
-        setSearchResults(results);
-        setIsSearching(false);
-        setShowResults(true);
-      } else {
-        setSearchResults([]);
-        setShowResults(false);
-      }
-    }, 300);
-
-    return () => clearTimeout(delayDebounce);
-  }, [searchTerm]);
-
   const addSpeciesObservation = (species: Species) => {
     const count = parseInt(currentCount) || 1;
     const newObservation: SpeciesObservation = {
@@ -70,7 +52,6 @@ function AddObservationForm({ location, onSave, onCancel }: AddObservationFormPr
     
     setSpeciesObservations([...speciesObservations, newObservation]);
     setSearchTerm('');
-    setSearchResults([]);
     setShowResults(false);
     setCurrentCount('1');
     setCurrentGender('unknown');
@@ -173,7 +154,7 @@ function AddObservationForm({ location, onSave, onCancel }: AddObservationFormPr
           {/* Species Search */}
           <div>
             <Label htmlFor="species-search" className="text-bark dark:text-sand">
-              Search for Bird Species
+              Search for Species
             </Label>
             <div className="relative mt-1">
               <Input
@@ -181,8 +162,15 @@ function AddObservationForm({ location, onSave, onCancel }: AddObservationFormPr
                 type="text"
                 placeholder="Type to search..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onFocus={() => searchResults.length > 0 && setShowResults(true)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  if (e.target.value.length >= 2) {
+                    setShowResults(true);
+                  } else {
+                    setShowResults(false);
+                  }
+                }}
+                onFocus={() => searchTerm.length >= 2 && searchResults.length > 0 && setShowResults(true)}
               />
               {isSearching && (
                 <div className="absolute right-3 top-3">
@@ -192,15 +180,15 @@ function AddObservationForm({ location, onSave, onCancel }: AddObservationFormPr
               
               {/* Search Results Dropdown */}
               {showResults && searchResults.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-white border-2 border-slate-border rounded-md shadow-custom-lg max-h-60 overflow-y-auto">
+                <div className="absolute z-10 w-full mt-1 bg-white dark:bg-bark border-2 border-slate-border dark:border-slate rounded-md shadow-custom-lg max-h-60 overflow-y-auto">
                   {searchResults.map((species) => (
                     <button
                       key={species.id}
                       type="button"
                       onClick={() => addSpeciesObservation(species)}
-                      className="w-full text-left px-3 py-2 hover:bg-sand transition-colors border-b border-slate-border last:border-b-0"
+                      className="w-full text-left px-3 py-2 hover:bg-sand dark:hover:bg-forest transition-colors border-b border-slate-border dark:border-slate last:border-b-0"
                     >
-                      <div className="font-medium text-bark">{species.vernacularName}</div>
+                      <div className="font-medium text-bark dark:text-sand">{species.vernacularName}</div>
                       <div className="text-sm text-slate italic">{species.scientificName}</div>
                     </button>
                   ))}

@@ -10,7 +10,7 @@ interface MyObservationsProps {
 }
 
 function MyObservations({onBack}: MyObservationsProps) {
-  const {observations, deleteObservation} = useObservations();
+  const {observations, deleteObservation, isLoading} = useObservations();
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const formatDate = (dateString: string) => {
@@ -50,7 +50,11 @@ function MyObservations({onBack}: MyObservationsProps) {
           </Button>
         </div>
 
-        {observations.length === 0 ? (
+        {isLoading ? (
+          <div className="text-center py-xxl">
+            <p className="text-lg text-slate">Laster observasjoner...</p>
+          </div>
+        ) : observations.length === 0 ? (
           <div className="text-center py-xxl">
             <MapPin size={48} className="mx-auto text-slate mb-md"/>
             <p className="text-lg text-slate">Ingen observasjoner ennå</p>

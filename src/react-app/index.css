@@ -74,4 +74,9 @@
             color: #F2EFEA;
         }
     }
+
+    /* Custom styling for observation markers */
+    .observation-marker {
+        filter: hue-rotate(120deg) saturate(1.5);
+    }
 }

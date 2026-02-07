@@ -58,7 +58,7 @@ function App() {
           </Button>
         </div>
       </header>
-      <Map onLocationSelect={handleLocationSelect}/>
+      <Map onLocationSelect={handleLocationSelect} observations={observations}/>
 
       {showAddForm && selectedLocation && (
         <ObservationForm

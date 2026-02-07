@@ -1,6 +1,7 @@
 import {useEffect, useRef, useState} from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import {Observation} from "./types/observation";
 
 // Fix for default marker icons in Leaflet with bundlers
 import icon from "leaflet/dist/images/marker-icon.png";
@@ -13,6 +14,15 @@ const DefaultIcon = L.icon({
   iconAnchor: [12, 41],
 });
 
+// Create a different icon for existing observations
+const ObservationIcon = L.icon({
+  iconUrl: icon,
+  shadowUrl: iconShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  className: 'observation-marker',
+});
+
 L.Marker.prototype.options.icon = DefaultIcon;
 
 // Delay for map resize after initialization to ensure container dimensions are available
@@ -20,9 +30,10 @@ const MAP_RESIZE_DELAY_MS = 100;
 
 interface MapProps {
   onLocationSelect?: (lat: number, lng: number) => void;
+  observations?: Observation[];
 }
 
-function Map({onLocationSelect}: MapProps) {
+function Map({onLocationSelect, observations = []}: MapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<{
@@ -30,6 +41,7 @@ function Map({onLocationSelect}: MapProps) {
     lng: number;
   } | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
+  const observationMarkersRef = useRef<L.Marker[]>([]);
   const [isLocating, setIsLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [userLocation, setUserLocation] = useState<{
@@ -137,8 +149,45 @@ function Map({onLocationSelect}: MapProps) {
       if (markerRef.current) {
         markerRef.current = null;
       }
+      observationMarkersRef.current = [];
     };
   }, [onLocationSelect]);
+
+  // Effect to handle observation markers
+  useEffect(() => {
+    if (!map.current) return;
+
+    // Remove existing observation markers
+    observationMarkersRef.current.forEach(marker => marker.remove());
+    observationMarkersRef.current = [];
+
+    // Add markers for each observation
+    observations.forEach((observation) => {
+      if (map.current) {
+        const marker = L.marker(
+          [observation.location.lat, observation.location.lng],
+          { icon: ObservationIcon }
+        ).addTo(map.current);
+
+        // Create popup content
+        const speciesList = observation.speciesObservations
+          .map(so => so.species.PrefferedPopularname || so.species.ValidScientificName)
+          .join(', ');
+        
+        const popupContent = `
+          <div style="min-width: 150px;">
+            <strong>${speciesList}</strong><br/>
+            <small>${new Date(observation.date).toLocaleDateString('no-NO')}</small><br/>
+            <small>±${observation.uncertaintyRadius}m</small>
+          </div>
+        `;
+        
+        marker.bindPopup(popupContent);
+
+        observationMarkersRef.current.push(marker);
+      }
+    });
+  }, [observations]);
 
   return (
     <div className="w-full h-[calc(100vh-80px)] relative flex-1 overflow-hidden bg-forest">

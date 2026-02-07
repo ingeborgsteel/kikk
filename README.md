@@ -25,8 +25,8 @@ Built with modern web technologies for a fast, responsive experience:
 - 🔍 **Species Search** - Search species using Artsdatabanken (Norwegian Biodiversity Information Centre) database
 - 📝 **Detailed Observations** - Record species, gender, count, location uncertainty, and field notes
 - 📋 **Observation Management** - View, edit, and delete your observation records
-- 💾 **Local Storage** - Your observations are stored locally in your browser
-- 🔐 **Optional Authentication** - Sign in with email and password for enhanced features
+- 💾 **Persistent Storage** - Observations stored in Supabase database with localStorage fallback
+- 🔐 **Optional Authentication** - Sign in with email and password for user-specific observations
 - 📱 **Responsive Design** - Works seamlessly on desktop and mobile devices
 
 ## Getting Started
@@ -46,7 +46,7 @@ npm install
 
 #### Optional: Supabase Authentication Setup
 
-To enable authentication features, you'll need to set up Supabase:
+To enable authentication and persistent storage features, you'll need to set up Supabase:
 
 1. Create a free account at [Supabase](https://supabase.com/)
 2. Create a new project
@@ -59,12 +59,24 @@ VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-6. In your Supabase project, configure Email Auth:
+6. **Set up the database schema**: Run the migration file to create the necessary tables
+   - Go to your Supabase project dashboard
+   - Navigate to SQL Editor
+   - Copy and paste the contents of `supabase/migrations/20260207_create_observations_tables.sql`
+   - Execute the SQL to create the `observations` and `species_observations` tables
+
+7. Configure Email Auth:
    - Go to Authentication > Providers
    - Enable Email provider
    - Disable "Confirm email" if you want to allow immediate login without email confirmation
 
-The app works fully without authentication - it's completely optional. Local storage will continue to work whether you're logged in or not.
+**About Data Storage:**
+- When Supabase is configured and you're logged in, your observations are saved to your user account
+- Anonymous users (not logged in) can still create observations that are stored in the database without a user ID
+- If Supabase is not configured, observations fall back to localStorage
+- localStorage is also used as a backup cache for improved performance
+
+The app works fully without authentication - it's completely optional.
 
 Start the development server:
 
@@ -117,9 +129,10 @@ npx wrangler tail
    - Add location uncertainty radius in meters
    - Set observation date and time
    - Add field notes and per-species comments
-3. **Save**: Your observation is stored locally
+3. **Save**: Your observation is stored in Supabase (if configured) and localStorage
 4. **View**: Click "My Observations" to see all your recorded observations
 5. **Manage**: Edit or delete observations as needed
+6. **Login** (Optional): Sign in to keep your observations synced across devices
 
 ## Additional Resources
 

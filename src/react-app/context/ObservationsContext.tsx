@@ -35,7 +35,7 @@ function dbToAppObservation(
       comment: so.comment || undefined,
     })),
     date: dbObs.observation_date,
-    comment: dbObs.comment,
+    comment: dbObs.comment || '',
     createdAt: dbObs.created_at,
     updatedAt: dbObs.updated_at,
   };
@@ -54,7 +54,7 @@ function appToDbObservation(obs: Observation, userId: string | null): {
       longitude: obs.location.lng,
       uncertainty_radius: obs.uncertaintyRadius,
       observation_date: obs.date,
-      comment: obs.comment,
+      comment: obs.comment || null,
     },
     speciesObservations: obs.speciesObservations.map(so => ({
       species_data: so.species,
@@ -243,10 +243,14 @@ export function ObservationsProvider({ children }: { children: ReactNode }) {
       }
 
       // Delete existing species observations
-      await supabase
+      const { error: deleteError } = await supabase
         .from('species_observations')
         .delete()
         .eq('observation_id', id);
+
+      if (deleteError) {
+        console.error('Error deleting species observations:', deleteError);
+      }
 
       // Insert new species observations
       const speciesWithObsId = speciesObservations.map(so => ({
@@ -254,9 +258,18 @@ export function ObservationsProvider({ children }: { children: ReactNode }) {
         observation_id: id,
       }));
 
-      await supabase
+      const { error: speciesError } = await supabase
         .from('species_observations')
         .insert(speciesWithObsId);
+
+      if (speciesError) {
+        console.error('Error inserting species observations:', speciesError);
+        // Still update local state even if species insertion fails
+        setObservations(prev =>
+          prev.map(obs => obs.id === id ? updatedObservation : obs)
+        );
+        return;
+      }
 
       // Update local state
       setObservations(prev =>

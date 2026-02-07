@@ -8,7 +8,7 @@ export interface DbObservation {
   longitude: number;
   uncertainty_radius: number;
   observation_date: string;
-  comment: string;
+  comment: string | null;
   created_at: string;
   updated_at: string;
 }

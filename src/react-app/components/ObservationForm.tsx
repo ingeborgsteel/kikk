@@ -23,6 +23,7 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
   const [searchTerm, setSearchTerm] = useState('');
   const [showResults, setShowResults] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [expandedSpecies, setExpandedSpecies] = useState<Set<number>>(new Set());
 
   const {data: searchResults = [], isLoading} = useSpeciesSearch(searchTerm);
   
@@ -155,6 +156,12 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
                 setSearchTerm('');
                 setShowResults(false);
                 setError(null); // Clear error when species is added
+                // Automatically expand newly added species
+                setExpandedSpecies(prev => {
+                  const newSet = new Set(prev);
+                  newSet.add(speciesObservations.length); // Add the index of the new item
+                  return newSet;
+                });
               };
 
               const updateSpeciesObservation = (index: number, field: keyof SpeciesObservation, value: string | number) => {
@@ -166,7 +173,7 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
                   };
                 } else if (field === 'gender') {
                   updated[index] = {...updated[index], [field]: value as 'male' | 'female' | 'unknown'};
-                } else if (field === 'comment') {
+                } else if (field === 'comment' || field === 'age' || field === 'method' || field === 'activity') {
                   updated[index] = {...updated[index], [field]: value as string};
                 }
                 onChange(updated);
@@ -175,6 +182,33 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
               const removeSpeciesObservation = (index: number) => {
                 onChange(speciesObservations.filter((_, i) => i !== index));
                 setError(null);
+                // Adjust expanded indices: remove the deleted index and shift down higher indices
+                setExpandedSpecies(prev => {
+                  const newSet = new Set<number>();
+                  prev.forEach(expandedIndex => {
+                    if (expandedIndex < index) {
+                      // Keep indices below the removed item
+                      newSet.add(expandedIndex);
+                    } else if (expandedIndex > index) {
+                      // Shift down indices above the removed item
+                      newSet.add(expandedIndex - 1);
+                    }
+                    // Skip the removed index itself
+                  });
+                  return newSet;
+                });
+              };
+
+              const toggleSpeciesExpanded = (index: number) => {
+                setExpandedSpecies(prev => {
+                  const newSet = new Set(prev);
+                  if (newSet.has(index)) {
+                    newSet.delete(index);
+                  } else {
+                    newSet.add(index);
+                  }
+                  return newSet;
+                });
               };
 
               return (
@@ -248,74 +282,138 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
                   </div>
                   <div>
                     <Label className="text-bark dark:text-sand">Artsobservasjoner</Label>
-                    <div className="mt-1 space-y-md">
-                      {speciesObservations.map((obs, index) => (
-                        <div
-                          key={index}
-                          className="bg-white dark:bg-forest p-md rounded-md border-2 border-moss space-y-sm"
-                        >
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div
-                                className="font-medium text-bark dark:text-sand">{obs.species.PrefferedPopularname}</div>
-                              <div className="text-sm text-slate italic">{obs.species.ValidScientificName}</div>
-                            </div>
-                            <Button
-                              variant="accent"
-                              size={"icon"}
-                              onClick={() => removeSpeciesObservation(index)}
-                              aria-label="Remove species"
+                    <div className="mt-1 space-y-sm">
+                      {speciesObservations.map((obs, index) => {
+                        const isExpanded = expandedSpecies.has(index);
+                        return (
+                          <div
+                            key={index}
+                            className="bg-white dark:bg-forest rounded-md border-2 border-moss"
+                          >
+                            {/* Compact Header - Always Visible */}
+                            <div 
+                              className="flex items-center justify-between p-sm cursor-pointer hover:bg-sand/50 dark:hover:bg-bark/50 transition-colors"
+                              onClick={() => toggleSpeciesExpanded(index)}
                             >
-                              <X size={20}/>
-                            </Button>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-sm">
-                            <div>
-                              <Label htmlFor={`gender-${index}`} className="text-bark dark:text-sand text-xs">
-                                Kjønn
-                              </Label>
-                              <Select
-                                id={`gender-${index}`}
-                                value={obs.gender}
-                                onChange={(e) => updateSpeciesObservation(index, 'gender', e.target.value)}
-                                className="mt-1"
-                              >
-                                <option value="unknown">Ukjent</option>
-                                <option value="male">Male</option>
-                                <option value="female">Female</option>
-                              </Select>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium text-bark dark:text-sand truncate">
+                                  {obs.species.PrefferedPopularname}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-sm ml-sm shrink-0">
+                                <Button
+                                  variant="accent"
+                                  size={"icon"}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    removeSpeciesObservation(index);
+                                  }}
+                                  aria-label="Remove species"
+                                  className="shrink-0"
+                                >
+                                  <X size={20}/>
+                                </Button>
+                              </div>
                             </div>
-                            <div>
-                              <Label htmlFor={`count-${index}`} className="text-bark dark:text-sand text-xs">
-                                Antall
-                              </Label>
-                              <Input
-                                id={`count-${index}`}
-                                type="number"
-                                min="1"
-                                value={obs.count}
-                                onChange={(e) => updateSpeciesObservation(index, 'count', parseInt(e.target.value) || 1)}
-                                className="mt-1"
-                              />
-                            </div>
-                          </div>
 
-                          <div>
-                            <Label htmlFor={`species-comment-${index}`} className="text-bark dark:text-sand text-xs">
-                              Notat
-                            </Label>
-                            <Textarea
-                              id={`species-comment-${index}`}
-                              placeholder="Notater om denne spesifikke arten..."
-                              value={obs.comment}
-                              onChange={(e) => updateSpeciesObservation(index, 'comment', e.target.value)}
-                              className="mt-1"
-                              rows={2}
-                            />
+                            {/* Expanded Details */}
+                            {isExpanded && (
+                              <div className="px-md pb-md space-y-sm border-t border-moss/30">
+                                <div className="pt-sm">
+                                  <div className="text-sm text-slate italic">{obs.species.ValidScientificName}</div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-sm">
+                                  <div>
+                                    <Label htmlFor={`gender-${index}`} className="text-bark dark:text-sand text-xs">
+                                      Kjønn
+                                    </Label>
+                                    <Select
+                                      id={`gender-${index}`}
+                                      value={obs.gender}
+                                      onChange={(e) => updateSpeciesObservation(index, 'gender', e.target.value)}
+                                      className="mt-1"
+                                    >
+                                      <option value="unknown">Ukjent</option>
+                                      <option value="male">Male</option>
+                                      <option value="female">Female</option>
+                                    </Select>
+                                  </div>
+                                  <div>
+                                    <Label htmlFor={`count-${index}`} className="text-bark dark:text-sand text-xs">
+                                      Antall
+                                    </Label>
+                                    <Input
+                                      id={`count-${index}`}
+                                      type="number"
+                                      min="1"
+                                      value={obs.count}
+                                      onChange={(e) => updateSpeciesObservation(index, 'count', parseInt(e.target.value) || 1)}
+                                      className="mt-1"
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-sm">
+                                  <div>
+                                    <Label htmlFor={`age-${index}`} className="text-bark dark:text-sand text-xs">
+                                      Alder
+                                    </Label>
+                                    <Input
+                                      id={`age-${index}`}
+                                      type="text"
+                                      placeholder="f.eks. voksen"
+                                      value={obs.age || ''}
+                                      onChange={(e) => updateSpeciesObservation(index, 'age', e.target.value)}
+                                      className="mt-1"
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label htmlFor={`method-${index}`} className="text-bark dark:text-sand text-xs">
+                                      Metode
+                                    </Label>
+                                    <Input
+                                      id={`method-${index}`}
+                                      type="text"
+                                      placeholder="f.eks. sett"
+                                      value={obs.method || ''}
+                                      onChange={(e) => updateSpeciesObservation(index, 'method', e.target.value)}
+                                      className="mt-1"
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label htmlFor={`activity-${index}`} className="text-bark dark:text-sand text-xs">
+                                      Aktivitet
+                                    </Label>
+                                    <Input
+                                      id={`activity-${index}`}
+                                      type="text"
+                                      placeholder="f.eks. flyr"
+                                      value={obs.activity || ''}
+                                      onChange={(e) => updateSpeciesObservation(index, 'activity', e.target.value)}
+                                      className="mt-1"
+                                    />
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <Label htmlFor={`species-comment-${index}`} className="text-bark dark:text-sand text-xs">
+                                    Notat
+                                  </Label>
+                                  <Textarea
+                                    id={`species-comment-${index}`}
+                                    placeholder="Notater om denne spesifikke arten..."
+                                    value={obs.comment}
+                                    onChange={(e) => updateSpeciesObservation(index, 'comment', e.target.value)}
+                                    className="mt-1"
+                                    rows={2}
+                                  />
+                                </div>
+                              </div>
+                            )}
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 </>

@@ -64,6 +64,13 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
    - Enable Email provider
    - Disable "Confirm email" if you want to allow immediate login without email confirmation
 
+7. Run database migrations:
+   - In the Supabase dashboard, go to SQL Editor
+   - Create a new query and paste the contents of each migration file from `supabase/migrations/`:
+     - `20260208_create_observation_with_species.sql`
+     - `20260208_update_observation_with_species.sql`
+   - Execute each migration in order to create the necessary database functions
+
 The app works fully without authentication - it's completely optional. Local storage will continue to work whether you're logged in or not.
 
 Start the development server:

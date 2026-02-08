@@ -11,11 +11,17 @@ LANGUAGE plpgsql
 AS $$
 DECLARE
   updated_observation jsonb;
+  rows_updated integer;
 BEGIN
+  -- Validate location is proper JSONB (will raise exception if invalid)
+  IF observation_data->'location' IS NULL THEN
+    RAISE EXCEPTION 'location field is required';
+  END IF;
+
   -- Update the parent observation
   UPDATE observations
   SET
-    location = (observation_data->>'location')::jsonb,
+    location = observation_data->'location',
     "locationName" = observation_data->>'locationName',
     "uncertaintyRadius" = (observation_data->>'uncertaintyRadius')::integer,
     "startDate" = (observation_data->>'startDate')::timestamp with time zone,
@@ -23,6 +29,12 @@ BEGIN
     comment = observation_data->>'comment',
     "updatedAt" = NOW()
   WHERE id = observation_id;
+
+  -- Check if the observation was found and updated
+  GET DIAGNOSTICS rows_updated = ROW_COUNT;
+  IF rows_updated = 0 THEN
+    RAISE EXCEPTION 'Observation with id % not found', observation_id;
+  END IF;
 
   -- Delete existing species observations
   DELETE FROM "speciesObservations"
@@ -42,7 +54,7 @@ BEGIN
     )
     SELECT
       observation_id,
-      (elem->>'species')::jsonb,
+      elem->'species',
       (elem->>'gender')::text,
       (elem->>'count')::integer,
       elem->>'age',

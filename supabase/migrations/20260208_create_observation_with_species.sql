@@ -13,6 +13,11 @@ DECLARE
   inserted_observation jsonb;
   observation_id uuid;
 BEGIN
+  -- Validate location is proper JSONB (will raise exception if invalid)
+  IF observation_data->'location' IS NULL THEN
+    RAISE EXCEPTION 'location field is required';
+  END IF;
+
   -- Insert the observation
   INSERT INTO observations (
     location,
@@ -24,7 +29,7 @@ BEGIN
     "userId"
   )
   VALUES (
-    (observation_data->>'location')::jsonb,
+    observation_data->'location',
     observation_data->>'locationName',
     (observation_data->>'uncertaintyRadius')::integer,
     (observation_data->>'startDate')::timestamp with time zone,
@@ -48,7 +53,7 @@ BEGIN
     )
     SELECT
       observation_id,
-      (elem->>'species')::jsonb,
+      elem->'species',
       (elem->>'gender')::text,
       (elem->>'count')::integer,
       elem->>'age',

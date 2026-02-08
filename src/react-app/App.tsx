@@ -14,13 +14,15 @@ import {BottomNav} from "./components/BottomNav";
 function App() {
   const [currentView, setCurrentView] = useState<'map' | 'observations'>('map');
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [selectedZoom, setSelectedZoom] = useState<number>(13); // Default zoom level
   const [showLoginForm, setShowLoginForm] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingObservationId, setEditingObservationId] = useState<string | null>(null);
   const {observations} = useObservations();
 
-  const handleLocationSelect = (lat: number, lng: number) => {
+  const handleLocationSelect = (lat: number, lng: number, zoom: number) => {
     setSelectedLocation({lat, lng});
+    setSelectedZoom(zoom);
     setEditingObservationId(null);
     setShowAddForm(true);
   };
@@ -80,6 +82,7 @@ function App() {
       {showAddForm && (editingObservation?.location || selectedLocation) && (
         <ObservationForm
           location={editingObservation?.location || selectedLocation!}
+          zoom={editingObservation ? 13 : selectedZoom}
           observation={editingObservation}
           onClose={onClose}
         />

@@ -1,10 +1,12 @@
 import {useState} from 'react';
-import {MapPin, Pencil, Trash2} from 'lucide-react';
+import {MapPin, Pencil, Trash2, FileSpreadsheet, Sparkles} from 'lucide-react';
 import {useObservations} from '../context/ObservationsContext';
 import {Button} from './ui/button';
 import ObservationForm from './ObservationForm.tsx';
 import {ThemeToggle} from './ThemeToggle';
 import {AuthButton} from './AuthButton';
+import ExportDialog from './ExportDialog';
+import {getUnexportedCount} from '../queries/useExports';
 
 interface MyObservationsProps {
   onBack: () => void;
@@ -14,6 +16,9 @@ interface MyObservationsProps {
 function MyObservations({onBack, setShowLoginForm}: MyObservationsProps) {
   const {observations, deleteObservation} = useObservations();
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [showExportDialog, setShowExportDialog] = useState(false);
+  
+  const unexportedCount = getUnexportedCount(observations);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -77,10 +82,23 @@ function MyObservations({onBack, setShowLoginForm}: MyObservationsProps) {
       </header>
 
       <div className="max-w-4xl mx-auto p-lg md:p-xl">
-        <div className="mb-lg hidden md:block">
-          <Button onClick={onBack} variant="outline">
-            ← Tilbake til kart
-          </Button>
+        <div className="mb-lg flex justify-between items-center gap-md">
+          <div className="hidden md:block">
+            <Button onClick={onBack} variant="outline">
+              ← Tilbake til kart
+            </Button>
+          </div>
+          {observations.length > 0 && (
+            <Button onClick={() => setShowExportDialog(true)} className="ml-auto">
+              <FileSpreadsheet size={20} className="mr-2" />
+              Eksporter til Excel
+              {unexportedCount > 0 && (
+                <span className="ml-2 px-2 py-0.5 bg-moss text-white text-xs rounded-full">
+                  {unexportedCount} nye
+                </span>
+              )}
+            </Button>
+          )}
         </div>
 
         {observations.length === 0 ? (
@@ -94,8 +112,19 @@ function MyObservations({onBack, setShowLoginForm}: MyObservationsProps) {
             {observations.map((observation) => (
               <div
                 key={observation.id}
-                className="bg-white rounded-lg shadow-custom p-lg border-2 border-slate-border"
+                className={`bg-white rounded-lg shadow-custom p-lg border-2 relative ${
+                  !observation.lastExportedAt
+                    ? 'border-moss border-opacity-60'
+                    : 'border-slate-border'
+                }`}
               >
+                {/* New observation badge */}
+                {!observation.lastExportedAt && (
+                  <div className="absolute top-2 right-2 bg-moss text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                    <Sparkles size={12} />
+                    Ny
+                  </div>
+                )}
                 <div className="flex justify-between items-start mb-md">
                   <div className="flex-1">
                     {observation.locationName && (
@@ -112,6 +141,14 @@ function MyObservations({onBack, setShowLoginForm}: MyObservationsProps) {
                     <p className="text-sm text-slate">
                       {formatDateRange(observation.startDate, observation.endDate)} • ±{observation.uncertaintyRadius}m
                     </p>
+                    {observation.lastExportedAt && (
+                      <p className="text-xs text-slate mt-1">
+                        Sist eksportert: {formatDate(observation.lastExportedAt)}
+                        {observation.exportCount && observation.exportCount > 1 && (
+                          <span> ({observation.exportCount} ganger)</span>
+                        )}
+                      </p>
+                    )}
                   </div>
                   <div className="flex gap-sm">
                     <Button
@@ -166,6 +203,13 @@ function MyObservations({onBack, setShowLoginForm}: MyObservationsProps) {
           location={editingObservation.location}
           observation={editingObservation}
           onClose={() => setEditingId(null)}
+        />
+      )}
+      
+      {showExportDialog && (
+        <ExportDialog
+          observations={observations}
+          onClose={() => setShowExportDialog(false)}
         />
       )}
     </div>

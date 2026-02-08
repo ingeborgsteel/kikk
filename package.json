@@ -24,7 +24,8 @@
     "react-dom": "19.2.1",
     "react-hook-form": "^7.71.1",
     "tailwind-merge": "^3.4.0",
-    "tslib": "^2.8.1"
+    "tslib": "^2.8.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.15.3",

@@ -1,11 +1,12 @@
 import {useState} from 'react';
-import {MapPin, Pencil, Trash2, FileSpreadsheet, Sparkles} from 'lucide-react';
+import {FileSpreadsheet} from 'lucide-react';
 import {useObservations} from '../context/ObservationsContext';
 import {Button} from './ui/button';
 import ObservationForm from './ObservationForm.tsx';
 import {ThemeToggle} from './ThemeToggle';
 import {AuthButton} from './AuthButton';
 import ExportDialog from './ExportDialog';
+import ObservationItem from './ObservationItem';
 import {getUnexportedCount} from '../queries/useExports';
 
 interface MyObservationsProps {
@@ -110,89 +111,14 @@ function MyObservations({onBack, setShowLoginForm}: MyObservationsProps) {
         ) : (
           <div className="space-y-md">
             {observations.map((observation) => (
-              <div
+              <ObservationItem
                 key={observation.id}
-                className={`bg-white rounded-lg shadow-custom p-lg border-2 relative ${
-                  !observation.lastExportedAt
-                    ? 'border-moss border-opacity-60'
-                    : 'border-slate-border'
-                }`}
-              >
-                {/* New observation badge */}
-                {!observation.lastExportedAt && (
-                  <div className="absolute top-2 right-2 bg-moss text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
-                    <Sparkles size={12} />
-                    Ny
-                  </div>
-                )}
-                <div className="flex justify-between items-start mb-md">
-                  <div className="flex-1">
-                    {observation.locationName && (
-                      <div className="font-medium text-bark mb-xs">
-                        {observation.locationName}
-                      </div>
-                    )}
-                    <div className="flex items-center gap-sm text-sm text-slate mb-xs">
-                      <MapPin size={16}/>
-                      <span>
-                        {observation.location.lat.toFixed(4)}, {observation.location.lng.toFixed(4)}
-                      </span>
-                    </div>
-                    <p className="text-sm text-slate">
-                      {formatDateRange(observation.startDate, observation.endDate)} • ±{observation.uncertaintyRadius}m
-                    </p>
-                    {observation.lastExportedAt && (
-                      <p className="text-xs text-slate mt-1">
-                        Sist eksportert: {formatDate(observation.lastExportedAt)}
-                        {observation.exportCount && observation.exportCount > 1 && (
-                          <span> ({observation.exportCount} ganger)</span>
-                        )}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex gap-sm">
-                    <Button
-                      variant={"accent"}
-                      size={"icon"}
-                      onClick={() => setEditingId(observation.id)}
-                      aria-label="Edit observation"
-                    >
-                      <Pencil size={18}/>
-                    </Button>
-                    <Button
-                      variant={"accent"}
-                      size={"icon"}
-                      onClick={() => handleDelete(observation.id)}
-                      aria-label="Delete observation"
-                    >
-                      <Trash2 size={18}/>
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="space-y-sm">
-                  <h3 className="font-semibold text-bark">Arter Observert:</h3>
-                  {observation.species.map((speciesObs, idx) => (
-                    <div key={idx} className="pl-md border-l-2 border-moss">
-                      <div className="font-medium text-bark">{speciesObs.species.PrefferedPopularname}</div>
-                      <div className="text-sm text-slate italic">{speciesObs.species.ValidScientificName}</div>
-                      <div className="text-sm text-slate">
-                        Count: {speciesObs.count} • Gender: {speciesObs.gender}
-                      </div>
-                      {speciesObs.comment && (
-                        <div className="text-sm text-bark mt-1 italic">"{speciesObs.comment}"</div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                {observation.comment && (
-                  <div className="mt-md pt-md border-t border-slate-border">
-                    <p className="text-sm font-medium text-bark mb-1">Generell Observasjon:</p>
-                    <p className="text-sm text-bark">{observation.comment}</p>
-                  </div>
-                )}
-              </div>
+                observation={observation}
+                onEdit={setEditingId}
+                onDelete={handleDelete}
+                formatDate={formatDate}
+                formatDateRange={formatDateRange}
+              />
             ))}
           </div>
         )}

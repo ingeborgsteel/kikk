@@ -135,7 +135,7 @@ function MyObservations({onBack, setShowLoginForm}: MyObservationsProps) {
 
                 <div className="space-y-sm">
                   <h3 className="font-semibold text-bark">Arter Observert:</h3>
-                  {observation.speciesObservations.map((speciesObs, idx) => (
+                  {observation.species.map((speciesObs, idx) => (
                     <div key={idx} className="pl-md border-l-2 border-moss">
                       <div className="font-medium text-bark">{speciesObs.species.PrefferedPopularname}</div>
                       <div className="text-sm text-slate italic">{speciesObs.species.ValidScientificName}</div>

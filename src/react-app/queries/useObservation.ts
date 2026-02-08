@@ -2,7 +2,7 @@ import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {Observation} from "../types/observation.ts";
 import {
   createObservation,
-  CreateObservationInput,
+  CreateObservation,
   deleteObservation,
   fetchObservations,
   updateObservation
@@ -22,7 +22,7 @@ export function useCreateObservation() {
   const {user} = useAuth();
 
   return useMutation({
-    mutationFn: (input: CreateObservationInput) => createObservation(input, user),
+    mutationFn: (input: CreateObservation) => createObservation(input, user),
     onSuccess: () => {
       qc.invalidateQueries({queryKey: ["observations"]});
     },

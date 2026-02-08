@@ -205,8 +205,8 @@ function Map({onLocationSelect, observations = [], onObservationClick}: MapProps
         ).addTo(map.current);
 
         // Create popup content
-        const speciesList = (observation.speciesObservations || [])
-          .map(so => so.species.PrefferedPopularname || so.species.ValidScientificName)
+        const speciesList = (observation.species || [])
+          .map(species => species.species.PrefferedPopularname || species.species.ValidScientificName)
           .join(', ');
 
         const popupContent = `

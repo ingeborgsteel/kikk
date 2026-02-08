@@ -1,7 +1,7 @@
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
-import { Observation } from "../types/observation"
-import { TaxonRecord } from "../types/artsdatabanken"
+import {type ClassValue, clsx} from "clsx"
+import {twMerge} from "tailwind-merge"
+import {Observation} from "../types/observation"
+import {TaxonRecord} from "../types/artsdatabanken"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -14,13 +14,13 @@ export function cn(...inputs: ClassValue[]) {
 export function getRecentSpecies(observations: Observation[], limit = 5): TaxonRecord[] {
   // Create a map to track the most recent observation for each species
   const speciesMap = new Map<number, { species: TaxonRecord; date: string }>();
-  
+
   // Iterate through all observations
   for (const obs of observations) {
-    for (const speciesObs of obs.speciesObservations) {
+    for (const speciesObs of obs.species) {
       const speciesId = speciesObs.species.Id;
       const existingEntry = speciesMap.get(speciesId);
-      
+
       // Keep the species with the most recent observation date
       if (!existingEntry || obs.updatedAt > existingEntry.date) {
         speciesMap.set(speciesId, {
@@ -30,7 +30,7 @@ export function getRecentSpecies(observations: Observation[], limit = 5): TaxonR
       }
     }
   }
-  
+
   // Sort by date (most recent first) and take the top limit
   return Array.from(speciesMap.values())
     .sort((a, b) => b.date.localeCompare(a.date))
@@ -52,32 +52,32 @@ export async function reverseGeocode(lat: number, lng: number): Promise<string |
         }
       }
     );
-    
+
     if (!response.ok) {
       return null;
     }
-    
+
     const data = await response.json();
-    
+
     // Build a location name from available data
     // Priority: village/town/city, municipality, county
     const parts: string[] = [];
-    
+
     if (data.address) {
       const addr = data.address;
       // Add locality (village, town, city, etc.)
       const locality = addr.village || addr.town || addr.city || addr.hamlet || addr.suburb;
       if (locality) parts.push(locality);
-      
+
       // Add municipality if different from locality
       if (addr.municipality && addr.municipality !== locality) {
         parts.push(addr.municipality);
       }
-      
+
       // Add county
       if (addr.county) parts.push(addr.county);
     }
-    
+
     // If we have parts, join them; otherwise use display_name
     if (parts.length > 0) {
       return parts.join(', ');
@@ -85,7 +85,7 @@ export async function reverseGeocode(lat: number, lng: number): Promise<string |
       // Fallback to first part of display_name (usually the most specific)
       return data.display_name.split(',')[0];
     }
-    
+
     return null;
   } catch (error) {
     console.error('Reverse geocoding failed:', error);

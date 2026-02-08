@@ -1,4 +1,4 @@
-import {Map, User} from 'lucide-react';
+import {Binoculars, Map} from 'lucide-react';
 
 interface BottomNavProps {
   currentView: 'map' | 'observations';
@@ -30,8 +30,8 @@ export function BottomNav({currentView, onViewChange}: BottomNavProps) {
           }`}
           aria-label="Profile"
         >
-          <User size={24}/>
-          <span className="text-xs font-medium">Profil</span>
+          <Binoculars size={24}/>
+          <span className="text-xs font-medium">Kikket på</span>
         </button>
       </div>
     </nav>

@@ -39,18 +39,18 @@ function App() {
     setEditingObservationId(null);
   };
 
-  const editingObservation = editingObservationId 
+  const editingObservation = editingObservationId
     ? observations.find(obs => obs.id === editingObservationId)
     : undefined;
 
   if (currentView === 'observations') {
     return (
       <>
-        <MyObservations 
+        <MyObservations
           onBack={() => setCurrentView('map')}
           setShowLoginForm={setShowLoginForm}
         />
-        <BottomNav currentView={currentView} onViewChange={setCurrentView} />
+        <BottomNav currentView={currentView} onViewChange={setCurrentView}/>
         <LoginForm closeLoginForm={() => setShowLoginForm(false)} showLoginForm={showLoginForm}/>
       </>
     );
@@ -69,12 +69,12 @@ function App() {
             onClick={() => setCurrentView('observations')}
             variant="secondary"
           >
-            Mine Observasjoner ({observations.length})
+            Kikket på ({observations.length})
           </Button>
         </div>
       </header>
-      <Map 
-        onLocationSelect={handleLocationSelect} 
+      <Map
+        onLocationSelect={handleLocationSelect}
         observations={observations}
         onObservationClick={handleObservationClick}
       />
@@ -88,7 +88,7 @@ function App() {
         />
       )}
       <LoginForm closeLoginForm={() => setShowLoginForm(false)} showLoginForm={showLoginForm}/>
-      <BottomNav currentView={currentView} onViewChange={setCurrentView} />
+      <BottomNav currentView={currentView} onViewChange={setCurrentView}/>
     </div>
   );
 }

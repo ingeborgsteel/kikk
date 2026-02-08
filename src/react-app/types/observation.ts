@@ -1,6 +1,8 @@
 import {TaxonRecord} from "./artsdatabanken.ts";
 
-export interface SpeciesObservation {
+export interface Species {
+  id: string;
+  createdAt: string;
   species: TaxonRecord;
   gender: 'male' | 'female' | 'unknown';
   count: number;
@@ -18,10 +20,9 @@ export interface Observation {
   };
   locationName?: string; // Optional human-readable location name
   uncertaintyRadius: number; // in meters
-  speciesObservations: SpeciesObservation[];
-  date: string; // ISO date string (kept for backward compatibility)
-  startDate?: string; // ISO date string for start time
-  endDate?: string; // ISO date string for end time
+  species: Species[];
+  startDate: string; // ISO date string for start time
+  endDate: string; // ISO date string for end time
   comment: string;
   createdAt: string;
   updatedAt: string;

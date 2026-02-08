@@ -26,22 +26,22 @@ function MyObservations({onBack, setShowLoginForm}: MyObservationsProps) {
     });
   };
 
-  const formatDateRange = (startDate?: string, endDate?: string, fallbackDate?: string) => {
+  const formatDateRange = (startDate?: string, endDate?: string) => {
     // Use new fields if available, otherwise fall back to old date field
-    const start = startDate || fallbackDate;
-    const end = endDate || fallbackDate;
-    
+    const start = startDate;
+    const end = endDate;
+
     if (!start) return 'Ukjent dato';
-    
+
     // If start and end are the same or end is not set, show single date
     if (!end || start === end) {
       return formatDate(start);
     }
-    
+
     // Show date range
     const startDateTime = new Date(start);
     const endDateTime = new Date(end);
-    
+
     // If same day, just show time range
     if (startDateTime.toDateString() === endDateTime.toDateString()) {
       return `${formatDate(start)} - ${endDateTime.toLocaleString('no-NO', {
@@ -49,7 +49,7 @@ function MyObservations({onBack, setShowLoginForm}: MyObservationsProps) {
         minute: '2-digit',
       })}`;
     }
-    
+
     // Different days, show full range
     return `${formatDate(start)} - ${formatDate(end)}`;
   };
@@ -110,7 +110,7 @@ function MyObservations({onBack, setShowLoginForm}: MyObservationsProps) {
                       </span>
                     </div>
                     <p className="text-sm text-slate">
-                      {formatDateRange(observation.startDate, observation.endDate, observation.date)} • ±{observation.uncertaintyRadius}m
+                      {formatDateRange(observation.startDate, observation.endDate)} • ±{observation.uncertaintyRadius}m
                     </p>
                   </div>
                   <div className="flex gap-sm">
@@ -135,7 +135,7 @@ function MyObservations({onBack, setShowLoginForm}: MyObservationsProps) {
 
                 <div className="space-y-sm">
                   <h3 className="font-semibold text-bark">Arter Observert:</h3>
-                  {observation.speciesObservations.map((speciesObs, idx) => (
+                  {observation.species.map((speciesObs, idx) => (
                     <div key={idx} className="pl-md border-l-2 border-moss">
                       <div className="font-medium text-bark">{speciesObs.species.PrefferedPopularname}</div>
                       <div className="text-sm text-slate italic">{speciesObs.species.ValidScientificName}</div>

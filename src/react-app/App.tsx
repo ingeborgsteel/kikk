@@ -82,7 +82,7 @@ function App() {
       {showAddForm && (editingObservation?.location || selectedLocation) && (
         <ObservationForm
           location={editingObservation?.location || selectedLocation!}
-          zoom={selectedZoom}
+          zoom={editingObservation ? 13 : selectedZoom}
           observation={editingObservation}
           onClose={onClose}
         />

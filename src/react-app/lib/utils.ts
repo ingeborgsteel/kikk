@@ -17,7 +17,7 @@ export function getRecentSpecies(observations: Observation[], limit = 5): TaxonR
 
   // Iterate through all observations
   for (const obs of observations) {
-    for (const speciesObs of obs.speciesObservations) {
+    for (const speciesObs of obs.species) {
       const speciesId = speciesObs.species.Id;
       const existingEntry = speciesMap.get(speciesId);
 

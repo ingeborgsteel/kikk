@@ -6,12 +6,13 @@ import {Label} from './ui/label';
 import {Select} from './ui/select';
 import {Textarea} from './ui/textarea';
 import {useObservations} from '../context/ObservationsContext';
-import {Observation, SpeciesObservation} from '../types/observation';
+import {Observation, Species} from '../types/observation';
 import {useSpeciesSearch} from "../queries/useSpeciesSearch.ts";
 import {TaxonRecord} from "../types/artsdatabanken.ts";
 import {Controller, useForm} from "react-hook-form";
 import {getRecentSpecies, reverseGeocode} from "../lib/utils.ts";
 import {LocationEditor} from "./LocationEditor.tsx";
+import {CreateSpecies} from "../api/observations.ts";
 
 interface ObservationFormProps {
   observation?: Observation,
@@ -281,30 +282,30 @@ const ObservationForm = ({observation, onClose, location, zoom = 13}: Observatio
             </div>
 
             <Controller
-              name={'speciesObservations'}
+              name={'species'}
               control={control}
-              render={({field: {value: speciesObservations = [], onChange}}) => {
+              render={({field: {value: species = [], onChange}}) => {
 
-                const addSpeciesObservation = (species: TaxonRecord) => {
-                  const newObservation: Omit<SpeciesObservation, "id"> = {
-                    species,
+                const addSpecies = (taxon: TaxonRecord) => {
+                  const newObservation: CreateSpecies = {
+                    species: taxon,
                     gender: "unknown",
                     count: 1,
                   };
-                  onChange([...speciesObservations, newObservation]);
+                  onChange([...species, newObservation]);
                   setSearchTerm('');
                   setShowResults(false);
                   setError(null); // Clear error when species is added
                   // Automatically expand newly added species
                   setExpandedSpecies(prev => {
                     const newSet = new Set(prev);
-                    newSet.add(speciesObservations.length); // Add the index of the new item
+                    newSet.add(species.length); // Add the index of the new item
                     return newSet;
                   });
                 };
 
-                const updateSpeciesObservation = (index: number, field: keyof SpeciesObservation, value: string | number) => {
-                  const updated = [...speciesObservations];
+                const updateSpecies = (index: number, field: keyof Species, value: string | number) => {
+                  const updated = [...species];
                   if (field === 'count') {
                     updated[index] = {
                       ...updated[index],
@@ -318,8 +319,8 @@ const ObservationForm = ({observation, onClose, location, zoom = 13}: Observatio
                   onChange(updated);
                 };
 
-                const removeSpeciesObservation = (index: number) => {
-                  onChange(speciesObservations.filter((_, i) => i !== index));
+                const removeSpecies = (index: number) => {
+                  onChange(species.filter((_, i) => i !== index));
                   setError(null);
                   // Adjust expanded indices: remove the deleted index and shift down higher indices
                   setExpandedSpecies(prev => {
@@ -366,7 +367,7 @@ const ObservationForm = ({observation, onClose, location, zoom = 13}: Observatio
                               <button
                                 key={species.Id}
                                 type="button"
-                                onClick={() => addSpeciesObservation(species)}
+                                onClick={() => addSpecies(species)}
                                 className="px-3 py-1.5 bg-moss/10 hover:bg-moss/20 dark:bg-moss/20 dark:hover:bg-moss/30 text-bark dark:text-sand text-sm rounded-md border border-moss/30 dark:border-moss/40 transition-colors flex items-center gap-1.5"
                                 title={species.ValidScientificName}
                               >
@@ -408,7 +409,7 @@ const ObservationForm = ({observation, onClose, location, zoom = 13}: Observatio
                               <button
                                 key={species.Id}
                                 type="button"
-                                onClick={() => addSpeciesObservation(species)}
+                                onClick={() => addSpecies(species)}
                                 className="w-full text-left px-3 py-2 hover:bg-sand dark:hover:bg-forest transition-colors border-b border-slate-border dark:border-slate last:border-b-0"
                               >
                                 <div
@@ -423,7 +424,7 @@ const ObservationForm = ({observation, onClose, location, zoom = 13}: Observatio
                     <div>
                       <Label className="text-bark dark:text-sand">Artsobservasjoner</Label>
                       <div className="mt-1 space-y-sm">
-                        {speciesObservations.map((obs, index) => {
+                        {species.map((obs, index) => {
                           const isExpanded = expandedSpecies.has(index);
                           return (
                             <div
@@ -446,7 +447,8 @@ const ObservationForm = ({observation, onClose, location, zoom = 13}: Observatio
                                     size={"icon"}
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      removeSpeciesObservation(index);
+                                      e.preventDefault();
+                                      removeSpecies(index);
                                     }}
                                     aria-label="Remove species"
                                     className="shrink-0"
@@ -471,7 +473,7 @@ const ObservationForm = ({observation, onClose, location, zoom = 13}: Observatio
                                       <Select
                                         id={`gender-${index}`}
                                         value={obs.gender}
-                                        onChange={(e) => updateSpeciesObservation(index, 'gender', e.target.value)}
+                                        onChange={(e) => updateSpecies(index, 'gender', e.target.value)}
                                         className="mt-1"
                                       >
                                         <option value="unknown">Ukjent</option>
@@ -488,7 +490,7 @@ const ObservationForm = ({observation, onClose, location, zoom = 13}: Observatio
                                         type="number"
                                         min="1"
                                         value={obs.count}
-                                        onChange={(e) => updateSpeciesObservation(index, 'count', parseInt(e.target.value) || 1)}
+                                        onChange={(e) => updateSpecies(index, 'count', parseInt(e.target.value) || 1)}
                                         className="mt-1"
                                       />
                                     </div>
@@ -504,7 +506,7 @@ const ObservationForm = ({observation, onClose, location, zoom = 13}: Observatio
                                         type="text"
                                         placeholder="f.eks. voksen"
                                         value={obs.age || ''}
-                                        onChange={(e) => updateSpeciesObservation(index, 'age', e.target.value)}
+                                        onChange={(e) => updateSpecies(index, 'age', e.target.value)}
                                         className="mt-1"
                                       />
                                     </div>
@@ -517,7 +519,7 @@ const ObservationForm = ({observation, onClose, location, zoom = 13}: Observatio
                                         type="text"
                                         placeholder="f.eks. sett"
                                         value={obs.method || ''}
-                                        onChange={(e) => updateSpeciesObservation(index, 'method', e.target.value)}
+                                        onChange={(e) => updateSpecies(index, 'method', e.target.value)}
                                         className="mt-1"
                                       />
                                     </div>
@@ -530,7 +532,7 @@ const ObservationForm = ({observation, onClose, location, zoom = 13}: Observatio
                                         type="text"
                                         placeholder="f.eks. flyr"
                                         value={obs.activity || ''}
-                                        onChange={(e) => updateSpeciesObservation(index, 'activity', e.target.value)}
+                                        onChange={(e) => updateSpecies(index, 'activity', e.target.value)}
                                         className="mt-1"
                                       />
                                     </div>
@@ -545,7 +547,7 @@ const ObservationForm = ({observation, onClose, location, zoom = 13}: Observatio
                                       id={`species-comment-${index}`}
                                       placeholder="Notater om denne spesifikke arten..."
                                       value={obs.comment}
-                                      onChange={(e) => updateSpeciesObservation(index, 'comment', e.target.value)}
+                                      onChange={(e) => updateSpecies(index, 'comment', e.target.value)}
                                       className="mt-1"
                                       rows={2}
                                     />

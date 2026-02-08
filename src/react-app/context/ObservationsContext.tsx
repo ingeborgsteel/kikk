@@ -6,12 +6,12 @@ import {
   useFetchObservations,
   useUpdateObservation
 } from "../queries/useObservation.ts";
-import {CreateObservationInput} from "../api/observations.ts";
+import {CreateObservation} from "../api/observations.ts";
 import {isSupabaseConfigured} from "../lib/supabase.ts";
 
 interface ObservationsContextType {
   observations: Observation[];
-  addObservation: (observation: CreateObservationInput) => void;
+  addObservation: (observation: CreateObservation) => void;
   updateObservation: (observation: Observation) => void;
   deleteObservation: (id: string) => void;
 }
@@ -48,7 +48,7 @@ export function ObservationsProvider({children}: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(observations));
   }, [observations]);
 
-  const addObservation = (observation: CreateObservationInput) => {
+  const addObservation = (observation: CreateObservation) => {
     if (supabaseConfigured) {
       create(observation);
     } else {

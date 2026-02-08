@@ -46,7 +46,7 @@ export function useExportObservations() {
       // Generate Excel file
       const timestamp = new Date().toISOString().split('T')[0];
       const fileName = `observations-export-${timestamp}.xlsx`;
-      const blob = generateExcelFromObservations(observations);
+      const blob = await generateExcelFromObservations(observations);
 
       // Download the file locally
       downloadExcelFile(blob, fileName);

@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { supabase } from '../lib/supabase';
 import { Observation } from '../types/observation';
 import { ExportLog } from '../types/export';
@@ -6,52 +6,76 @@ import { ExportLog } from '../types/export';
 /**
  * Generate Excel file from observations
  */
-export function generateExcelFromObservations(observations: Observation[]): Blob {
-  // Flatten observations for Excel format
-  const rows = observations.flatMap((obs) =>
-    obs.species.map((spec) => ({
-      'Observation ID': obs.id,
-      'Location Name': obs.locationName || '',
-      'Latitude': obs.location.lat,
-      'Longitude': obs.location.lng,
-      'Uncertainty (m)': obs.uncertaintyRadius,
-      'Start Date': new Date(obs.startDate).toLocaleString('no-NO'),
-      'End Date': new Date(obs.endDate).toLocaleString('no-NO'),
-      'Species (Norwegian)': spec.species.PrefferedPopularname,
-      'Species (Scientific)': spec.species.ValidScientificName,
-      'Count': spec.count,
-      'Gender': spec.gender,
-      'Age': spec.age || '',
-      'Method': spec.method || '',
-      'Activity': spec.activity || '',
-      'Species Comment': spec.comment || '',
-      'General Comment': obs.comment,
-      'Created At': new Date(obs.createdAt).toLocaleString('no-NO'),
-      'Updated At': new Date(obs.updatedAt).toLocaleString('no-NO'),
-      'Last Exported At': obs.lastExportedAt ? new Date(obs.lastExportedAt).toLocaleString('no-NO') : 'Never',
-      'Export Count': obs.exportCount || 0,
-    }))
-  );
+export async function generateExcelFromObservations(observations: Observation[]): Promise<Blob> {
+  // Create a new workbook and worksheet
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Observations');
 
-  // Create workbook and worksheet
-  const ws = XLSX.utils.json_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Observations');
+  // Define columns
+  worksheet.columns = [
+    { header: 'Observation ID', key: 'observationId', width: 15 },
+    { header: 'Location Name', key: 'locationName', width: 20 },
+    { header: 'Latitude', key: 'latitude', width: 12 },
+    { header: 'Longitude', key: 'longitude', width: 12 },
+    { header: 'Uncertainty (m)', key: 'uncertainty', width: 15 },
+    { header: 'Start Date', key: 'startDate', width: 20 },
+    { header: 'End Date', key: 'endDate', width: 20 },
+    { header: 'Species (Norwegian)', key: 'speciesNorwegian', width: 25 },
+    { header: 'Species (Scientific)', key: 'speciesScientific', width: 25 },
+    { header: 'Count', key: 'count', width: 10 },
+    { header: 'Gender', key: 'gender', width: 10 },
+    { header: 'Age', key: 'age', width: 15 },
+    { header: 'Method', key: 'method', width: 15 },
+    { header: 'Activity', key: 'activity', width: 15 },
+    { header: 'Species Comment', key: 'speciesComment', width: 30 },
+    { header: 'General Comment', key: 'generalComment', width: 30 },
+    { header: 'Created At', key: 'createdAt', width: 20 },
+    { header: 'Updated At', key: 'updatedAt', width: 20 },
+    { header: 'Last Exported At', key: 'lastExportedAt', width: 20 },
+    { header: 'Export Count', key: 'exportCount', width: 12 },
+  ];
 
-  // Auto-size columns
-  const maxWidth = 50;
-  const colWidths = Object.keys(rows[0] || {}).map((key) => {
-    const maxLength = Math.max(
-      key.length,
-      ...rows.map((row) => String(row[key as keyof typeof row] || '').length)
-    );
-    return { wch: Math.min(maxLength + 2, maxWidth) };
+  // Style the header row
+  worksheet.getRow(1).font = { bold: true };
+  worksheet.getRow(1).fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FFE0E0E0' },
+  };
+
+  // Add data rows
+  observations.forEach((obs) => {
+    obs.species.forEach((spec) => {
+      worksheet.addRow({
+        observationId: obs.id,
+        locationName: obs.locationName || '',
+        latitude: obs.location.lat,
+        longitude: obs.location.lng,
+        uncertainty: obs.uncertaintyRadius,
+        startDate: new Date(obs.startDate).toLocaleString('no-NO'),
+        endDate: new Date(obs.endDate).toLocaleString('no-NO'),
+        speciesNorwegian: spec.species.PrefferedPopularname,
+        speciesScientific: spec.species.ValidScientificName,
+        count: spec.count,
+        gender: spec.gender,
+        age: spec.age || '',
+        method: spec.method || '',
+        activity: spec.activity || '',
+        speciesComment: spec.comment || '',
+        generalComment: obs.comment,
+        createdAt: new Date(obs.createdAt).toLocaleString('no-NO'),
+        updatedAt: new Date(obs.updatedAt).toLocaleString('no-NO'),
+        lastExportedAt: obs.lastExportedAt
+          ? new Date(obs.lastExportedAt).toLocaleString('no-NO')
+          : 'Never',
+        exportCount: obs.exportCount || 0,
+      });
+    });
   });
-  ws['!cols'] = colWidths;
 
   // Generate buffer
-  const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-  return new Blob([excelBuffer], {
+  const buffer = await workbook.xlsx.writeBuffer();
+  return new Blob([buffer], {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   });
 }

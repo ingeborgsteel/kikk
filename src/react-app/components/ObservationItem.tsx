@@ -51,12 +51,12 @@ function ObservationItem({
                 </div>
               )}
               {isExported && (
-                <button
+                <div
                   className="text-slate hover:text-bark transition-colors"
                   aria-label={isExpanded ? 'Collapse' : 'Expand'}
                 >
                   {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-                </button>
+                </div>
               )}
             </div>
             <div className="flex items-center gap-sm text-sm text-slate mb-xs">

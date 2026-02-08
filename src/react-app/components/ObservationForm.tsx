@@ -3,7 +3,6 @@ import {X} from 'lucide-react';
 import {Button} from './ui/button';
 import {Input} from './ui/input';
 import {Label} from './ui/label';
-import {Select} from './ui/select';
 import {Textarea} from './ui/textarea';
 import {useObservations} from '../context/ObservationsContext';
 import {Observation, Species} from '../types/observation';
@@ -13,6 +12,7 @@ import {Controller, useForm} from "react-hook-form";
 import {getRecentSpecies, reverseGeocode} from "../lib/utils.ts";
 import {LocationEditor} from "./LocationEditor.tsx";
 import {CreateSpecies} from "../api/observations.ts";
+import SpeciesItem from "./SpeciesItem.tsx";
 
 interface ObservationFormProps {
   observation?: Observation,
@@ -25,8 +25,6 @@ const ObservationForm = ({observation, onClose, location, zoom = 13}: Observatio
   const {addObservation, updateObservation, observations} = useObservations();
   const [searchTerm, setSearchTerm] = useState('');
   const [showResults, setShowResults] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [expandedSpecies, setExpandedSpecies] = useState<Set<number>>(new Set());
   const [loadingLocationName, setLoadingLocationName] = useState(false);
   const [geocodingFailed, setGeocodingFailed] = useState(false);
   const [formReady, setFormReady] = useState(!!observation); // Form is ready immediately if editing
@@ -39,7 +37,7 @@ const ObservationForm = ({observation, onClose, location, zoom = 13}: Observatio
 
   const defaultStartDate = new Date().toISOString().slice(0, 16);
 
-  const {control, handleSubmit, setValue, getValues} = useForm<Observation>({
+  const {control, handleSubmit, setValue, getValues, formState: {isDirty, isValid}} = useForm<Observation>({
     defaultValues: {
       startDate: observation?.startDate || defaultStartDate,
       endDate: observation?.endDate || defaultStartDate,
@@ -135,8 +133,9 @@ const ObservationForm = ({observation, onClose, location, zoom = 13}: Observatio
     <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 p-4">
       <div
         className="bg-sand dark:bg-bark w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg shadow-custom-2xl border-2 border-moss">
-        <div className="sticky top-0 bg-forest text-sand p-lg border-b-2 border-moss flex justify-between items-center">
-          <h2 className="text-xl font-bold">{observation ? "Rediger Observasjon" : "Opprett Observasjon"}</h2>
+        <div
+          className="sticky top-0 bg-forest text-sand p-lg border-b-2 border-moss flex justify-between items-center z-[2000]">
+          <h2 className="text-xl font-bold">{observation ? "Rediger kikk" : "Opprett kikk"}</h2>
           <Button
             variant={"accent"}
             size={"icon"}
@@ -153,442 +152,269 @@ const ObservationForm = ({observation, onClose, location, zoom = 13}: Observatio
             <p className="text-bark dark:text-sand text-lg">Henter stedsinformasjon...</p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit(save)} className="p-lg space-y-lg overflow-x-hidden">
-            {/* Error Message */}
-            {error && (
-              <div className="bg-rust/10 border-2 border-rust text-rust p-md rounded-md flex items-start gap-sm">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="shrink-0 mt-0.5"
-                >
-                  <circle cx="12" cy="12" r="10"/>
-                  <line x1="12" y1="8" x2="12" y2="12"/>
-                  <line x1="12" y1="16" x2="12.01" y2="16"/>
-                </svg>
-                <span>{error}</span>
+          <form onSubmit={handleSubmit(save)}>
+            <div className="p-lg space-y-lg overflow-x-hidden">
+              <div>
+                <Label className="text-bark dark:text-sand">Plassering</Label>
+                <p className="text-sm text-slate mt-1 mb-2">
+                  Lat: {currentLocation.lat.toFixed(4)}, Lng: {currentLocation.lng.toFixed(4)}
+                </p>
+                <LocationEditor
+                  location={currentLocation}
+                  onLocationChange={handleLocationChange}
+                  zoom={zoom}
+                />
               </div>
-            )}
 
-            <div>
-              <Label className="text-bark dark:text-sand">Plassering</Label>
-              <p className="text-sm text-slate mt-1 mb-2">
-                Lat: {currentLocation.lat.toFixed(4)}, Lng: {currentLocation.lng.toFixed(4)}
-              </p>
-              <LocationEditor
-                location={currentLocation}
-                onLocationChange={handleLocationChange}
-                zoom={zoom}
+              <Controller
+                name={'locationName'}
+                control={control}
+                render={({field: {value, onChange}}) => (
+                  <div>
+                    <Label htmlFor="locationName" className="text-bark dark:text-sand">
+                      Stedsnavn
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        id="locationName"
+                        type="text"
+                        placeholder="F.eks. Oslo, Nordmarka"
+                        value={value}
+                        onChange={(e) => onChange(e.target.value)}
+                        className="mt-1"
+                      />
+                      {loadingLocationName && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          <div
+                            className="w-4 h-4 border-2 border-slate-border border-t-rust rounded-full animate-spin"></div>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate mt-1">
+                      {geocodingFailed
+                        ? 'Kunne ikke hente stedsnavn automatisk. Vennligst fyll inn manuelt.'
+                        : 'Foreslått basert på koordinater, kan redigeres'}
+                    </p>
+                  </div>
+                )}
               />
-            </div>
 
-            <Controller
-              name={'locationName'}
-              control={control}
-              render={({field: {value, onChange}}) => (
-                <div>
-                  <Label htmlFor="locationName" className="text-bark dark:text-sand">
-                    Stedsnavn
-                  </Label>
-                  <div className="relative">
+              <Controller
+                name={'uncertaintyRadius'}
+                control={control}
+                render={({field: {value, onChange}}) => (
+                  <div>
+                    <Label htmlFor="uncertainty" className="text-bark dark:text-sand">
+                      Usikkerhetsradius (meter)
+                    </Label>
                     <Input
-                      id="locationName"
-                      type="text"
-                      placeholder="F.eks. Oslo, Nordmarka"
+                      id="uncertainty"
+                      type="number"
+                      min="0"
+                      value={value}
+                      onChange={(e) =>
+                        onChange(e.target.value === '' ? undefined : Number(e.target.value))
+                      }
+                      className="mt-1"
+                    />
+                  </div>
+                )}
+              />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+                <Controller
+                  name={'startDate'}
+                  control={control}
+                  render={({field: {value, onChange}}) => (
+                    <div>
+                      <Label htmlFor="startDate" className="text-bark dark:text-sand">
+                        Starttid
+                      </Label>
+                      <Input
+                        id="startDate"
+                        type="datetime-local"
+                        value={value}
+                        onChange={(e) => onChange(e.target.value)}
+                        className="mt-1 max-w-full"
+                      />
+                    </div>
+                  )}
+                />
+
+                <Controller
+                  name={'endDate'}
+                  control={control}
+                  render={({field: {value, onChange}}) => (
+                    <div>
+                      <Label htmlFor="endDate" className="text-bark dark:text-sand">
+                        Sluttid
+                      </Label>
+                      <Input
+                        id="endDate"
+                        type="datetime-local"
+                        value={value}
+                        onChange={(e) => onChange(e.target.value)}
+                        className="mt-1 max-w-full"
+                      />
+                    </div>
+                  )}
+                />
+              </div>
+
+              <Controller
+                name={'species'}
+                control={control}
+                rules={{validate: (value) => value && value.length > 0 || 'Du må legge til minst én art'}}
+                render={({field: {value: species = [], onChange}}) => {
+
+                  const addSpecies = (taxon: TaxonRecord) => {
+                    const newObservation: CreateSpecies = {
+                      species: taxon,
+                      gender: "unknown",
+                      count: 1,
+                    };
+                    onChange([newObservation, ...species]);
+                    setSearchTerm('');
+                    setShowResults(false);
+                  };
+
+                  const updateSpecies = (index: number, field: keyof Species, value: string | number) => {
+                    const updated = [...species];
+                    if (field === 'count') {
+                      updated[index] = {
+                        ...updated[index],
+                        [field]: typeof value === 'number' ? value : parseInt(value) || 1
+                      };
+                    } else if (field === 'gender') {
+                      updated[index] = {...updated[index], [field]: value as 'male' | 'female' | 'unknown'};
+                    } else if (field === 'comment' || field === 'age' || field === 'method' || field === 'activity') {
+                      updated[index] = {...updated[index], [field]: value as string};
+                    }
+                    onChange(updated);
+                  };
+
+                  const removeSpecies = (index: number) => {
+                    onChange(species.filter((_, i) => i !== index));
+                  };
+
+                  return (
+                    <>
+                      <div>
+                        <Label htmlFor="species-search" className="text-bark dark:text-sand">
+                          Søk etter art
+                        </Label>
+                        {recentSpecies.length > 0 && (
+                          <div className="mt-2 mb-3">
+                            <div className="text-xs text-slate mb-2">Nylig observerte arter:</div>
+                            <div className="flex flex-wrap gap-2">
+                              {recentSpecies.map((species) => (
+                                <button
+                                  key={species.Id}
+                                  type="button"
+                                  onClick={() => addSpecies(species)}
+                                  className="px-3 py-1.5 bg-moss/10 hover:bg-moss/20 dark:bg-moss/20 dark:hover:bg-moss/30 text-bark dark:text-sand text-sm rounded-md border border-moss/30 dark:border-moss/40 transition-colors flex items-center gap-1.5"
+                                  title={species.ValidScientificName}
+                                >
+                                  <span className="font-medium">{species.PrefferedPopularname}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="relative mt-1">
+                          <Input
+                            id="species-search"
+                            type="text"
+                            placeholder="Skriv for å søke..."
+                            value={searchTerm}
+                            onChange={(e) => {
+                              setSearchTerm(e.target.value);
+                              if (e.target.value.length >= 2) {
+                                setShowResults(true);
+                              } else {
+                                setShowResults(false);
+                              }
+                            }}
+                            onFocus={() => searchTerm.length >= 2 && searchResults.length > 0 && setShowResults(true)}
+                          />
+                          {isLoading && (
+                            <div className="absolute right-3 top-3">
+                              <div
+                                className="w-4 h-4 border-2 border-slate-border border-t-rust rounded-full animate-spin"></div>
+                            </div>
+                          )}
+
+                          {/* Search Results Dropdown */}
+                          {showResults && searchResults.length > 0 && (
+                            <div
+                              className="absolute z-10 w-full mt-1 bg-white dark:bg-bark border-2 border-slate-border dark:border-slate rounded-md shadow-custom-lg max-h-60 overflow-y-auto">
+                              {searchResults.map((species) => (
+                                <button
+                                  key={species.Id}
+                                  type="button"
+                                  onClick={() => addSpecies(species)}
+                                  className="w-full text-left px-3 py-2 hover:bg-sand dark:hover:bg-forest transition-colors border-b border-slate-border dark:border-slate last:border-b-0"
+                                >
+                                  <div
+                                    className="font-medium text-bark dark:text-sand">{species.PrefferedPopularname}</div>
+                                  <div className="text-sm text-slate italic">{species.ValidScientificName}</div>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-bark dark:text-sand">Observerte arter</Label>
+                        {species.length === 0 && (
+                          <p className="text-sm text-slate mt-1">
+                            Ingen arter lagt til enda. Bruk søkefeltet over for å legge til arter du har observert.
+                          </p>
+                        )}
+                        <div className="mt-1 space-y-sm">
+                          {species.map((s, index) => (
+                            <SpeciesItem
+                              key={index}
+                              species={s}
+                              updateSpecies={(field: keyof Species, value: string | number) => updateSpecies(index, field, value)}
+                              removeSpecies={() => removeSpecies(index)}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )
+                }}
+              />
+
+              <Controller
+                name={'comment'}
+                control={control}
+                render={({field: {value, onChange}}) => (
+                  <div>
+                    <Label htmlFor="comment" className="text-bark dark:text-sand">
+                      Kommentar
+                    </Label>
+                    <Textarea
+                      id="comment"
+                      placeholder="Legg til notater om den generelle observasjonen..."
                       value={value}
                       onChange={(e) => onChange(e.target.value)}
                       className="mt-1"
-                    />
-                    {loadingLocationName && (
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                        <div
-                          className="w-4 h-4 border-2 border-slate-border border-t-rust rounded-full animate-spin"></div>
-                      </div>
-                    )}
-                  </div>
-                  <p className="text-xs text-slate mt-1">
-                    {geocodingFailed
-                      ? 'Kunne ikke hente stedsnavn automatisk. Vennligst fyll inn manuelt.'
-                      : 'Foreslått basert på koordinater, kan redigeres'}
-                  </p>
-                </div>
-              )}
-            />
-
-            <Controller
-              name={'uncertaintyRadius'}
-              control={control}
-              render={({field: {value, onChange}}) => (
-                <div>
-                  <Label htmlFor="uncertainty" className="text-bark dark:text-sand">
-                    Usikkerhetsradius (meter)
-                  </Label>
-                  <Input
-                    id="uncertainty"
-                    type="number"
-                    min="0"
-                    value={value}
-                    onChange={(e) =>
-                      onChange(e.target.value === '' ? undefined : Number(e.target.value))
-                    }
-                    className="mt-1"
-                  />
-                </div>
-              )}
-            />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
-              <Controller
-                name={'startDate'}
-                control={control}
-                render={({field: {value, onChange}}) => (
-                  <div>
-                    <Label htmlFor="startDate" className="text-bark dark:text-sand">
-                      Starttid
-                    </Label>
-                    <Input
-                      id="startDate"
-                      type="datetime-local"
-                      value={value}
-                      onChange={(e) => onChange(e.target.value)}
-                      className="mt-1 max-w-full"
+                      rows={3}
                     />
                   </div>
                 )}
               />
 
-              <Controller
-                name={'endDate'}
-                control={control}
-                render={({field: {value, onChange}}) => (
-                  <div>
-                    <Label htmlFor="endDate" className="text-bark dark:text-sand">
-                      Sluttid
-                    </Label>
-                    <Input
-                      id="endDate"
-                      type="datetime-local"
-                      value={value}
-                      onChange={(e) => onChange(e.target.value)}
-                      className="mt-1 max-w-full"
-                    />
-                  </div>
-                )}
-              />
             </div>
-
-            <Controller
-              name={'species'}
-              control={control}
-              render={({field: {value: species = [], onChange}}) => {
-
-                const addSpecies = (taxon: TaxonRecord) => {
-                  const newObservation: CreateSpecies = {
-                    species: taxon,
-                    gender: "unknown",
-                    count: 1,
-                  };
-                  onChange([...species, newObservation]);
-                  setSearchTerm('');
-                  setShowResults(false);
-                  setError(null); // Clear error when species is added
-                  // Automatically expand newly added species
-                  setExpandedSpecies(prev => {
-                    const newSet = new Set(prev);
-                    newSet.add(species.length); // Add the index of the new item
-                    return newSet;
-                  });
-                };
-
-                const updateSpecies = (index: number, field: keyof Species, value: string | number) => {
-                  const updated = [...species];
-                  if (field === 'count') {
-                    updated[index] = {
-                      ...updated[index],
-                      [field]: typeof value === 'number' ? value : parseInt(value) || 1
-                    };
-                  } else if (field === 'gender') {
-                    updated[index] = {...updated[index], [field]: value as 'male' | 'female' | 'unknown'};
-                  } else if (field === 'comment' || field === 'age' || field === 'method' || field === 'activity') {
-                    updated[index] = {...updated[index], [field]: value as string};
-                  }
-                  onChange(updated);
-                };
-
-                const removeSpecies = (index: number) => {
-                  onChange(species.filter((_, i) => i !== index));
-                  setError(null);
-                  // Adjust expanded indices: remove the deleted index and shift down higher indices
-                  setExpandedSpecies(prev => {
-                    const newSet = new Set<number>();
-                    prev.forEach(expandedIndex => {
-                      if (expandedIndex < index) {
-                        // Keep indices below the removed item
-                        newSet.add(expandedIndex);
-                      } else if (expandedIndex > index) {
-                        // Shift down indices above the removed item
-                        newSet.add(expandedIndex - 1);
-                      }
-                      // Skip the removed index itself
-                    });
-                    return newSet;
-                  });
-                };
-
-                const toggleSpeciesExpanded = (index: number) => {
-                  setExpandedSpecies(prev => {
-                    const newSet = new Set(prev);
-                    if (newSet.has(index)) {
-                      newSet.delete(index);
-                    } else {
-                      newSet.add(index);
-                    }
-                    return newSet;
-                  });
-                };
-
-                return (
-                  <>
-                    <div>
-                      <Label htmlFor="species-search" className="text-bark dark:text-sand">
-                        Søk etter Art
-                      </Label>
-
-                      {/* Recently Observed Species */}
-                      {recentSpecies.length > 0 && (
-                        <div className="mt-2 mb-3">
-                          <div className="text-xs text-slate mb-2">Nylig observerte arter:</div>
-                          <div className="flex flex-wrap gap-2">
-                            {recentSpecies.map((species) => (
-                              <button
-                                key={species.Id}
-                                type="button"
-                                onClick={() => addSpecies(species)}
-                                className="px-3 py-1.5 bg-moss/10 hover:bg-moss/20 dark:bg-moss/20 dark:hover:bg-moss/30 text-bark dark:text-sand text-sm rounded-md border border-moss/30 dark:border-moss/40 transition-colors flex items-center gap-1.5"
-                                title={species.ValidScientificName}
-                              >
-                                <span className="font-medium">{species.PrefferedPopularname}</span>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="relative mt-1">
-                        <Input
-                          id="species-search"
-                          type="text"
-                          placeholder="Skriv for å søke..."
-                          value={searchTerm}
-                          onChange={(e) => {
-                            setSearchTerm(e.target.value);
-                            if (e.target.value.length >= 2) {
-                              setShowResults(true);
-                            } else {
-                              setShowResults(false);
-                            }
-                          }}
-                          onFocus={() => searchTerm.length >= 2 && searchResults.length > 0 && setShowResults(true)}
-                        />
-                        {isLoading && (
-                          <div className="absolute right-3 top-3">
-                            <div
-                              className="w-4 h-4 border-2 border-slate-border border-t-rust rounded-full animate-spin"></div>
-                          </div>
-                        )}
-
-                        {/* Search Results Dropdown */}
-                        {showResults && searchResults.length > 0 && (
-                          <div
-                            className="absolute z-10 w-full mt-1 bg-white dark:bg-bark border-2 border-slate-border dark:border-slate rounded-md shadow-custom-lg max-h-60 overflow-y-auto">
-                            {searchResults.map((species) => (
-                              <button
-                                key={species.Id}
-                                type="button"
-                                onClick={() => addSpecies(species)}
-                                className="w-full text-left px-3 py-2 hover:bg-sand dark:hover:bg-forest transition-colors border-b border-slate-border dark:border-slate last:border-b-0"
-                              >
-                                <div
-                                  className="font-medium text-bark dark:text-sand">{species.PrefferedPopularname}</div>
-                                <div className="text-sm text-slate italic">{species.ValidScientificName}</div>
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div>
-                      <Label className="text-bark dark:text-sand">Artsobservasjoner</Label>
-                      <div className="mt-1 space-y-sm">
-                        {species.map((obs, index) => {
-                          const isExpanded = expandedSpecies.has(index);
-                          return (
-                            <div
-                              key={index}
-                              className="bg-white dark:bg-forest rounded-md border-2 border-moss"
-                            >
-                              {/* Compact Header - Always Visible */}
-                              <div
-                                className="flex items-center justify-between p-sm cursor-pointer hover:bg-sand/50 dark:hover:bg-bark/50 transition-colors"
-                                onClick={() => toggleSpeciesExpanded(index)}
-                              >
-                                <div className="flex-1 min-w-0">
-                                  <div className="font-medium text-bark dark:text-sand truncate">
-                                    {obs.species.PrefferedPopularname}
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-sm ml-sm shrink-0">
-                                  <Button
-                                    variant="accent"
-                                    size={"icon"}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      e.preventDefault();
-                                      removeSpecies(index);
-                                    }}
-                                    aria-label="Remove species"
-                                    className="shrink-0"
-                                  >
-                                    <X size={20}/>
-                                  </Button>
-                                </div>
-                              </div>
-
-                              {/* Expanded Details */}
-                              {isExpanded && (
-                                <div className="px-md pb-md space-y-sm border-t border-moss/30">
-                                  <div className="pt-sm">
-                                    <div className="text-sm text-slate italic">{obs.species.ValidScientificName}</div>
-                                  </div>
-
-                                  <div className="grid grid-cols-2 gap-sm">
-                                    <div>
-                                      <Label htmlFor={`gender-${index}`} className="text-bark dark:text-sand text-xs">
-                                        Kjønn
-                                      </Label>
-                                      <Select
-                                        id={`gender-${index}`}
-                                        value={obs.gender}
-                                        onChange={(e) => updateSpecies(index, 'gender', e.target.value)}
-                                        className="mt-1"
-                                      >
-                                        <option value="unknown">Ukjent</option>
-                                        <option value="male">Male</option>
-                                        <option value="female">Female</option>
-                                      </Select>
-                                    </div>
-                                    <div>
-                                      <Label htmlFor={`count-${index}`} className="text-bark dark:text-sand text-xs">
-                                        Antall
-                                      </Label>
-                                      <Input
-                                        id={`count-${index}`}
-                                        type="number"
-                                        min="1"
-                                        value={obs.count}
-                                        onChange={(e) => updateSpecies(index, 'count', parseInt(e.target.value) || 1)}
-                                        className="mt-1"
-                                      />
-                                    </div>
-                                  </div>
-
-                                  <div className="grid grid-cols-3 gap-sm">
-                                    <div>
-                                      <Label htmlFor={`age-${index}`} className="text-bark dark:text-sand text-xs">
-                                        Alder
-                                      </Label>
-                                      <Input
-                                        id={`age-${index}`}
-                                        type="text"
-                                        placeholder="f.eks. voksen"
-                                        value={obs.age || ''}
-                                        onChange={(e) => updateSpecies(index, 'age', e.target.value)}
-                                        className="mt-1"
-                                      />
-                                    </div>
-                                    <div>
-                                      <Label htmlFor={`method-${index}`} className="text-bark dark:text-sand text-xs">
-                                        Metode
-                                      </Label>
-                                      <Input
-                                        id={`method-${index}`}
-                                        type="text"
-                                        placeholder="f.eks. sett"
-                                        value={obs.method || ''}
-                                        onChange={(e) => updateSpecies(index, 'method', e.target.value)}
-                                        className="mt-1"
-                                      />
-                                    </div>
-                                    <div>
-                                      <Label htmlFor={`activity-${index}`} className="text-bark dark:text-sand text-xs">
-                                        Aktivitet
-                                      </Label>
-                                      <Input
-                                        id={`activity-${index}`}
-                                        type="text"
-                                        placeholder="f.eks. flyr"
-                                        value={obs.activity || ''}
-                                        onChange={(e) => updateSpecies(index, 'activity', e.target.value)}
-                                        className="mt-1"
-                                      />
-                                    </div>
-                                  </div>
-
-                                  <div>
-                                    <Label htmlFor={`species-comment-${index}`}
-                                           className="text-bark dark:text-sand text-xs">
-                                      Notat
-                                    </Label>
-                                    <Textarea
-                                      id={`species-comment-${index}`}
-                                      placeholder="Notater om denne spesifikke arten..."
-                                      value={obs.comment}
-                                      onChange={(e) => updateSpecies(index, 'comment', e.target.value)}
-                                      className="mt-1"
-                                      rows={2}
-                                    />
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </>
-                )
-              }}
-            />
-
-            <Controller
-              name={'comment'}
-              control={control}
-              render={({field: {value, onChange}}) => (
-                <div>
-                  <Label htmlFor="comment" className="text-bark dark:text-sand">
-                    Kommentar
-                  </Label>
-                  <Textarea
-                    id="comment"
-                    placeholder="Legg til notater om den generelle observasjonen..."
-                    value={value}
-                    onChange={(e) => onChange(e.target.value)}
-                    className="mt-1"
-                    rows={3}
-                  />
-                </div>
-              )}
-            />
-
-            <div className="flex gap-md justify-end pt-md">
+            <div
+              className="flex gap-md justify-end pt-md sticky bottom-0 bg-sand dark:bg-bark border-t-2 border-moss p-md z-10">
               <Button type="button" variant="outline" onClick={onClose}>
                 Avbryt
               </Button>
-              <Button type="submit">
+              <Button type="submit" disabled={!isDirty || !isValid}>
                 Lagre
               </Button>
             </div>

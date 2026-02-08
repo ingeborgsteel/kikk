@@ -59,8 +59,6 @@ export function LoginForm({closeLoginForm, showLoginForm}: { closeLoginForm: () 
     setLoading(false);
   };
 
-  console.log(showLoginForm);
-
   if (!showLoginForm) {
     return null;
   }

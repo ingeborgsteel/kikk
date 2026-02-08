@@ -8,7 +8,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "bg-rust text-white hover:bg-rust-dark shadow-custom hover:shadow-custom-lg hover:-translate-y-0.5 active:translate-y-0",
-        secondary: "bg-moss text-white hover:bg-forest shadow-custom hover:shadow-custom-lg hover:-translate-y-0.5 active:translate-y-0",
+        secondary: "bg-moss text-white hover:bg-rust shadow-custom hover:shadow-custom-lg hover:-translate-y-0.5 active:translate-y-0",
         outline: "border-2 text-bark border-slate-border bg-white hover:bg-sand hover:text-bark",
         ghost: "hover:bg-sand hover:text-bark",
         accent: "bg-rust text-white hover:bg-rust-dark shadow-custom hover:shadow-custom-lg hover:-translate-y-0.5 active:translate-y-0",

@@ -231,7 +231,9 @@ const ObservationForm = ({observation, onClose, location, zoom = 13}: Observatio
                     type="number"
                     min="0"
                     value={value}
-                    onChange={(e) => onChange(e.target.value)}
+                    onChange={(e) =>
+                      onChange(e.target.value === '' ? undefined : Number(e.target.value))
+                    }
                     className="mt-1"
                   />
                 </div>

@@ -38,9 +38,10 @@ L.Marker.prototype.options.icon = DefaultIcon;
 interface LocationEditorProps {
   location: { lat: number; lng: number };
   onLocationChange: (lat: number, lng: number) => void;
+  zoom?: number;
 }
 
-export const LocationEditor = ({ location, onLocationChange }: LocationEditorProps) => {
+export const LocationEditor = ({ location, onLocationChange, zoom = 13 }: LocationEditorProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
@@ -48,11 +49,11 @@ export const LocationEditor = ({ location, onLocationChange }: LocationEditorPro
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
-    // Initialize map centered on the location
+    // Initialize map centered on the location with the specified zoom
     map.current = L.map(mapContainer.current, {
       zoomControl: true,
       attributionControl: false,
-    }).setView([location.lat, location.lng], 13);
+    }).setView([location.lat, location.lng], zoom);
 
     // Add OpenStreetMap tiles
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {

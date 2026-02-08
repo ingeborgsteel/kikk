@@ -16,10 +16,11 @@ import {LocationEditor} from "./LocationEditor.tsx";
 interface ObservationFormProps {
   observation?: Observation,
   onClose: () => void,
-  location: { lat: number; lng: number }
+  location: { lat: number; lng: number },
+  zoom?: number
 }
 
-const ObservationForm = ({observation, onClose, location}: ObservationFormProps) => {
+const ObservationForm = ({observation, onClose, location, zoom = 13}: ObservationFormProps) => {
   const {addObservation, updateObservation, observations} = useObservations();
   const [searchTerm, setSearchTerm] = useState('');
   const [showResults, setShowResults] = useState(false);
@@ -193,6 +194,7 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
             <LocationEditor 
               location={currentLocation} 
               onLocationChange={handleLocationChange}
+              zoom={zoom}
             />
           </div>
 

@@ -62,7 +62,7 @@ L.Marker.prototype.options.icon = DefaultIcon;
 const MAP_RESIZE_DELAY_MS = 100;
 
 interface MapProps {
-  onLocationSelect?: (lat: number, lng: number) => void;
+  onLocationSelect?: (lat: number, lng: number, zoom: number) => void;
   observations?: Observation[];
   onObservationClick?: (observationId: string) => void;
 }
@@ -124,8 +124,9 @@ function Map({onLocationSelect, observations = [], onObservationClick}: MapProps
       }
 
       // Call callback if provided
-      if (onLocationSelect) {
-        onLocationSelect(lat, lng);
+      if (onLocationSelect && map.current) {
+        const currentZoom = map.current.getZoom();
+        onLocationSelect(lat, lng, currentZoom);
       }
     });
 

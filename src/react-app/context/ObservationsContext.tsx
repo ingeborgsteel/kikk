@@ -21,9 +21,9 @@ const STORAGE_KEY = 'kikk_observations';
 
 export function ObservationsProvider({children}: { children: ReactNode }) {
   const {data: observations = []} = useFetchObservations();
-  const {mutateAsync: create} = useCreateObservation();
-  const {mutateAsync: remove} = useDeleteObservation();
-  const {mutateAsync: update} = useUpdateObservation();
+  const {mutate: create} = useCreateObservation();
+  const {mutate: remove} = useDeleteObservation();
+  const {mutate: update} = useUpdateObservation();
 
   // Save observations to localStorage whenever they change
   useEffect(() => {
@@ -31,15 +31,27 @@ export function ObservationsProvider({children}: { children: ReactNode }) {
   }, [observations]);
 
   const addObservation = (observation: CreateObservationInput) => {
-    create(observation);
+    create(observation, {
+      onError: (error) => {
+        console.error('Failed to create observation:', error);
+      }
+    });
   };
 
   const updateObservation = (updatedObservation: Observation) => {
-    update(updatedObservation);
+    update(updatedObservation, {
+      onError: (error) => {
+        console.error('Failed to update observation:', error);
+      }
+    });
   };
 
   const deleteObservation = (id: string) => {
-    remove(id);
+    remove(id, {
+      onError: (error) => {
+        console.error('Failed to delete observation:', error);
+      }
+    });
   };
 
   return (

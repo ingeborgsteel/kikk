@@ -203,6 +203,7 @@ function Map({onLocationSelect, observations = [], onObservationClick}: MapProps
         markerRef.current = null;
       }
       if (userLocationMarkerRef.current) {
+        userLocationMarkerRef.current.remove();
         userLocationMarkerRef.current = null;
       }
       observationMarkersRef.current = [];

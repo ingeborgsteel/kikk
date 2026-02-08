@@ -25,6 +25,9 @@ Built with modern web technologies for a fast, responsive experience:
 - 🔍 **Species Search** - Search species using Artsdatabanken (Norwegian Biodiversity Information Centre) database
 - 📝 **Detailed Observations** - Record species, gender, count, location uncertainty, and field notes
 - 📋 **Observation Management** - View, edit, and delete your observation records
+- 📊 **Excel Export** - Export observations to Excel spreadsheets with complete metadata
+- 🏷️ **Export Tracking** - Track which observations have been exported and when
+- 📥 **Export History** - View and re-download previous exports (with Supabase)
 - 💾 **Local Storage** - Your observations are stored locally in your browser
 - 🔐 **Optional Authentication** - Sign in with email and password for enhanced features
 - 📱 **Responsive Design** - Works seamlessly on desktop and mobile devices
@@ -64,7 +67,12 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
    - Enable Email provider
    - Disable "Confirm email" if you want to allow immediate login without email confirmation
 
-The app works fully without authentication - it's completely optional. Local storage will continue to work whether you're logged in or not.
+7. Run the database migration to create export tracking tables:
+   - In your Supabase project, go to SQL Editor
+   - Run the migration file: `supabase/migrations/20260208_add_export_functionality.sql`
+   - This creates the `export_logs` table and storage bucket for exports
+
+The app works fully without authentication - it's completely optional. Local storage will continue to work whether you're logged in or not. Export functionality works locally without Supabase, but export logs and file storage require Supabase.
 
 Start the development server:
 
@@ -110,6 +118,8 @@ npx wrangler tail
 
 ## Usage
 
+### Recording Observations
+
 1. **Add an Observation**: Click anywhere on the map to select a location
 2. **Enter Details**: 
    - Search for and select species from the Artsdatabanken database
@@ -118,8 +128,25 @@ npx wrangler tail
    - Set observation date and time
    - Add field notes and per-species comments
 3. **Save**: Your observation is stored locally
-4. **View**: Click "My Observations" to see all your recorded observations
+4. **View**: Click "Kikket på" to see all your recorded observations
 5. **Manage**: Edit or delete observations as needed
+
+### Exporting Observations
+
+The app provides Excel export functionality to help you share and analyze your observations:
+
+1. **Open Export Dialog**: Click "Eksporter til Excel" button on the observations page
+2. **Choose Export Type**:
+   - **Kun nye observasjoner**: Export only observations that haven't been exported before (marked with "Ny" badge)
+   - **Alle observasjoner**: Export all observations regardless of export status
+3. **Download**: Click export button to download the Excel file
+
+**Export Features:**
+- Observations are marked with "Ny" (new) badge if never exported
+- Previously exported observations show last export date and count
+- Excel files include all observation details: location, species, dates, comments, and export history
+- With Supabase configured: Export logs are saved and can be re-downloaded later
+- Without Supabase: Exports work locally, but history is not saved
 
 ## Additional Resources
 

@@ -1,10 +1,17 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Observation } from '../types/observation';
+import {createContext, ReactNode, useContext, useEffect} from 'react';
+import {Observation} from '../types/observation';
+import {
+  useCreateObservation,
+  useDeleteObservation,
+  useFetchObservations,
+  useUpdateObservation
+} from "../queries/useObservation.ts";
+import {CreateObservationInput} from "../api/observations.ts";
 
 interface ObservationsContextType {
   observations: Observation[];
-  addObservation: (observation: Observation) => void;
-  updateObservation: (id: string, observation: Observation) => void;
+  addObservation: (observation: CreateObservationInput) => void;
+  updateObservation: (observation: Observation) => void;
   deleteObservation: (id: string) => void;
 }
 
@@ -12,34 +19,31 @@ const ObservationsContext = createContext<ObservationsContextType | undefined>(u
 
 const STORAGE_KEY = 'kikk_observations';
 
-export function ObservationsProvider({ children }: { children: ReactNode }) {
-  const [observations, setObservations] = useState<Observation[]>(() => {
-    // Load observations from localStorage on mount
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
-  });
+export function ObservationsProvider({children}: { children: ReactNode }) {
+  const {data: observations = []} = useFetchObservations();
+  const {mutateAsync: create} = useCreateObservation();
+  const {mutateAsync: remove} = useDeleteObservation();
+  const {mutateAsync: update} = useUpdateObservation();
 
   // Save observations to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(observations));
   }, [observations]);
 
-  const addObservation = (observation: Observation) => {
-    setObservations(prev => [...prev, observation]);
+  const addObservation = (observation: CreateObservationInput) => {
+    create(observation);
   };
 
-  const updateObservation = (id: string, updatedObservation: Observation) => {
-    setObservations(prev => 
-      prev.map(obs => obs.id === id ? updatedObservation : obs)
-    );
+  const updateObservation = (updatedObservation: Observation) => {
+    update(updatedObservation);
   };
 
   const deleteObservation = (id: string) => {
-    setObservations(prev => prev.filter(obs => obs.id !== id));
+    remove(id);
   };
 
   return (
-    <ObservationsContext.Provider value={{ observations, addObservation, updateObservation, deleteObservation }}>
+    <ObservationsContext.Provider value={{observations, addObservation, updateObservation, deleteObservation}}>
       {children}
     </ObservationsContext.Provider>
   );

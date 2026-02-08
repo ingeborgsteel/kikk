@@ -120,7 +120,7 @@ function Map({onLocationSelect, observations = [], onObservationClick}: MapProps
 
       // Add new marker at clicked location with rust color
       if (map.current) {
-        markerRef.current = L.marker([lat, lng], { icon: SelectionIcon }).addTo(map.current);
+        markerRef.current = L.marker([lat, lng], {icon: SelectionIcon}).addTo(map.current);
       }
 
       // Call callback if provided
@@ -205,14 +205,14 @@ function Map({onLocationSelect, observations = [], onObservationClick}: MapProps
         ).addTo(map.current);
 
         // Create popup content
-        const speciesList = observation.speciesObservations
+        const speciesList = (observation.speciesObservations || [])
           .map(so => so.species.PrefferedPopularname || so.species.ValidScientificName)
           .join(', ');
 
         const popupContent = `
           <div style="min-width: 150px;">
             <strong>${speciesList}</strong><br/>
-            <small>${new Date(observation.date).toLocaleDateString('no-NO')}</small><br/>
+            <small>${new Date(observation.startDate).toLocaleDateString('no-NO')}</small><br/>
             <small>±${observation.uncertaintyRadius}m</small>
           </div>
         `;

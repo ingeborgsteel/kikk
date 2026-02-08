@@ -11,6 +11,7 @@ import {useSpeciesSearch} from "../hooks/useSpeciesSearch.ts";
 import {TaxonRecord} from "../types/artsdatabanken.ts";
 import {Controller, useForm} from "react-hook-form";
 import {getRecentSpecies, reverseGeocode} from "../lib/utils.ts";
+import {LocationEditor} from "./LocationEditor.tsx";
 
 interface ObservationFormProps {
   observation?: Observation,
@@ -27,6 +28,7 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
   const [loadingLocationName, setLoadingLocationName] = useState(false);
   const [geocodingFailed, setGeocodingFailed] = useState(false);
   const [formReady, setFormReady] = useState(!!observation); // Form is ready immediately if editing
+  const [currentLocation, setCurrentLocation] = useState(location);
 
   const {data: searchResults = [], isLoading} = useSpeciesSearch(searchTerm);
   
@@ -41,20 +43,55 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
       endDate: observation?.endDate || observation?.date || defaultStartDate,
       locationName: observation?.locationName || '',
       date: observation?.date || defaultStartDate, // Keep for backward compatibility
-      location,
+      location: currentLocation,
       uncertaintyRadius: observation?.uncertaintyRadius || 10,
       ...observation
     }
   })
+
+  // Handle location change from map editor
+  const handleLocationChange = useCallback((lat: number, lng: number) => {
+    const newLocation = { lat, lng };
+    setCurrentLocation(newLocation);
+    setValue('location', newLocation);
+    
+    // Re-fetch location name when position changes significantly (> 100m)
+    const distance = Math.sqrt(
+      Math.pow((lat - currentLocation.lat) * 111000, 2) +
+      Math.pow((lng - currentLocation.lng) * 111000 * Math.cos(lat * Math.PI / 180), 2)
+    );
+    
+    if (distance > 100) {
+      setLoadingLocationName(true);
+      setGeocodingFailed(false);
+      reverseGeocode(lat, lng)
+        .then(name => {
+          if (name) {
+            setValue('locationName', name);
+            setGeocodingFailed(false);
+          } else {
+            setGeocodingFailed(true);
+          }
+        })
+        .catch(err => {
+          console.error('Failed to get location name:', err);
+          setGeocodingFailed(true);
+        })
+        .finally(() => {
+          setLoadingLocationName(false);
+        });
+    }
+  }, [currentLocation, setValue]);
 
   // Fetch location name when form opens for a new observation
   useEffect(() => {
     const currentLocationName = getValues('locationName');
     // Only fetch if this is a new observation and locationName is not yet set
     if (!observation && currentLocationName === '') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoadingLocationName(true);
       setGeocodingFailed(false);
-      reverseGeocode(location.lat, location.lng)
+      reverseGeocode(currentLocation.lat, currentLocation.lng)
         .then(name => {
           if (name) {
             setValue('locationName', name);
@@ -72,7 +109,7 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
           setFormReady(true); // Form is ready after geocoding completes (success or failure)
         });
     }
-  }, [observation, location, setValue, getValues]);
+  }, [observation, currentLocation, setValue, getValues]);
 
   const save = useCallback((data: Observation) => {
     // Ensure backward compatibility: if only date is set, use it for startDate/endDate
@@ -150,9 +187,13 @@ const ObservationForm = ({observation, onClose, location}: ObservationFormProps)
 
           <div>
             <Label className="text-bark dark:text-sand">Plassering</Label>
-            <p className="text-sm text-slate mt-1">
-              Lat: {location.lat.toFixed(4)}, Lng: {location.lng.toFixed(4)}
+            <p className="text-sm text-slate mt-1 mb-2">
+              Lat: {currentLocation.lat.toFixed(4)}, Lng: {currentLocation.lng.toFixed(4)}
             </p>
+            <LocationEditor 
+              location={currentLocation} 
+              onLocationChange={handleLocationChange}
+            />
           </div>
 
           <Controller

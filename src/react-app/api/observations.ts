@@ -27,33 +27,20 @@ export async function createObservation(
   input: CreateObservationInput,
   user: { id: string } | null = null,
 ): Promise<Observation> {
-  // 1) insert parent observation (WITHOUT speciesObservations)
+  // Use RPC function for atomic insert
   const {speciesObservations, ...observationRow} = input;
 
-  const {data: insertedObs, error: obsError} = await supabase
-    .from("observations")
-    .insert({...observationRow, userId: user?.id})
-    .select(
-      `
-      *,
-      speciesObservations:speciesObservations (*)
-      `
-    )
-    .single();
+  const {data, error} = await supabase
+    .rpc("create_observation_with_species", {
+      observation_data: observationRow,
+      species_observations_data: speciesObservations,
+      user_id: user?.id || null,
+    });
 
-  if (obsError) throw obsError;
-  if (!insertedObs) throw new Error("Failed to insert observation");
+  if (error) throw error;
+  if (!data) throw new Error("Failed to insert observation");
 
-  // 2) insert child rows (if any)
-  if (speciesObservations.length > 0) {
-    const {error: childError} = await supabase
-      .from("speciesObservations")
-      .insert(speciesObservations.map((obs) => ({...obs, observationId: insertedObs.id})));
-
-    if (childError) throw childError;
-  }
-
-  return insertedObs;
+  return data as Observation;
 }
 
 export async function updateObservation(updatedObservation: Observation): Promise<Observation> {

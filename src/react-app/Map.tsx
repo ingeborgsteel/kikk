@@ -76,6 +76,7 @@ function Map({onLocationSelect, observations = [], onObservationClick}: MapProps
   } | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
   const observationMarkersRef = useRef<L.Marker[]>([]);
+  const userLocationMarkerRef = useRef<L.CircleMarker | null>(null);
   const [isLocating, setIsLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [userLocation, setUserLocation] = useState<{
@@ -86,9 +87,9 @@ function Map({onLocationSelect, observations = [], onObservationClick}: MapProps
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
-    // Initialize map with default center (Norway)
-    const defaultCenter: [number, number] = [60.472, 8.4689];
-    const defaultZoom = 6;
+    // Initialize map with default center (Oslo, Norway)
+    const defaultCenter: [number, number] = [59.9139, 10.7522];
+    const defaultZoom = 12;
 
     map.current = L.map(mapContainer.current).setView(defaultCenter, defaultZoom);
 
@@ -138,7 +139,24 @@ function Map({onLocationSelect, observations = [], onObservationClick}: MapProps
         (position) => {
           const {latitude, longitude} = position.coords;
           setUserLocation({lat: latitude, lng: longitude});
+          
+          // Add blue dot for user location
           if (mapInstance) {
+            // Remove existing user location marker if any
+            if (userLocationMarkerRef.current) {
+              userLocationMarkerRef.current.remove();
+            }
+            
+            // Create blue dot with white border
+            userLocationMarkerRef.current = L.circleMarker([latitude, longitude], {
+              radius: 8,
+              fillColor: '#4285F4',
+              color: '#ffffff',
+              weight: 2,
+              opacity: 1,
+              fillOpacity: 1,
+            }).addTo(mapInstance);
+            
             mapInstance.setView([latitude, longitude], 13);
           }
           setIsLocating(false);
@@ -182,7 +200,12 @@ function Map({onLocationSelect, observations = [], onObservationClick}: MapProps
         map.current = null;
       }
       if (markerRef.current) {
+        markerRef.current.remove();
         markerRef.current = null;
+      }
+      if (userLocationMarkerRef.current) {
+        userLocationMarkerRef.current.remove();
+        userLocationMarkerRef.current = null;
       }
       observationMarkersRef.current = [];
     };

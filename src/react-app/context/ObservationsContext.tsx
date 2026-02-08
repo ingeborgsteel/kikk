@@ -23,7 +23,7 @@ const STORAGE_KEY = 'kikk_observations';
 export function ObservationsProvider({children}: { children: ReactNode }) {
   // Memoize Supabase configuration check to avoid re-evaluation on every render
   const supabaseConfigured = useMemo(() => isSupabaseConfigured(), []);
-  
+
   // Local state for when Supabase is not configured
   const [localObservations, setLocalObservations] = useState<Observation[]>(() => {
     if (supabaseConfigured) return [];
@@ -58,6 +58,11 @@ export function ObservationsProvider({children}: { children: ReactNode }) {
         id: crypto.randomUUID(),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        species: observation.species.map((s) => ({
+          ...s,
+          id: crypto.randomUUID(),
+          createdAt: new Date().toISOString(),
+        }))
       };
       setLocalObservations(prev => [...prev, newObservation]);
     }
@@ -72,6 +77,11 @@ export function ObservationsProvider({children}: { children: ReactNode }) {
         prev.map(obs => obs.id === updatedObservation.id ? {
           ...updatedObservation,
           updatedAt: new Date().toISOString(),
+          species: obs.species.map((s) => ({
+            ...s,
+            id: crypto.randomUUID(),
+            createdAt: new Date().toISOString(),
+          }))
         } : obs)
       );
     }

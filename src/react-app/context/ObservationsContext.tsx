@@ -1,4 +1,4 @@
-import {createContext, ReactNode, useContext, useEffect, useState} from 'react';
+import {createContext, ReactNode, useContext, useEffect, useMemo, useState} from 'react';
 import {Observation} from '../types/observation';
 import {
   useCreateObservation,
@@ -21,7 +21,8 @@ const ObservationsContext = createContext<ObservationsContextType | undefined>(u
 const STORAGE_KEY = 'kikk_observations';
 
 export function ObservationsProvider({children}: { children: ReactNode }) {
-  const supabaseConfigured = isSupabaseConfigured();
+  // Memoize Supabase configuration check to avoid re-evaluation on every render
+  const supabaseConfigured = useMemo(() => isSupabaseConfigured(), []);
   
   // Local state for when Supabase is not configured
   const [localObservations, setLocalObservations] = useState<Observation[]>(() => {
@@ -31,8 +32,10 @@ export function ObservationsProvider({children}: { children: ReactNode }) {
     return stored ? JSON.parse(stored) : [];
   });
 
-  // Supabase hooks (only used when configured)
-  const {data: supabaseObservations = []} = useFetchObservations();
+  // Supabase hooks (disabled when not configured to avoid unnecessary network requests)
+  const {data: supabaseObservations = []} = useFetchObservations({
+    enabled: supabaseConfigured,
+  });
   const {mutateAsync: create} = useCreateObservation();
   const {mutateAsync: remove} = useDeleteObservation();
   const {mutateAsync: update} = useUpdateObservation();

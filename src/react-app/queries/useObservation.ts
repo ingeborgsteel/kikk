@@ -9,11 +9,12 @@ import {
 } from "../api/observations.ts";
 import {useAuth} from "../context/AuthContext.tsx";
 
-export const useFetchObservations = () => {
+export const useFetchObservations = (options?: { enabled?: boolean }) => {
   const {user} = useAuth();
   return useQuery<Observation[]>({
     queryFn: () => fetchObservations(user?.id),
     queryKey: ["observations", user?.id],
+    enabled: options?.enabled ?? true,
   })
 }
 

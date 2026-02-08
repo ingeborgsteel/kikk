@@ -26,7 +26,7 @@ export type CreateObservationInput = Omit<
 export async function createObservation(
   input: CreateObservationInput,
   user: { id: string } | null = null,
-): Promise<Omit<Observation, "speciesObservations">> {
+): Promise<Observation> {
   // 1) insert parent observation (WITHOUT speciesObservations)
   const {speciesObservations, ...observationRow} = input;
 
@@ -56,17 +56,22 @@ export async function createObservation(
   return insertedObs;
 }
 
-export async function updateObservation(updatedObservation: Observation): Promise<string> {
+export async function updateObservation(updatedObservation: Observation): Promise<Observation> {
   const {id, speciesObservations, ...observationPatch} = updatedObservation;
 
   // 1) Update parent (only if there are fields to update)
-  const {error: parentError} = await supabase
+  const {data: observation, error: parentError} = await supabase
     .from("observations")
     .update({
       ...observationPatch,
       updatedAt: new Date().toISOString(),
     })
-    .eq("id", id);
+    .eq("id", id)
+    .select(`
+      *,
+      speciesObservations:speciesObservations (*)
+      `)
+    .single();
 
   if (parentError) throw parentError;
 
@@ -74,7 +79,7 @@ export async function updateObservation(updatedObservation: Observation): Promis
   if (speciesObservations) {
     // delete existing child rows
     const {error: delError} = await supabase
-      .from("speciesObservation")
+      .from("speciesObservations")
       .delete()
       .eq("observationId", id);
 
@@ -84,14 +89,14 @@ export async function updateObservation(updatedObservation: Observation): Promis
     if (speciesObservations.length > 0) {
 
       const {error: insError} = await supabase
-        .from("speciesObservation")
+        .from("speciesObservations")
         .insert(speciesObservations.map((obs) => ({...obs, observationId: id})));
 
       if (insError) throw insError;
     }
   }
 
-  return "ok";
+  return observation;
 }
 
 export async function deleteObservation(observationId: string): Promise<void> {

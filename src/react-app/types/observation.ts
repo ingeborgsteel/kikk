@@ -1,7 +1,7 @@
 import {TaxonRecord} from "./artsdatabanken.ts";
 
 export interface Species {
-  id: number;
+  id: string;
   createdAt: string;
   species: TaxonRecord;
   gender: 'male' | 'female' | 'unknown';

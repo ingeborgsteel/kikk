@@ -46,44 +46,18 @@ export async function createObservation(
 export async function updateObservation(updatedObservation: Observation): Promise<Observation> {
   const {id, speciesObservations, ...observationPatch} = updatedObservation;
 
-  // 1) Update parent (only if there are fields to update)
-  const {data: observation, error: parentError} = await supabase
-    .from("observations")
-    .update({
-      ...observationPatch,
-      updatedAt: new Date().toISOString(),
-    })
-    .eq("id", id)
-    .select(`
-      *,
-      speciesObservations:speciesObservations (*)
-      `)
-    .single();
+  // Use RPC function for atomic update
+  const {data, error} = await supabase
+    .rpc("update_observation_with_species", {
+      observation_id: id,
+      observation_data: observationPatch,
+      species_observations_data: speciesObservations,
+    });
 
-  if (parentError) throw parentError;
+  if (error) throw error;
+  if (!data) throw new Error("Failed to update observation");
 
-  // 2) Replace children if provided
-  if (speciesObservations) {
-    // delete existing child rows
-    const {error: delError} = await supabase
-      .from("speciesObservations")
-      .delete()
-      .eq("observationId", id);
-
-    if (delError) throw delError;
-
-    // insert new child rows (if any)
-    if (speciesObservations.length > 0) {
-
-      const {error: insError} = await supabase
-        .from("speciesObservations")
-        .insert(speciesObservations.map((obs) => ({...obs, observationId: id})));
-
-      if (insError) throw insError;
-    }
-  }
-
-  return observation;
+  return data as Observation;
 }
 
 export async function deleteObservation(observationId: string): Promise<void> {

@@ -83,6 +83,7 @@ export const LocationEditor = ({ location, onLocationChange }: LocationEditorPro
     });
 
     // Ensure the map container is properly sized
+    // This delay allows the DOM to fully render before invalidating size
     setTimeout(() => {
       if (map.current) {
         map.current.invalidateSize();
@@ -99,6 +100,8 @@ export const LocationEditor = ({ location, onLocationChange }: LocationEditorPro
         markerRef.current = null;
       }
     };
+    // Empty deps: only initialize once on mount. location/onLocationChange handled by separate effect
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Update marker position when location prop changes externally

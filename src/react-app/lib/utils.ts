@@ -66,16 +66,13 @@ export async function reverseGeocode(lat: number, lng: number): Promise<string |
     if (data.address) {
       const addr = data.address;
       // Add locality (village, town, city, etc.)
-      const locality = addr.village || addr.town || addr.city || addr.hamlet || addr.suburb;
+      const locality = addr.farm || addr.leisure || addr.neighbourhood || addr.hamlet || addr.road || addr.village || addr.town || addr.city || addr.suburb;
       if (locality) parts.push(locality);
 
       // Add municipality if different from locality
       if (addr.municipality && addr.municipality !== locality) {
         parts.push(addr.municipality);
       }
-
-      // Add county
-      if (addr.county) parts.push(addr.county);
     }
 
     // If we have parts, join them; otherwise use display_name

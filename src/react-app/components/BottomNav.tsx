@@ -3,19 +3,18 @@ import {useAuth} from '../context/AuthContext';
 import {isSupabaseConfigured} from '../lib/supabase';
 
 interface BottomNavProps {
-  currentView: 'map' | 'observations';
-  onViewChange: (view: 'map' | 'observations') => void;
-  onProfileClick: () => void;
+  currentView: 'map' | 'observations' | 'profile';
+  onViewChange: (view: 'map' | 'observations' | 'profile') => void;
   onLoginClick: () => void;
 }
 
-export function BottomNav({currentView, onViewChange, onProfileClick, onLoginClick}: BottomNavProps) {
+export function BottomNav({currentView, onViewChange, onLoginClick}: BottomNavProps) {
   const {user} = useAuth();
   const supabaseConfigured = isSupabaseConfigured();
 
   const handleProfileOrLogin = () => {
     if (user) {
-      onProfileClick();
+      onViewChange('profile');
     } else {
       onLoginClick();
     }
@@ -51,7 +50,11 @@ export function BottomNav({currentView, onViewChange, onProfileClick, onLoginCli
         {supabaseConfigured && (
           <button
             onClick={handleProfileOrLogin}
-            className="flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors text-sand hover:text-sunlit"
+            className={`flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors ${
+              currentView === 'profile'
+                ? 'text-sunlit'
+                : 'text-sand'
+            }`}
             aria-label={user ? 'Profil' : 'Logg inn'}
           >
             <User size={24}/>

@@ -8,17 +8,15 @@ import {useObservations} from "./context/ObservationsContext";
 import {useLocations} from "./context/LocationsContext";
 import ObservationForm from "./components/ObservationForm.tsx";
 import {ThemeToggle} from "./components/ThemeToggle";
-import {AuthButton} from "./components/AuthButton";
 import {LoginForm} from "./components/LoginForm.tsx";
 import {BottomNav} from "./components/BottomNav";
 import {UserProfile} from "./components/UserProfile.tsx";
 
 function App() {
-  const [currentView, setCurrentView] = useState<'map' | 'observations'>('map');
+  const [currentView, setCurrentView] = useState<'map' | 'observations' | 'profile'>('map');
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [selectedZoom, setSelectedZoom] = useState<number>(13); // Default zoom level
   const [showLoginForm, setShowLoginForm] = useState(false);
-  const [showUserProfile, setShowUserProfile] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingObservationId, setEditingObservationId] = useState<string | null>(null);
   const {observations} = useObservations();
@@ -59,6 +57,22 @@ function App() {
     ? observations.find(obs => obs.id === editingObservationId)
     : undefined;
 
+  if (currentView === 'profile') {
+    return (
+      <>
+        <UserProfile
+          onBack={() => setCurrentView('map')}
+        />
+        <BottomNav 
+          currentView={currentView} 
+          onViewChange={setCurrentView}
+          onLoginClick={() => setShowLoginForm(true)}
+        />
+        <LoginForm closeLoginForm={() => setShowLoginForm(false)} showLoginForm={showLoginForm}/>
+      </>
+    );
+  }
+
   if (currentView === 'observations') {
     return (
       <>
@@ -69,11 +83,9 @@ function App() {
         <BottomNav 
           currentView={currentView} 
           onViewChange={setCurrentView}
-          onProfileClick={() => setShowUserProfile(true)}
           onLoginClick={() => setShowLoginForm(true)}
         />
         <LoginForm closeLoginForm={() => setShowLoginForm(false)} showLoginForm={showLoginForm}/>
-        {showUserProfile && <UserProfile onClose={() => setShowUserProfile(false)} />}
       </>
     );
   }
@@ -86,12 +98,17 @@ function App() {
           <ThemeToggle/>
         </div>
         <div className="absolute right-lg top-1/2 -translate-y-1/2 hidden md:flex items-center gap-2">
-          <AuthButton setShowLoginForm={setShowLoginForm}/>
           <Button
             onClick={() => setCurrentView('observations')}
             variant="secondary"
           >
             Kikket på ({observations.length})
+          </Button>
+          <Button
+            onClick={() => setCurrentView('profile')}
+            variant="secondary"
+          >
+            Profil
           </Button>
         </div>
       </header>
@@ -112,11 +129,9 @@ function App() {
         />
       )}
       <LoginForm closeLoginForm={() => setShowLoginForm(false)} showLoginForm={showLoginForm}/>
-      {showUserProfile && <UserProfile onClose={() => setShowUserProfile(false)} />}
       <BottomNav 
         currentView={currentView} 
         onViewChange={setCurrentView}
-        onProfileClick={() => setShowUserProfile(true)}
         onLoginClick={() => setShowLoginForm(true)}
       />
     </div>

@@ -2,17 +2,20 @@ import { useState } from 'react';
 import { Button } from './ui/button';
 import { useLocations } from '../context/LocationsContext';
 import { useAuth } from '../context/AuthContext';
-import { Trash2, Edit2, MapPin, Plus, X } from 'lucide-react';
+import { Trash2, Edit2, MapPin, Plus, LogOut, History, Download } from 'lucide-react';
 import { CreateUserLocation } from '../api/locations';
 import { UserLocation } from '../types/location';
+import { ThemeToggle } from './ThemeToggle';
+import { useDownloadExport, useExportLogs } from '../queries/useExports';
+import { isSupabaseConfigured } from '../lib/supabase';
 
 interface UserProfileProps {
-  onClose: () => void;
+  onBack: () => void;
 }
 
-export function UserProfile({ onClose }: UserProfileProps) {
+export function UserProfile({ onBack }: UserProfileProps) {
   const { locations, addLocation, updateLocation, deleteLocation } = useLocations();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [showForm, setShowForm] = useState(false);
   const [editingLocation, setEditingLocation] = useState<UserLocation | null>(null);
   const [formData, setFormData] = useState({
@@ -22,6 +25,29 @@ export function UserProfile({ onClose }: UserProfileProps) {
     uncertaintyRadius: '10',
     description: '',
   });
+  
+  const supabaseConfigured = isSupabaseConfigured();
+  const { data: exportLogs = [], isLoading: isLoadingLogs } = useExportLogs();
+  const { mutate: downloadExport, isPending: isDownloading } = useDownloadExport();
+
+  const handleSignOut = async () => {
+    await signOut();
+    onBack();
+  };
+
+  const handleDownloadPrevious = (filePath: string, fileName: string) => {
+    downloadExport(
+      { filePath, fileName },
+      {
+        onSuccess: () => {
+          alert('Tidligere eksport lastet ned!');
+        },
+        onError: (error) => {
+          alert(`Feil ved nedlasting: ${error.message}`);
+        },
+      }
+    );
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,20 +113,40 @@ export function UserProfile({ onClose }: UserProfileProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-[2000] flex items-start justify-center overflow-y-auto bg-black/50 backdrop-blur-sm p-4 md:p-8">
-      <div className="w-full max-w-2xl bg-sand dark:bg-bark rounded-lg shadow-custom-2xl my-8">
-        <div className="p-6 border-b-2 border-moss dark:border-moss flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-bark dark:text-sand">Mine plasseringer</h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-moss/10 rounded-lg transition-colors"
-            aria-label="Lukk"
-          >
-            <X size={24} className="text-bark dark:text-sand" />
-          </button>
+    <div className="w-full min-h-screen bg-sand dark:bg-bark pb-16 md:pb-0">
+      <header className="bg-forest text-sand p-lg md:p-xl relative">
+        <div className="max-w-4xl mx-auto ml-16">
+          <h1 className="text-sand m-0 text-[clamp(2rem,6vw,3rem)] tracking-wider">profil</h1>
+        </div>
+        <div className="absolute left-lg top-1/2 -translate-y-1/2">
+          <ThemeToggle/>
+        </div>
+        <div className="absolute right-lg top-1/2 -translate-y-1/2 flex items-center gap-2">
+          {supabaseConfigured && user && (
+            <Button
+              onClick={handleSignOut}
+              variant="secondary"
+              className="flex items-center gap-2"
+            >
+              <LogOut size={16}/>
+              <span className="hidden md:inline">Logg ut</span>
+            </Button>
+          )}
+        </div>
+      </header>
+
+      <div className="max-w-4xl mx-auto p-lg md:p-xl">
+        <div className="mb-lg">
+          <div className="hidden md:block">
+            <Button onClick={onBack} variant="outline">
+              ← Tilbake til kart
+            </Button>
+          </div>
         </div>
 
-        <div className="p-6">
+        {/* My Locations Section */}
+        <div className="mb-xxl">
+          <h2 className="text-2xl font-bold text-bark dark:text-sand mb-lg">Mine plasseringer</h2>
           {!showForm && (
             <Button
               onClick={() => setShowForm(true)}
@@ -254,6 +300,56 @@ export function UserProfile({ onClose }: UserProfileProps) {
             )}
           </div>
         </div>
+
+        {/* Export History Section */}
+        {supabaseConfigured && exportLogs.length > 0 && (
+          <div>
+            <h2 className="text-2xl font-bold text-bark dark:text-sand mb-lg flex items-center gap-2">
+              <History size={24}/>
+              Eksporthistorikk
+            </h2>
+            <div className="space-y-3">
+              {isLoadingLogs ? (
+                <div className="text-center py-8 text-bark/60 dark:text-sand/60">
+                  <p>Laster...</p>
+                </div>
+              ) : (
+                exportLogs.map((log) => (
+                  <div
+                    key={log.id}
+                    className="p-4 bg-white dark:bg-[#2c2c2c] rounded-lg border-2 border-moss/30"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-bark dark:text-sand">
+                          {log.fileName}
+                        </h3>
+                        <p className="text-sm text-bark/70 dark:text-sand/70 mt-1">
+                          {new Date(log.createdAt).toLocaleString('no-NO')}
+                        </p>
+                        <p className="text-xs text-bark/60 dark:text-sand/60 mt-1">
+                          {log.observationIds.length} observasjoner
+                        </p>
+                      </div>
+                      {log.filePath && (
+                        <Button
+                          onClick={() => handleDownloadPrevious(log.filePath!, log.fileName)}
+                          disabled={isDownloading}
+                          variant="outline"
+                          size="sm"
+                          className="flex items-center gap-2"
+                        >
+                          <Download size={16}/>
+                          Last ned
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

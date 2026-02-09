@@ -11,7 +11,7 @@ import {LoginForm} from "./components/LoginForm.tsx";
 import {BottomNav} from "./components/BottomNav";
 import {UserProfile} from "./components/UserProfile.tsx";
 import {MapClickDialog} from "./components/MapClickDialog.tsx";
-import {AddLocationForm} from "./components/AddLocationForm.tsx";
+import {LocationForm} from "./components/LocationForm.tsx";
 import {AuthButton} from "./components/AuthButton.tsx";
 import {KikkemodusToggle} from "./components/KikkemodusToggle.tsx";
 import {UserLocation} from "./types/location.ts";
@@ -174,7 +174,7 @@ function App() {
         />
       )}
       {showAddLocationForm && selectedLocation && (
-        <AddLocationForm
+        <LocationForm
           initialLocation={selectedLocation}
           onClose={onClose}
         />

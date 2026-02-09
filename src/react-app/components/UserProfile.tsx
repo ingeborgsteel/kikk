@@ -1,28 +1,28 @@
-import { useState } from 'react';
-import { Button } from './ui/button';
-import { useLocations } from '../context/LocationsContext';
-import { useAuth } from '../context/AuthContext';
-import { Trash2, Edit2, MapPin, Plus, LogOut, History, Download } from 'lucide-react';
-import { UserLocation } from '../types/location';
-import { ThemeToggle } from './ThemeToggle';
-import { useDownloadExport, useExportLogs } from '../queries/useExports';
-import { isSupabaseConfigured } from '../lib/supabase';
-import { AddLocationForm } from './AddLocationForm';
+import {useState} from 'react';
+import {Button} from './ui/button';
+import {useLocations} from '../context/LocationsContext';
+import {useAuth} from '../context/AuthContext';
+import {Download, Edit2, History, LogOut, MapPin, Plus, Trash2} from 'lucide-react';
+import {UserLocation} from '../types/location';
+import {ThemeToggle} from './ThemeToggle';
+import {useDownloadExport, useExportLogs} from '../queries/useExports';
+import {isSupabaseConfigured} from '../lib/supabase';
+import {LocationForm} from './LocationForm.tsx';
 
 interface UserProfileProps {
   onBack: () => void;
 }
 
-export function UserProfile({ onBack }: UserProfileProps) {
-  const { locations, deleteLocation } = useLocations();
-  const { user, signOut } = useAuth();
+export function UserProfile({onBack}: UserProfileProps) {
+  const {locations, deleteLocation} = useLocations();
+  const {user, signOut} = useAuth();
   const [showLocationForm, setShowLocationForm] = useState(false);
   const [editingLocation, setEditingLocation] = useState<UserLocation | null>(null);
   const [formLocation, setFormLocation] = useState<{ lat: number; lng: number } | null>(null);
-  
+
   const supabaseConfigured = isSupabaseConfigured();
-  const { data: exportLogs = [], isLoading: isLoadingLogs } = useExportLogs();
-  const { mutate: downloadExport, isPending: isDownloading } = useDownloadExport();
+  const {data: exportLogs = [], isLoading: isLoadingLogs} = useExportLogs();
+  const {mutate: downloadExport, isPending: isDownloading} = useDownloadExport();
 
   const handleSignOut = async () => {
     await signOut();
@@ -31,7 +31,7 @@ export function UserProfile({ onBack }: UserProfileProps) {
 
   const handleDownloadPrevious = (filePath: string, fileName: string) => {
     downloadExport(
-      { filePath, fileName },
+      {filePath, fileName},
       {
         onSuccess: () => {
           alert('Tidligere eksport lastet ned!');
@@ -45,7 +45,7 @@ export function UserProfile({ onBack }: UserProfileProps) {
 
   const handleAddNew = () => {
     // Use Oslo coordinates as default for new locations
-    setFormLocation({ lat: 59.9139, lng: 10.7522 });
+    setFormLocation({lat: 59.9139, lng: 10.7522});
     setEditingLocation(null);
     setShowLocationForm(true);
   };
@@ -107,14 +107,14 @@ export function UserProfile({ onBack }: UserProfileProps) {
             onClick={handleAddNew}
             className="mb-4 flex items-center gap-2"
           >
-            <Plus size={20} />
+            <Plus size={20}/>
             Legg til ny plassering
           </Button>
 
           <div className="space-y-3">
             {locations.length === 0 ? (
               <div className="text-center py-8 text-bark/60 dark:text-sand/60">
-                <MapPin size={48} className="mx-auto mb-2 opacity-50" />
+                <MapPin size={48} className="mx-auto mb-2 opacity-50"/>
                 <p>Ingen plasseringer lagt til ennå</p>
                 <p className="text-sm mt-1">Klikk på "Legg til ny plassering" for å komme i gang</p>
               </div>
@@ -147,14 +147,14 @@ export function UserProfile({ onBack }: UserProfileProps) {
                         className="p-2 hover:bg-moss/10 rounded-lg transition-colors"
                         aria-label="Rediger"
                       >
-                        <Edit2 size={18} className="text-bark dark:text-sand" />
+                        <Edit2 size={18} className="text-bark dark:text-sand"/>
                       </button>
                       <button
                         onClick={() => handleDelete(location.id)}
                         className="p-2 hover:bg-rust/10 rounded-lg transition-colors"
                         aria-label="Slett"
                       >
-                        <Trash2 size={18} className="text-rust" />
+                        <Trash2 size={18} className="text-rust"/>
                       </button>
                     </div>
                   </div>
@@ -214,10 +214,10 @@ export function UserProfile({ onBack }: UserProfileProps) {
           </div>
         )}
       </div>
-      
+
       {/* Location Form Modal */}
       {showLocationForm && formLocation && (
-        <AddLocationForm
+        <LocationForm
           initialLocation={formLocation}
           onClose={handleCloseForm}
           editingLocation={editingLocation}

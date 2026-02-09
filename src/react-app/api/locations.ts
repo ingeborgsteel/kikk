@@ -1,36 +1,23 @@
-import { supabase } from "../lib/supabase.ts";
-import { UserLocation } from "../types/location.ts";
+import {supabase} from "../lib/supabase.ts";
+import {UserLocation} from "../types/location.ts";
 
 export async function fetchUserLocations(userId?: string): Promise<UserLocation[]> {
   let query = supabase
-    .from("user_locations")
+    .from("locations")
     .select("*")
-    .order('created_at', { ascending: false });
+    .order('createdAt', {ascending: false});
 
   if (userId) {
-    query = query.eq("user_id", userId);
+    query = query.eq("userId", userId);
   } else {
-    query = query.is("user_id", null);
+    query = query.is("userId", null);
   }
 
-  const { data, error } = await query;
+  const {data, error} = await query;
 
   if (error) throw error;
 
-  // Transform snake_case to camelCase
-  return (data ?? []).map(loc => ({
-    id: loc.id,
-    userId: loc.user_id,
-    name: loc.name,
-    location: {
-      lat: loc.lat,
-      lng: loc.lng,
-    },
-    uncertaintyRadius: loc.uncertainty_radius,
-    description: loc.description,
-    createdAt: loc.created_at,
-    updatedAt: loc.updated_at,
-  }));
+  return data;
 }
 
 export type CreateUserLocation = Omit<UserLocation, "id" | "createdAt" | "updatedAt">;
@@ -39,15 +26,11 @@ export async function createUserLocation(
   location: CreateUserLocation,
   user: { id: string } | null = null,
 ): Promise<UserLocation> {
-  const { data, error } = await supabase
-    .from("user_locations")
+  const {data, error} = await supabase
+    .from("locations")
     .insert({
-      user_id: user?.id,
-      name: location.name,
-      lat: location.location.lat,
-      lng: location.location.lng,
-      uncertainty_radius: location.uncertaintyRadius,
-      description: location.description,
+      ...location,
+      userId: user?.id,
     })
     .select()
     .single();
@@ -55,32 +38,15 @@ export async function createUserLocation(
   if (error) throw error;
   if (!data) throw new Error("Failed to insert user location");
 
-  // Transform snake_case to camelCase
-  return {
-    id: data.id,
-    userId: data.user_id,
-    name: data.name,
-    location: {
-      lat: data.lat,
-      lng: data.lng,
-    },
-    uncertaintyRadius: data.uncertainty_radius,
-    description: data.description,
-    createdAt: data.created_at,
-    updatedAt: data.updated_at,
-  };
+  return data;
 }
 
 export async function updateUserLocation(location: UserLocation): Promise<UserLocation> {
-  const { data, error } = await supabase
-    .from("user_locations")
+  const {data, error} = await supabase
+    .from("locations")
     .update({
-      name: location.name,
-      lat: location.location.lat,
-      lng: location.location.lng,
-      uncertainty_radius: location.uncertaintyRadius,
-      description: location.description,
-      updated_at: new Date().toISOString(),
+      ...location,
+      updatedAt: new Date().toISOString(),
     })
     .eq("id", location.id)
     .select()
@@ -89,25 +55,12 @@ export async function updateUserLocation(location: UserLocation): Promise<UserLo
   if (error) throw error;
   if (!data) throw new Error("Failed to update user location");
 
-  // Transform snake_case to camelCase
-  return {
-    id: data.id,
-    userId: data.user_id,
-    name: data.name,
-    location: {
-      lat: data.lat,
-      lng: data.lng,
-    },
-    uncertaintyRadius: data.uncertainty_radius,
-    description: data.description,
-    createdAt: data.created_at,
-    updatedAt: data.updated_at,
-  };
+  return data;
 }
 
 export async function deleteUserLocation(locationId: string): Promise<void> {
-  const { error } = await supabase
-    .from("user_locations")
+  const {error} = await supabase
+    .from("locations")
     .delete()
     .eq("id", locationId);
 

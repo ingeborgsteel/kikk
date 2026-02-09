@@ -1,6 +1,7 @@
 import {useState} from 'react';
-import {FileSpreadsheet, MapPin} from 'lucide-react';
+import {FileSpreadsheet, MapPin, Filter} from 'lucide-react';
 import {useObservations} from '../context/ObservationsContext';
+import {useLocations} from '../context/LocationsContext';
 import {Button} from './ui/button';
 import ObservationForm from './ObservationForm.tsx';
 import {ThemeToggle} from './ThemeToggle';
@@ -14,12 +15,28 @@ interface MyObservationsProps {
   setShowLoginForm: (show: boolean) => void;
 }
 
+// Helper function to calculate distance between two coordinates (Haversine formula)
+function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371e3; // Earth's radius in meters
+  const φ1 = lat1 * Math.PI / 180;
+  const φ2 = lat2 * Math.PI / 180;
+  const Δφ = (lat2 - lat1) * Math.PI / 180;
+  const Δλ = (lng2 - lng1) * Math.PI / 180;
+
+  const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+    Math.cos(φ1) * Math.cos(φ2) *
+    Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c; // Distance in meters
+}
+
 function MyObservations({onBack, setShowLoginForm}: MyObservationsProps) {
   const {observations, deleteObservation} = useObservations();
+  const {locations} = useLocations();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showExportDialog, setShowExportDialog] = useState(false);
-
-  const unexportedCount = getUnexportedCount(observations);
+  const [filterLocationId, setFilterLocationId] = useState<string | null>(null);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -66,6 +83,25 @@ function MyObservations({onBack, setShowLoginForm}: MyObservationsProps) {
     }
   };
 
+  // Filter observations by location if a filter is active
+  const filteredObservations = filterLocationId
+    ? observations.filter(obs => {
+        const location = locations.find(loc => loc.id === filterLocationId);
+        if (!location) return false;
+        // Check if observation is within the uncertainty radius of the location
+        const distance = calculateDistance(
+          obs.location.lat,
+          obs.location.lng,
+          location.location.lat,
+          location.location.lng
+        );
+        // Consider it a match if within combined uncertainty radius
+        return distance <= (location.uncertaintyRadius + obs.uncertaintyRadius);
+      })
+    : observations;
+
+  const unexportedCount = getUnexportedCount(filteredObservations);
+
   const editingObservation = observations.find(obs => obs.id === editingId);
 
   return (
@@ -83,12 +119,32 @@ function MyObservations({onBack, setShowLoginForm}: MyObservationsProps) {
       </header>
 
       <div className="max-w-4xl mx-auto p-lg md:p-xl">
-        <div className="mb-lg flex justify-between items-center gap-md">
+        <div className="mb-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-md">
           <div className="hidden md:block">
             <Button onClick={onBack} variant="outline">
               ← Tilbake til kart
             </Button>
           </div>
+          
+          {/* Location filter */}
+          {locations.length > 0 && (
+            <div className="flex items-center gap-2 w-full md:w-auto">
+              <Filter size={20} className="text-bark dark:text-sand" />
+              <select
+                value={filterLocationId || ''}
+                onChange={(e) => setFilterLocationId(e.target.value || null)}
+                className="flex-1 md:flex-initial p-2 rounded border-2 border-moss bg-sand dark:bg-bark text-bark dark:text-sand"
+              >
+                <option value="">Alle observasjoner</option>
+                {locations.map((location) => (
+                  <option key={location.id} value={location.id}>
+                    {location.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          
           {observations.length > 0 && (
             <Button onClick={() => setShowExportDialog(true)} className="ml-auto">
               <FileSpreadsheet size={20} className="mr-2"/>
@@ -102,7 +158,13 @@ function MyObservations({onBack, setShowLoginForm}: MyObservationsProps) {
           )}
         </div>
 
-        {observations.length === 0 ? (
+        {filteredObservations.length === 0 && observations.length > 0 ? (
+          <div className="text-center py-xxl">
+            <MapPin size={48} className="mx-auto text-slate mb-md"/>
+            <p className="text-lg text-slate">Ingen observasjoner på denne plasseringen</p>
+            <p className="text-sm text-slate mt-sm">Prøv et annet filter eller legg til en ny observasjon!</p>
+          </div>
+        ) : observations.length === 0 ? (
           <div className="text-center py-xxl">
             <MapPin size={48} className="mx-auto text-slate mb-md"/>
             <p className="text-lg text-slate">Ingen observasjoner ennå</p>
@@ -110,7 +172,7 @@ function MyObservations({onBack, setShowLoginForm}: MyObservationsProps) {
           </div>
         ) : (
           <div className="space-y-md">
-            {observations.map((observation) => (
+            {filteredObservations.map((observation) => (
               <ObservationItem
                 key={observation.id}
                 observation={observation}

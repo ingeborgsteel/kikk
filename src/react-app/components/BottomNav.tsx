@@ -1,11 +1,26 @@
-import {Binoculars, Map} from 'lucide-react';
+import {Binoculars, Map, User} from 'lucide-react';
+import {useAuth} from '../context/AuthContext';
+import {isSupabaseConfigured} from '../lib/supabase';
 
 interface BottomNavProps {
   currentView: 'map' | 'observations';
   onViewChange: (view: 'map' | 'observations') => void;
+  onProfileClick: () => void;
+  onLoginClick: () => void;
 }
 
-export function BottomNav({currentView, onViewChange}: BottomNavProps) {
+export function BottomNav({currentView, onViewChange, onProfileClick, onLoginClick}: BottomNavProps) {
+  const {user} = useAuth();
+  const supabaseConfigured = isSupabaseConfigured();
+
+  const handleProfileOrLogin = () => {
+    if (user) {
+      onProfileClick();
+    } else {
+      onLoginClick();
+    }
+  };
+
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-rust z-[1000] safe-area-bottom">
       <div className="flex justify-around items-center h-16">
@@ -28,11 +43,21 @@ export function BottomNav({currentView, onViewChange}: BottomNavProps) {
               ? 'text-sunlit'
               : 'text-sand'
           }`}
-          aria-label="Profile"
+          aria-label="Observations"
         >
           <Binoculars size={24}/>
           <span className="text-xs font-medium">Kikket på</span>
         </button>
+        {supabaseConfigured && (
+          <button
+            onClick={handleProfileOrLogin}
+            className="flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors text-sand hover:text-sunlit"
+            aria-label={user ? 'Profil' : 'Logg inn'}
+          >
+            <User size={24}/>
+            <span className="text-xs font-medium">{user ? 'Profil' : 'Logg inn'}</span>
+          </button>
+        )}
       </div>
     </nav>
   );

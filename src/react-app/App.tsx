@@ -13,6 +13,7 @@ import {BottomNav} from "./components/BottomNav";
 import {UserProfile} from "./components/UserProfile.tsx";
 import {MapClickDialog} from "./components/MapClickDialog.tsx";
 import {AddLocationForm} from "./components/AddLocationForm.tsx";
+import {AuthButton} from "./components/AuthButton.tsx";
 
 function App() {
   const [currentView, setCurrentView] = useState<'map' | 'observations' | 'profile'>('map');
@@ -92,8 +93,8 @@ function App() {
         <UserProfile
           onBack={() => setCurrentView('map')}
         />
-        <BottomNav 
-          currentView={currentView} 
+        <BottomNav
+          currentView={currentView}
           onViewChange={setCurrentView}
           onLoginClick={() => setShowLoginForm(true)}
         />
@@ -109,8 +110,8 @@ function App() {
           onBack={() => setCurrentView('map')}
           setShowLoginForm={setShowLoginForm}
         />
-        <BottomNav 
-          currentView={currentView} 
+        <BottomNav
+          currentView={currentView}
           onViewChange={setCurrentView}
           onLoginClick={() => setShowLoginForm(true)}
         />
@@ -133,12 +134,7 @@ function App() {
           >
             Kikket på ({observations.length})
           </Button>
-          <Button
-            onClick={() => setCurrentView('profile')}
-            variant="secondary"
-          >
-            Profil
-          </Button>
+          <AuthButton setShowLoginForm={setShowLoginForm} openProfilePage={() => setCurrentView('profile')}/>
         </div>
       </header>
       <Map
@@ -173,8 +169,8 @@ function App() {
         />
       )}
       <LoginForm closeLoginForm={() => setShowLoginForm(false)} showLoginForm={showLoginForm}/>
-      <BottomNav 
-        currentView={currentView} 
+      <BottomNav
+        currentView={currentView}
         onViewChange={setCurrentView}
         onLoginClick={() => setShowLoginForm(true)}
       />

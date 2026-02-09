@@ -94,6 +94,7 @@ interface MapProps {
 function Map({onLocationSelect, observations = [], onObservationClick, userLocations = [], onUserLocationClick}: MapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
+  const onLocationSelectRef = useRef(onLocationSelect);
   const [selectedLocation, setSelectedLocation] = useState<{
     lat: number;
     lng: number;
@@ -108,6 +109,11 @@ function Map({onLocationSelect, observations = [], onObservationClick, userLocat
     lat: number;
     lng: number;
   } | null>(null);
+
+  // Update the ref whenever onLocationSelect changes
+  useEffect(() => {
+    onLocationSelectRef.current = onLocationSelect;
+  }, [onLocationSelect]);
 
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
@@ -150,9 +156,9 @@ function Map({onLocationSelect, observations = [], onObservationClick, userLocat
       }
 
       // Call callback if provided
-      if (onLocationSelect && map.current) {
+      if (onLocationSelectRef.current && map.current) {
         const currentZoom = map.current.getZoom();
-        onLocationSelect(lat, lng, currentZoom);
+        onLocationSelectRef.current(lat, lng, currentZoom);
       }
     });
 

@@ -7,13 +7,13 @@ import {Button} from "./components/ui/button";
 import {useObservations} from "./context/ObservationsContext";
 import {useLocations} from "./context/LocationsContext";
 import ObservationForm from "./components/ObservationForm.tsx";
-import {ThemeToggle} from "./components/ThemeToggle";
 import {LoginForm} from "./components/LoginForm.tsx";
 import {BottomNav} from "./components/BottomNav";
 import {UserProfile} from "./components/UserProfile.tsx";
 import {MapClickDialog} from "./components/MapClickDialog.tsx";
 import {AddLocationForm} from "./components/AddLocationForm.tsx";
 import {AuthButton} from "./components/AuthButton.tsx";
+import {KikkemodusToggle} from "./components/KikkemodusToggle.tsx";
 
 function App() {
   const [currentView, setCurrentView] = useState<'map' | 'observations' | 'profile'>('map');
@@ -25,6 +25,7 @@ function App() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingObservationId, setEditingObservationId] = useState<string | null>(null);
   const [presetLocationName, setPresetLocationName] = useState<string | null>(null);
+  const [kikkemodusActive, setKikkemodusActive] = useState(false);
   const {observations} = useObservations();
   const {locations} = useLocations();
 
@@ -33,8 +34,14 @@ function App() {
     setSelectedZoom(zoom);
     setEditingObservationId(null);
     setPresetLocationName(null); // Clear preset location name
-    // Show dialog to choose between observation or location
-    setShowMapClickDialog(true);
+    
+    // In kikkemodus, go directly to observation form
+    if (kikkemodusActive) {
+      setShowAddForm(true);
+    } else {
+      // Show dialog to choose between observation or location
+      setShowMapClickDialog(true);
+    }
   };
 
   const handleAddObservation = (location: { lat: number; lng: number }) => {
@@ -125,7 +132,10 @@ function App() {
       <header className="text-center p-lg md:p-xl bg-forest relative overflow-visible">
         <h1 className="text-sand m-0 text-[clamp(2rem,6vw,3rem)] tracking-wider">kikk</h1>
         <div className="absolute left-lg top-1/2 -translate-y-1/2">
-          <ThemeToggle/>
+          <KikkemodusToggle 
+            kikkemodusActive={kikkemodusActive} 
+            onToggle={() => setKikkemodusActive(!kikkemodusActive)} 
+          />
         </div>
         <div className="absolute right-lg top-1/2 -translate-y-1/2 hidden md:flex items-center gap-2">
           <Button

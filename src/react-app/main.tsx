@@ -6,6 +6,7 @@ import App from "./App.tsx";
 import { ObservationsProvider } from "./context/ObservationsContext.tsx";
 import { ThemeProvider } from "./context/ThemeContext.tsx";
 import { AuthProvider } from "./context/AuthContext.tsx";
+import { LocationsProvider } from "./context/LocationsContext.tsx";
 
 const queryClient = new QueryClient({
 	defaultOptions: {
@@ -21,9 +22,11 @@ createRoot(document.getElementById("root")!).render(
 		<QueryClientProvider client={queryClient}>
 			<AuthProvider>
 				<ThemeProvider>
-					<ObservationsProvider>
-						<App />
-					</ObservationsProvider>
+					<LocationsProvider>
+						<ObservationsProvider>
+							<App />
+						</ObservationsProvider>
+					</LocationsProvider>
 				</ThemeProvider>
 			</AuthProvider>
 		</QueryClientProvider>

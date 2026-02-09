@@ -13,15 +13,17 @@ import {getRecentSpecies, reverseGeocode} from "../lib/utils.ts";
 import {LocationEditor} from "./LocationEditor.tsx";
 import {CreateSpecies} from "../api/observations.ts";
 import SpeciesItem from "./SpeciesItem.tsx";
+import {UserLocation} from "../types/location.ts";
 
 interface ObservationFormProps {
   observation?: Observation,
   onClose: () => void,
   location: { lat: number; lng: number },
-  zoom?: number
+  zoom?: number,
+  presetLocation?: UserLocation | null
 }
 
-const ObservationForm = ({observation, onClose, location, zoom = 13}: ObservationFormProps) => {
+const ObservationForm = ({observation, onClose, location, zoom = 13, presetLocation}: ObservationFormProps) => {
   const {addObservation, updateObservation, observations} = useObservations();
   const [searchTerm, setSearchTerm] = useState('');
   const [showResults, setShowResults] = useState(false);
@@ -41,7 +43,7 @@ const ObservationForm = ({observation, onClose, location, zoom = 13}: Observatio
     defaultValues: {
       startDate: observation?.startDate || defaultStartDate,
       endDate: observation?.endDate || defaultStartDate,
-      locationName: observation?.locationName || '',
+      locationName: observation?.locationName || presetLocation?.name || '',
       location: currentLocation,
       uncertaintyRadius: observation?.uncertaintyRadius || 10,
       ...observation
@@ -50,6 +52,11 @@ const ObservationForm = ({observation, onClose, location, zoom = 13}: Observatio
 
   // Handle location change from map editor
   const handleLocationChange = useCallback((lat: number, lng: number) => {
+    // Don't allow location changes if we have a preset location name (locked)
+    if (presetLocation) {
+      return;
+    }
+
     const newLocation = {lat, lng};
     setCurrentLocation(newLocation);
     setValue('location', newLocation);
@@ -80,7 +87,7 @@ const ObservationForm = ({observation, onClose, location, zoom = 13}: Observatio
           setLoadingLocationName(false);
         });
     }
-  }, [currentLocation, setValue]);
+  }, [currentLocation, setValue, presetLocation]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -98,8 +105,8 @@ const ObservationForm = ({observation, onClose, location, zoom = 13}: Observatio
   // Fetch location name when form opens for a new observation
   useEffect(() => {
     const currentLocationName = getValues('locationName');
-    // Only fetch if this is a new observation and locationName is not yet set
-    if (!observation && currentLocationName === '') {
+    // Only fetch if this is a new observation, locationName is not yet set, and no preset location name
+    if (!observation && currentLocationName === '' && !presetLocation) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoadingLocationName(true);
       setGeocodingFailed(false);
@@ -120,8 +127,11 @@ const ObservationForm = ({observation, onClose, location, zoom = 13}: Observatio
           setLoadingLocationName(false);
           setFormReady(true); // Form is ready after geocoding completes (success or failure)
         });
+    } else if (presetLocation) {
+      // If we have a preset location name, form is ready immediately
+      setFormReady(true);
     }
-  }, [observation, currentLocation, setValue, getValues]);
+  }, [observation, currentLocation, setValue, getValues, presetLocation]);
 
   const save = useCallback((data: Observation) => {
     const {startDate, endDate} = data;
@@ -135,12 +145,13 @@ const ObservationForm = ({observation, onClose, location, zoom = 13}: Observatio
     } else {
       addObservation({
         ...data,
+        locationId: presetLocation?.id,
         startDate,
         endDate,
       });
     }
     onClose();
-  }, [addObservation, updateObservation, onClose]);
+  }, [onClose, updateObservation, addObservation, presetLocation]);
 
   return (
     <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 p-4">
@@ -172,11 +183,18 @@ const ObservationForm = ({observation, onClose, location, zoom = 13}: Observatio
                 <p className="text-sm text-slate mt-1 mb-2">
                   Lat: {currentLocation.lat.toFixed(4)}, Lng: {currentLocation.lng.toFixed(4)}
                 </p>
-                <LocationEditor
-                  location={currentLocation}
-                  onLocationChange={handleLocationChange}
-                  zoom={zoom}
-                />
+                {!presetLocation && (
+                  <>
+                    <LocationEditor
+                      location={currentLocation}
+                      onLocationChange={handleLocationChange}
+                      zoom={zoom}
+                    />
+                    <p className="text-xs text-slate mt-1">
+                      Dra markøren eller klikk for å justere posisjon
+                    </p>
+                  </>
+                )}
               </div>
 
               <Controller
@@ -195,6 +213,8 @@ const ObservationForm = ({observation, onClose, location, zoom = 13}: Observatio
                         value={value}
                         onChange={(e) => onChange(e.target.value)}
                         className="mt-1"
+                        readOnly={!!presetLocation}
+                        disabled={!!presetLocation}
                       />
                       {loadingLocationName && (
                         <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -204,9 +224,11 @@ const ObservationForm = ({observation, onClose, location, zoom = 13}: Observatio
                       )}
                     </div>
                     <p className="text-xs text-slate mt-1">
-                      {geocodingFailed
-                        ? 'Kunne ikke hente stedsnavn automatisk. Vennligst fyll inn manuelt.'
-                        : 'Foreslått basert på koordinater, kan redigeres'}
+                      {presetLocation
+                        ? 'Låst til forhåndsinnstilt plassering.'
+                        : geocodingFailed
+                          ? 'Kunne ikke hente stedsnavn automatisk. Vennligst fyll inn manuelt.'
+                          : ''}
                     </p>
                   </div>
                 )}

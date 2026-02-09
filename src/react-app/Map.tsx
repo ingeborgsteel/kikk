@@ -2,6 +2,7 @@ import {useEffect, useRef, useState} from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import {Observation} from "./types/observation";
+import {UserLocation} from "./types/location";
 
 // Fix for default marker icons in Leaflet with bundlers
 import icon from "leaflet/dist/images/marker-icon.png";
@@ -38,6 +39,18 @@ const createForestGreenMarkerSVG = () => {
   return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 };
 
+// Create custom SVG marker for user locations - purple/blue color
+const createUserLocationMarkerSVG = () => {
+  const svg = `
+    <svg width="25" height="41" viewBox="0 0 25 41" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12.5 0C5.6 0 0 5.6 0 12.5c0 8.4 12.5 28.5 12.5 28.5S25 20.9 25 12.5C25 5.6 19.4 0 12.5 0z" 
+            fill="#7C3AED" stroke="#5B21B6" stroke-width="1"/>
+      <circle cx="12.5" cy="12.5" r="4" fill="#FFF" opacity="0.3"/>
+    </svg>
+  `;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+};
+
 // Create icon for new selection marker - rust color
 const SelectionIcon = L.icon({
   iconUrl: createRustMarkerSVG(),
@@ -56,6 +69,15 @@ const ObservationIcon = L.icon({
   popupAnchor: [0, -41],
 });
 
+// Create icon for user locations - purple
+const UserLocationIcon = L.icon({
+  iconUrl: createUserLocationMarkerSVG(),
+  shadowUrl: iconShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [0, -41],
+});
+
 L.Marker.prototype.options.icon = DefaultIcon;
 
 // Delay for map resize after initialization to ensure container dimensions are available
@@ -65,17 +87,21 @@ interface MapProps {
   onLocationSelect?: (lat: number, lng: number, zoom: number) => void;
   observations?: Observation[];
   onObservationClick?: (observationId: string) => void;
+  userLocations?: UserLocation[];
+  onUserLocationClick?: (locationId: string) => void;
 }
 
-function Map({onLocationSelect, observations = [], onObservationClick}: MapProps) {
+function Map({onLocationSelect, observations = [], onObservationClick, userLocations = [], onUserLocationClick}: MapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
+  const onLocationSelectRef = useRef(onLocationSelect);
   const [selectedLocation, setSelectedLocation] = useState<{
     lat: number;
     lng: number;
   } | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
   const observationMarkersRef = useRef<L.Marker[]>([]);
+  const userLocationsMarkersRef = useRef<L.Marker[]>([]);
   const userLocationMarkerRef = useRef<L.CircleMarker | null>(null);
   const [isLocating, setIsLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
@@ -83,6 +109,11 @@ function Map({onLocationSelect, observations = [], onObservationClick}: MapProps
     lat: number;
     lng: number;
   } | null>(null);
+
+  // Update the ref whenever onLocationSelect changes
+  useEffect(() => {
+    onLocationSelectRef.current = onLocationSelect;
+  }, [onLocationSelect]);
 
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
@@ -125,9 +156,9 @@ function Map({onLocationSelect, observations = [], onObservationClick}: MapProps
       }
 
       // Call callback if provided
-      if (onLocationSelect && map.current) {
+      if (onLocationSelectRef.current && map.current) {
         const currentZoom = map.current.getZoom();
-        onLocationSelect(lat, lng, currentZoom);
+        onLocationSelectRef.current(lat, lng, currentZoom);
       }
     });
 
@@ -208,6 +239,7 @@ function Map({onLocationSelect, observations = [], onObservationClick}: MapProps
         userLocationMarkerRef.current = null;
       }
       observationMarkersRef.current = [];
+      userLocationsMarkersRef.current = [];
     };
   }, []);
 
@@ -253,6 +285,45 @@ function Map({onLocationSelect, observations = [], onObservationClick}: MapProps
       }
     });
   }, [observations, onObservationClick]);
+
+  // Effect to handle user location markers
+  useEffect(() => {
+    if (!map.current) return;
+
+    // Remove existing user location markers
+    userLocationsMarkersRef.current.forEach(marker => marker.remove());
+    userLocationsMarkersRef.current = [];
+
+    // Add markers for each user location
+    userLocations.forEach((userLoc) => {
+      if (map.current) {
+        const marker = L.marker(
+          [userLoc.location.lat, userLoc.location.lng],
+          {icon: UserLocationIcon}
+        ).addTo(map.current);
+
+        // Create popup content
+        const popupContent = `
+          <div style="min-width: 150px;">
+            <strong>${userLoc.name}</strong><br/>
+            ${userLoc.description ? `<small>${userLoc.description}</small><br/>` : ''}
+            <small>±${userLoc.uncertaintyRadius}m</small>
+          </div>
+        `;
+
+        marker.bindPopup(popupContent);
+
+        // Add click handler to create observation at this location
+        marker.on('click', () => {
+          if (onUserLocationClick) {
+            onUserLocationClick(userLoc.id);
+          }
+        });
+
+        userLocationsMarkersRef.current.push(marker);
+      }
+    });
+  }, [userLocations, onUserLocationClick]);
 
   return (
     <div className="w-full h-[calc(100vh-80px)] relative flex-1 overflow-hidden bg-forest">

@@ -55,7 +55,7 @@ const ObservationForm = ({observation, onClose, location, zoom = 13, presetLocat
     if (presetLocationName) {
       return;
     }
-    
+
     const newLocation = {lat, lng};
     setCurrentLocation(newLocation);
     setValue('location', newLocation);
@@ -193,11 +193,6 @@ const ObservationForm = ({observation, onClose, location, zoom = 13, presetLocat
                     </p>
                   </>
                 )}
-                {presetLocationName && (
-                  <p className="text-sm text-bark/70 dark:text-sand/70 mt-1">
-                    Låst til forhåndsinnstilt plassering: <strong>{presetLocationName}</strong>
-                  </p>
-                )}
               </div>
 
               <Controller
@@ -227,9 +222,11 @@ const ObservationForm = ({observation, onClose, location, zoom = 13, presetLocat
                       )}
                     </div>
                     <p className="text-xs text-slate mt-1">
-                      {geocodingFailed
-                        ? 'Kunne ikke hente stedsnavn automatisk. Vennligst fyll inn manuelt.'
-                        : 'Foreslått basert på koordinater, kan redigeres'}
+                      {presetLocationName
+                        ? 'Låst til forhåndsinnstilt plassering.'
+                        : geocodingFailed
+                          ? 'Kunne ikke hente stedsnavn automatisk. Vennligst fyll inn manuelt.'
+                          : ''}
                     </p>
                   </div>
                 )}

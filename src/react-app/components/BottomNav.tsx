@@ -1,20 +1,21 @@
 import {Binoculars, Map, User} from 'lucide-react';
+import {useNavigate} from 'react-router-dom';
 import {useAuth} from '../context/AuthContext';
 import {isSupabaseConfigured} from '../lib/supabase';
 
 interface BottomNavProps {
   currentView: 'map' | 'observations' | 'profile';
-  onViewChange: (view: 'map' | 'observations' | 'profile') => void;
   onLoginClick: () => void;
 }
 
-export function BottomNav({currentView, onViewChange, onLoginClick}: BottomNavProps) {
+export function BottomNav({currentView, onLoginClick}: BottomNavProps) {
+  const navigate = useNavigate();
   const {user} = useAuth();
   const supabaseConfigured = isSupabaseConfigured();
 
   const handleProfileOrLogin = () => {
     if (user) {
-      onViewChange('profile');
+      navigate('/profile');
     } else {
       onLoginClick();
     }
@@ -24,7 +25,7 @@ export function BottomNav({currentView, onViewChange, onLoginClick}: BottomNavPr
     <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-rust z-[1000] safe-area-bottom">
       <div className="flex justify-around items-center h-16">
         <button
-          onClick={() => onViewChange('map')}
+          onClick={() => navigate('/')}
           className={`flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors ${
             currentView === 'map'
               ? 'text-sunlit'
@@ -36,7 +37,7 @@ export function BottomNav({currentView, onViewChange, onLoginClick}: BottomNavPr
           <span className="text-xs font-medium">Kart</span>
         </button>
         <button
-          onClick={() => onViewChange('observations')}
+          onClick={() => navigate('/observations')}
           className={`flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors ${
             currentView === 'observations'
               ? 'text-sunlit'

@@ -1,6 +1,7 @@
 // src/App.tsx
 
 import {useState} from "react";
+import {Routes, Route, useNavigate, useLocation} from "react-router-dom";
 import Map from "./Map";
 import MyObservations from "./components/MyObservations";
 import {Button} from "./components/ui/button";
@@ -17,7 +18,8 @@ import {KikkemodusToggle} from "./components/KikkemodusToggle.tsx";
 import {UserLocation} from "./types/location.ts";
 
 function App() {
-  const [currentView, setCurrentView] = useState<'map' | 'observations' | 'profile'>('map');
+  const navigate = useNavigate();
+  const location = useLocation();
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [selectedZoom, setSelectedZoom] = useState<number>(13); // Default zoom level
   const [showLoginForm, setShowLoginForm] = useState(false);
@@ -95,97 +97,85 @@ function App() {
     ? observations.find(obs => obs.id === editingObservationId)
     : undefined;
 
-  if (currentView === 'profile') {
-    return (
-      <>
-        <UserProfile
-          onBack={() => setCurrentView('map')}
-        />
-        <BottomNav
-          currentView={currentView}
-          onViewChange={setCurrentView}
-          onLoginClick={() => setShowLoginForm(true)}
-        />
-        <LoginForm closeLoginForm={() => setShowLoginForm(false)} showLoginForm={showLoginForm}/>
-      </>
-    );
-  }
-
-  if (currentView === 'observations') {
-    return (
-      <>
-        <MyObservations
-          onBack={() => setCurrentView('map')}
-          setShowLoginForm={setShowLoginForm}
-        />
-        <BottomNav
-          currentView={currentView}
-          onViewChange={setCurrentView}
-          onLoginClick={() => setShowLoginForm(true)}
-        />
-        <LoginForm closeLoginForm={() => setShowLoginForm(false)} showLoginForm={showLoginForm}/>
-      </>
-    );
-  }
+  // Determine current view from location pathname
+  const getCurrentView = (): 'map' | 'observations' | 'profile' => {
+    if (location.pathname === '/observations') return 'observations';
+    if (location.pathname === '/profile') return 'profile';
+    return 'map';
+  };
 
   return (
-    <div className="w-full min-h-screen p-0 flex flex-col bg-sand dark:bg-bark pb-16 md:pb-0">
-      <header className="text-center p-lg md:p-xl bg-forest relative overflow-visible">
-        <h1 className="text-sand m-0 text-[clamp(2rem,6vw,3rem)] tracking-wider">kikk</h1>
-        <div className="absolute left-lg top-1/2 -translate-y-1/2">
-          <KikkemodusToggle
-            kikkemodusActive={kikkemodusActive}
-            onToggle={() => setKikkemodusActive(!kikkemodusActive)}
+    <>
+      <Routes>
+        <Route path="/profile" element={
+          <UserProfile onBack={() => navigate('/')} />
+        } />
+        <Route path="/observations" element={
+          <MyObservations
+            onBack={() => navigate('/')}
+            setShowLoginForm={setShowLoginForm}
           />
-        </div>
-        <div className="absolute right-lg top-1/2 -translate-y-1/2 hidden md:flex items-center gap-2">
-          <Button
-            onClick={() => setCurrentView('observations')}
-            variant="secondary"
-          >
-            Kikket på ({observations.length})
-          </Button>
-          <AuthButton setShowLoginForm={setShowLoginForm} openProfilePage={() => setCurrentView('profile')}/>
-        </div>
-      </header>
-      <Map
-        onLocationSelect={handleLocationSelect}
-        observations={observations}
-        onObservationClick={handleObservationClick}
-        userLocations={locations}
-        onUserLocationClick={handleUserLocationClick}
-      />
+        } />
+        <Route path="/" element={
+          <div className="w-full min-h-screen p-0 flex flex-col bg-sand dark:bg-bark pb-16 md:pb-0">
+            <header className="text-center p-lg md:p-xl bg-forest relative overflow-visible">
+              <h1 className="text-sand m-0 text-[clamp(2rem,6vw,3rem)] tracking-wider">kikk</h1>
+              <div className="absolute left-lg top-1/2 -translate-y-1/2">
+                <KikkemodusToggle
+                  kikkemodusActive={kikkemodusActive}
+                  onToggle={() => setKikkemodusActive(!kikkemodusActive)}
+                />
+              </div>
+              <div className="absolute right-lg top-1/2 -translate-y-1/2 hidden md:flex items-center gap-2">
+                <Button
+                  onClick={() => navigate('/observations')}
+                  variant="secondary"
+                >
+                  Kikket på ({observations.length})
+                </Button>
+                <AuthButton setShowLoginForm={setShowLoginForm} openProfilePage={() => navigate('/profile')}/>
+              </div>
+            </header>
+            <Map
+              onLocationSelect={handleLocationSelect}
+              observations={observations}
+              onObservationClick={handleObservationClick}
+              userLocations={locations}
+              onUserLocationClick={handleUserLocationClick}
+            />
 
-      {showAddForm && (editingObservation?.location || selectedLocation) && (
-        <ObservationForm
-          location={editingObservation?.location || selectedLocation!}
-          zoom={editingObservation ? 13 : selectedZoom}
-          observation={editingObservation}
-          presetLocation={presetLocation}
-          onClose={onClose}
-        />
-      )}
-      {showMapClickDialog && selectedLocation && (
-        <MapClickDialog
-          location={selectedLocation}
-          onAddObservation={handleAddObservation}
-          onAddLocation={handleAddLocation}
-          onClose={handleCloseMapClickDialog}
-        />
-      )}
-      {showAddLocationForm && selectedLocation && (
-        <LocationForm
-          initialLocation={selectedLocation}
-          onClose={onClose}
-        />
-      )}
+            {showAddForm && (editingObservation?.location || selectedLocation) && (
+              <ObservationForm
+                location={editingObservation?.location || selectedLocation!}
+                zoom={editingObservation ? 13 : selectedZoom}
+                observation={editingObservation}
+                presetLocation={presetLocation}
+                onClose={onClose}
+              />
+            )}
+            {showMapClickDialog && selectedLocation && (
+              <MapClickDialog
+                location={selectedLocation}
+                onAddObservation={handleAddObservation}
+                onAddLocation={handleAddLocation}
+                onClose={handleCloseMapClickDialog}
+              />
+            )}
+            {showAddLocationForm && selectedLocation && (
+              <LocationForm
+                initialLocation={selectedLocation}
+                onClose={onClose}
+              />
+            )}
+          </div>
+        } />
+      </Routes>
       <LoginForm closeLoginForm={() => setShowLoginForm(false)} showLoginForm={showLoginForm}/>
       <BottomNav
-        currentView={currentView}
-        onViewChange={setCurrentView}
+        currentView={getCurrentView()}
         onLoginClick={() => setShowLoginForm(true)}
       />
-    </div>
+    </>
   );
 }
 

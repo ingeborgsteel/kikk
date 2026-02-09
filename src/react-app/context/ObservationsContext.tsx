@@ -58,6 +58,8 @@ export function ObservationsProvider({children}: { children: ReactNode }) {
         id: crypto.randomUUID(),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        lastExportedAt: undefined,
+        exportCount: 0,
         species: observation.species.map((s) => ({
           ...s,
           id: crypto.randomUUID(),

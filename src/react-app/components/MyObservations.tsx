@@ -1,10 +1,13 @@
 import {useState} from 'react';
-import {MapPin, Pencil, Trash2} from 'lucide-react';
+import {FileSpreadsheet, MapPin} from 'lucide-react';
 import {useObservations} from '../context/ObservationsContext';
 import {Button} from './ui/button';
 import ObservationForm from './ObservationForm.tsx';
 import {ThemeToggle} from './ThemeToggle';
 import {AuthButton} from './AuthButton';
+import ExportDialog from './ExportDialog';
+import ObservationItem from './ObservationItem';
+import {getUnexportedCount} from '../queries/useExports';
 
 interface MyObservationsProps {
   onBack: () => void;
@@ -14,6 +17,9 @@ interface MyObservationsProps {
 function MyObservations({onBack, setShowLoginForm}: MyObservationsProps) {
   const {observations, deleteObservation} = useObservations();
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [showExportDialog, setShowExportDialog] = useState(false);
+
+  const unexportedCount = getUnexportedCount(observations);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -77,10 +83,23 @@ function MyObservations({onBack, setShowLoginForm}: MyObservationsProps) {
       </header>
 
       <div className="max-w-4xl mx-auto p-lg md:p-xl">
-        <div className="mb-lg hidden md:block">
-          <Button onClick={onBack} variant="outline">
-            ← Tilbake til kart
-          </Button>
+        <div className="mb-lg flex justify-between items-center gap-md">
+          <div className="hidden md:block">
+            <Button onClick={onBack} variant="outline">
+              ← Tilbake til kart
+            </Button>
+          </div>
+          {observations.length > 0 && (
+            <Button onClick={() => setShowExportDialog(true)} className="ml-auto">
+              <FileSpreadsheet size={20} className="mr-2"/>
+              Eksporter til Excel
+              {unexportedCount > 0 && (
+                <span className="ml-2 px-2 py-0.5 bg-moss text-white text-xs rounded-full">
+                  {unexportedCount} nye
+                </span>
+              )}
+            </Button>
+          )}
         </div>
 
         {observations.length === 0 ? (
@@ -92,70 +111,14 @@ function MyObservations({onBack, setShowLoginForm}: MyObservationsProps) {
         ) : (
           <div className="space-y-md">
             {observations.map((observation) => (
-              <div
+              <ObservationItem
                 key={observation.id}
-                className="bg-white rounded-lg shadow-custom p-lg border-2 border-slate-border"
-              >
-                <div className="flex justify-between items-start mb-md">
-                  <div className="flex-1">
-                    {observation.locationName && (
-                      <div className="font-medium text-bark mb-xs">
-                        {observation.locationName}
-                      </div>
-                    )}
-                    <div className="flex items-center gap-sm text-sm text-slate mb-xs">
-                      <MapPin size={16}/>
-                      <span>
-                        {observation.location.lat.toFixed(4)}, {observation.location.lng.toFixed(4)}
-                      </span>
-                    </div>
-                    <p className="text-sm text-slate">
-                      {formatDateRange(observation.startDate, observation.endDate)} • ±{observation.uncertaintyRadius}m
-                    </p>
-                  </div>
-                  <div className="flex gap-sm">
-                    <Button
-                      variant={"accent"}
-                      size={"icon"}
-                      onClick={() => setEditingId(observation.id)}
-                      aria-label="Edit observation"
-                    >
-                      <Pencil size={18}/>
-                    </Button>
-                    <Button
-                      variant={"accent"}
-                      size={"icon"}
-                      onClick={() => handleDelete(observation.id)}
-                      aria-label="Delete observation"
-                    >
-                      <Trash2 size={18}/>
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="space-y-sm">
-                  <h3 className="font-semibold text-bark">Arter Observert:</h3>
-                  {observation.species.map((speciesObs, idx) => (
-                    <div key={idx} className="pl-md border-l-2 border-moss">
-                      <div className="font-medium text-bark">{speciesObs.species.PrefferedPopularname}</div>
-                      <div className="text-sm text-slate italic">{speciesObs.species.ValidScientificName}</div>
-                      <div className="text-sm text-slate">
-                        Count: {speciesObs.count} • Gender: {speciesObs.gender}
-                      </div>
-                      {speciesObs.comment && (
-                        <div className="text-sm text-bark mt-1 italic">"{speciesObs.comment}"</div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                {observation.comment && (
-                  <div className="mt-md pt-md border-t border-slate-border">
-                    <p className="text-sm font-medium text-bark mb-1">Generell Observasjon:</p>
-                    <p className="text-sm text-bark">{observation.comment}</p>
-                  </div>
-                )}
-              </div>
+                observation={observation}
+                onEdit={setEditingId}
+                onDelete={handleDelete}
+                formatDate={formatDate}
+                formatDateRange={formatDateRange}
+              />
             ))}
           </div>
         )}
@@ -166,6 +129,13 @@ function MyObservations({onBack, setShowLoginForm}: MyObservationsProps) {
           location={editingObservation.location}
           observation={editingObservation}
           onClose={() => setEditingId(null)}
+        />
+      )}
+
+      {showExportDialog && (
+        <ExportDialog
+          observations={observations}
+          onClose={() => setShowExportDialog(false)}
         />
       )}
     </div>

@@ -133,7 +133,7 @@ const SpeciesItem = ({species, updateSpecies, removeSpecies, key}: SpeciesItemPr
           </Label>
           <Textarea
             id={`species-comment-${key}`}
-            placeholder="Notater om denne spesifikke arten..."
+            placeholder="Notater om denne spesifikke observasjonen..."
             value={species.comment}
             onChange={(e) => updateSpecies('comment', e.target.value)}
             className="mt-1"

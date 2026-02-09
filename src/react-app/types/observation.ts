@@ -28,4 +28,5 @@ export interface Observation {
   updatedAt: string;
   lastExportedAt?: string; // ISO date string of last export, null if never exported
   exportCount?: number; // Number of times this observation has been exported
+  locationId?: string;
 }

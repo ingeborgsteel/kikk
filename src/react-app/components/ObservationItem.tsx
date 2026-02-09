@@ -63,12 +63,11 @@ function ObservationItem({
             <div className="flex items-center gap-sm text-sm text-slate mb-xs">
               <MapPin size={16}/>
               <span>
-                {observation.location.lat.toFixed(4)}, {observation.location.lng.toFixed(4)}
+                {observation.location.lat.toFixed(4)}, {observation.location.lng.toFixed(4)} ±{observation.uncertaintyRadius}m
               </span>
             </div>
             <p className="text-sm text-slate">
-              {formatDateRange(observation.startDate, observation.endDate)} • ±
-              {observation.uncertaintyRadius}m
+              {formatDateRange(observation.startDate, observation.endDate)}
             </p>
             {isExported && observation.lastExportedAt && (
               <p className="text-xs text-slate mt-1">

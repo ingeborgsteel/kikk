@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import {FileSpreadsheet, MapPin, Filter} from 'lucide-react';
+import {FileSpreadsheet, Filter, MapPin} from 'lucide-react';
 import {useObservations} from '../context/ObservationsContext';
 import {useLocations} from '../context/LocationsContext';
 import {Button} from './ui/button';
@@ -13,22 +13,6 @@ import {getUnexportedCount} from '../queries/useExports';
 interface MyObservationsProps {
   onBack: () => void;
   setShowLoginForm: (show: boolean) => void;
-}
-
-// Helper function to calculate distance between two coordinates (Haversine formula)
-function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const R = 6371e3; // Earth's radius in meters
-  const φ1 = lat1 * Math.PI / 180;
-  const φ2 = lat2 * Math.PI / 180;
-  const Δφ = (lat2 - lat1) * Math.PI / 180;
-  const Δλ = (lng2 - lng1) * Math.PI / 180;
-
-  const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-    Math.cos(φ1) * Math.cos(φ2) *
-    Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-  return R * c; // Distance in meters
 }
 
 function MyObservations({onBack, setShowLoginForm}: MyObservationsProps) {
@@ -85,19 +69,7 @@ function MyObservations({onBack, setShowLoginForm}: MyObservationsProps) {
 
   // Filter observations by location if a filter is active
   const filteredObservations = filterLocationId
-    ? observations.filter(obs => {
-        const location = locations.find(loc => loc.id === filterLocationId);
-        if (!location) return false;
-        // Check if observation is within the uncertainty radius of the location
-        const distance = calculateDistance(
-          obs.location.lat,
-          obs.location.lng,
-          location.location.lat,
-          location.location.lng
-        );
-        // Consider it a match if within combined uncertainty radius
-        return distance <= (location.uncertaintyRadius + obs.uncertaintyRadius);
-      })
+    ? observations.filter(obs => obs.locationId === filterLocationId)
     : observations;
 
   const unexportedCount = getUnexportedCount(filteredObservations);
@@ -125,11 +97,11 @@ function MyObservations({onBack, setShowLoginForm}: MyObservationsProps) {
               ← Tilbake til kart
             </Button>
           </div>
-          
+
           {/* Location filter */}
           {locations.length > 0 && (
             <div className="flex items-center gap-2 w-full md:w-auto">
-              <Filter size={20} className="text-bark dark:text-sand" />
+              <Filter size={20} className="text-bark dark:text-sand"/>
               <select
                 value={filterLocationId || ''}
                 onChange={(e) => setFilterLocationId(e.target.value || null)}
@@ -144,7 +116,7 @@ function MyObservations({onBack, setShowLoginForm}: MyObservationsProps) {
               </select>
             </div>
           )}
-          
+
           {observations.length > 0 && (
             <Button onClick={() => setShowExportDialog(true)} className="ml-auto">
               <FileSpreadsheet size={20} className="mr-2"/>

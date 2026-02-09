@@ -14,6 +14,7 @@ import {MapClickDialog} from "./components/MapClickDialog.tsx";
 import {AddLocationForm} from "./components/AddLocationForm.tsx";
 import {AuthButton} from "./components/AuthButton.tsx";
 import {KikkemodusToggle} from "./components/KikkemodusToggle.tsx";
+import {UserLocation} from "./types/location.ts";
 
 function App() {
   const [currentView, setCurrentView] = useState<'map' | 'observations' | 'profile'>('map');
@@ -24,7 +25,7 @@ function App() {
   const [showAddLocationForm, setShowAddLocationForm] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingObservationId, setEditingObservationId] = useState<string | null>(null);
-  const [presetLocationName, setPresetLocationName] = useState<string | null>(null);
+  const [presetLocation, setPresetLocation] = useState<UserLocation | null>(null);
   const [kikkemodusActive, setKikkemodusActive] = useState(false);
   const {observations} = useObservations();
   const {locations} = useLocations();
@@ -33,8 +34,8 @@ function App() {
     setSelectedLocation({lat, lng});
     setSelectedZoom(zoom);
     setEditingObservationId(null);
-    setPresetLocationName(null); // Clear preset location name
-    
+    setPresetLocation(null); // Clear preset location name
+
     // In kikkemodus, go directly to observation form
     if (kikkemodusActive) {
       setShowAddForm(true);
@@ -59,13 +60,13 @@ function App() {
   const handleCloseMapClickDialog = () => {
     setShowMapClickDialog(false);
     setSelectedLocation(null);
-    setPresetLocationName(null);
+    setPresetLocation(null);
   };
 
   const handleObservationClick = (observationId: string) => {
     setEditingObservationId(observationId);
     setSelectedLocation(null);
-    setPresetLocationName(null);
+    setPresetLocation(null);
     setShowAddForm(true);
   };
 
@@ -75,7 +76,7 @@ function App() {
     if (userLocation) {
       // Set the location to create a new observation at this preset location
       setSelectedLocation(userLocation.location);
-      setPresetLocationName(userLocation.name); // Set preset location name to lock it
+      setPresetLocation(userLocation); // Set preset location name to lock it
       setSelectedZoom(13);
       setEditingObservationId(null);
       setShowAddForm(true);
@@ -86,7 +87,7 @@ function App() {
     setShowAddForm(false);
     setShowAddLocationForm(false);
     setSelectedLocation(null);
-    setPresetLocationName(null);
+    setPresetLocation(null);
     setEditingObservationId(null);
   };
 
@@ -132,9 +133,9 @@ function App() {
       <header className="text-center p-lg md:p-xl bg-forest relative overflow-visible">
         <h1 className="text-sand m-0 text-[clamp(2rem,6vw,3rem)] tracking-wider">kikk</h1>
         <div className="absolute left-lg top-1/2 -translate-y-1/2">
-          <KikkemodusToggle 
-            kikkemodusActive={kikkemodusActive} 
-            onToggle={() => setKikkemodusActive(!kikkemodusActive)} 
+          <KikkemodusToggle
+            kikkemodusActive={kikkemodusActive}
+            onToggle={() => setKikkemodusActive(!kikkemodusActive)}
           />
         </div>
         <div className="absolute right-lg top-1/2 -translate-y-1/2 hidden md:flex items-center gap-2">
@@ -160,7 +161,7 @@ function App() {
           location={editingObservation?.location || selectedLocation!}
           zoom={editingObservation ? 13 : selectedZoom}
           observation={editingObservation}
-          presetLocationName={presetLocationName}
+          presetLocation={presetLocation}
           onClose={onClose}
         />
       )}

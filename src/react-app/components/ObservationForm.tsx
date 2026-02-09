@@ -82,6 +82,19 @@ const ObservationForm = ({observation, onClose, location, zoom = 13}: Observatio
     }
   }, [currentLocation, setValue]);
 
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
+
   // Fetch location name when form opens for a new observation
   useEffect(() => {
     const currentLocationName = getValues('locationName');

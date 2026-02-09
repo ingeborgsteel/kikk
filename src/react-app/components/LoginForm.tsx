@@ -24,7 +24,7 @@ export function LoginForm({closeLoginForm, showLoginForm}: { closeLoginForm: () 
 
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, [showLoginForm]);
+  }, [closeLoginForm, showLoginForm]);
 
   // Don't render if Supabase is not configured
   if (!isSupabaseConfigured()) {

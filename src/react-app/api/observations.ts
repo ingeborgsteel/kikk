@@ -4,7 +4,8 @@ import {Observation, Species} from "../types/observation.ts";
 export async function fetchObservations(userId?: string): Promise<Observation[]> {
   let query = supabase
     .from("observations")
-    .select("*, species (*)");
+    .select("*, species (*)")
+    .order('createdAt', {ascending: false});
 
   if (userId) {
     query = query.eq("userId", userId);

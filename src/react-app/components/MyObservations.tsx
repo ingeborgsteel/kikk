@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import {FileSpreadsheet} from 'lucide-react';
+import {FileSpreadsheet, MapPin} from 'lucide-react';
 import {useObservations} from '../context/ObservationsContext';
 import {Button} from './ui/button';
 import ObservationForm from './ObservationForm.tsx';
@@ -18,7 +18,7 @@ function MyObservations({onBack, setShowLoginForm}: MyObservationsProps) {
   const {observations, deleteObservation} = useObservations();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showExportDialog, setShowExportDialog] = useState(false);
-  
+
   const unexportedCount = getUnexportedCount(observations);
 
   const formatDate = (dateString: string) => {
@@ -91,7 +91,7 @@ function MyObservations({onBack, setShowLoginForm}: MyObservationsProps) {
           </div>
           {observations.length > 0 && (
             <Button onClick={() => setShowExportDialog(true)} className="ml-auto">
-              <FileSpreadsheet size={20} className="mr-2" />
+              <FileSpreadsheet size={20} className="mr-2"/>
               Eksporter til Excel
               {unexportedCount > 0 && (
                 <span className="ml-2 px-2 py-0.5 bg-moss text-white text-xs rounded-full">
@@ -131,7 +131,7 @@ function MyObservations({onBack, setShowLoginForm}: MyObservationsProps) {
           onClose={() => setEditingId(null)}
         />
       )}
-      
+
       {showExportDialog && (
         <ExportDialog
           observations={observations}

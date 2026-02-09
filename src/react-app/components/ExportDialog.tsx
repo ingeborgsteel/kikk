@@ -1,22 +1,27 @@
-import { useState } from 'react';
-import { X, Download, FileSpreadsheet, History } from 'lucide-react';
-import { Button } from './ui/button';
-import { Observation } from '../types/observation';
-import { useExportObservations, useExportLogs, useDownloadExport, getUnexportedObservations } from '../queries/useExports';
-import { isSupabaseConfigured } from '../lib/supabase';
+import {useState} from 'react';
+import {Download, FileSpreadsheet, History, X} from 'lucide-react';
+import {Button} from './ui/button';
+import {Observation} from '../types/observation';
+import {
+  getUnexportedObservations,
+  useDownloadExport,
+  useExportLogs,
+  useExportObservations
+} from '../queries/useExports';
+import {isSupabaseConfigured} from '../lib/supabase';
 
 interface ExportDialogProps {
   observations: Observation[];
   onClose: () => void;
 }
 
-function ExportDialog({ observations, onClose }: ExportDialogProps) {
+function ExportDialog({observations, onClose}: ExportDialogProps) {
   const [exportType, setExportType] = useState<'all' | 'new'>('new');
-  const { mutate: exportObservations, isPending: isExporting } = useExportObservations();
-  const { data: exportLogs = [], isLoading: isLoadingLogs } = useExportLogs();
-  const { mutate: downloadExport, isPending: isDownloading } = useDownloadExport();
+  const {mutate: exportObservations, isPending: isExporting} = useExportObservations();
+  const {data: exportLogs = [], isLoading: isLoadingLogs} = useExportLogs();
+  const {mutate: downloadExport, isPending: isDownloading} = useDownloadExport();
   const supabaseConfigured = isSupabaseConfigured();
-  
+
   const unexportedObservations = getUnexportedObservations(observations);
   const observationsToExport = exportType === 'new' ? unexportedObservations : observations;
 
@@ -27,7 +32,7 @@ function ExportDialog({ observations, onClose }: ExportDialogProps) {
     }
 
     exportObservations(
-      { observations: observationsToExport, saveToStorage: supabaseConfigured },
+      {observations: observationsToExport, saveToStorage: supabaseConfigured},
       {
         onSuccess: () => {
           alert(`${observationsToExport.length} observasjoner eksportert!`);
@@ -42,7 +47,7 @@ function ExportDialog({ observations, onClose }: ExportDialogProps) {
 
   const handleDownloadPrevious = (filePath: string, fileName: string) => {
     downloadExport(
-      { filePath, fileName },
+      {filePath, fileName},
       {
         onSuccess: () => {
           alert('Tidligere eksport lastet ned!');
@@ -60,7 +65,7 @@ function ExportDialog({ observations, onClose }: ExportDialogProps) {
         {/* Header */}
         <div className="sticky top-0 bg-forest text-sand p-lg flex justify-between items-center">
           <h2 className="text-2xl font-bold flex items-center gap-sm">
-            <FileSpreadsheet size={24} />
+            <FileSpreadsheet size={24}/>
             Eksporter Observasjoner
           </h2>
           <Button
@@ -69,7 +74,7 @@ function ExportDialog({ observations, onClose }: ExportDialogProps) {
             onClick={onClose}
             className="text-sand hover:bg-moss"
           >
-            <X size={24} />
+            <X size={24}/>
           </Button>
         </div>
 
@@ -81,7 +86,8 @@ function ExportDialog({ observations, onClose }: ExportDialogProps) {
               Velg hva som skal eksporteres
             </h3>
             <div className="space-y-sm">
-              <label className="flex items-center gap-sm cursor-pointer p-md border-2 border-slate-border rounded-lg hover:bg-moss hover:bg-opacity-10">
+              <label
+                className="flex items-center gap-sm cursor-pointer p-md border-2 border-slate-border rounded-lg hover:bg-moss hover:bg-opacity-10">
                 <input
                   type="radio"
                   name="exportType"
@@ -99,7 +105,8 @@ function ExportDialog({ observations, onClose }: ExportDialogProps) {
                   </div>
                 </div>
               </label>
-              <label className="flex items-center gap-sm cursor-pointer p-md border-2 border-slate-border rounded-lg hover:bg-moss hover:bg-opacity-10">
+              <label
+                className="flex items-center gap-sm cursor-pointer p-md border-2 border-slate-border rounded-lg hover:bg-moss hover:bg-opacity-10">
                 <input
                   type="radio"
                   name="exportType"
@@ -128,7 +135,7 @@ function ExportDialog({ observations, onClose }: ExportDialogProps) {
               className="w-full"
               size="lg"
             >
-              <Download size={20} className="mr-2" />
+              <Download size={20} className="mr-2"/>
               {isExporting
                 ? 'Eksporterer...'
                 : `Eksporter ${observationsToExport.length} observasjoner`}
@@ -139,7 +146,7 @@ function ExportDialog({ observations, onClose }: ExportDialogProps) {
           {supabaseConfigured && (
             <div>
               <h3 className="text-lg font-semibold text-bark dark:text-sand mb-md flex items-center gap-sm">
-                <History size={20} />
+                <History size={20}/>
                 Tidligere Eksporter
               </h3>
               {isLoadingLogs ? (
@@ -158,7 +165,7 @@ function ExportDialog({ observations, onClose }: ExportDialogProps) {
                           {log.fileName}
                         </div>
                         <div className="text-sm text-slate">
-                          {new Date(log.exportedAt).toLocaleString('no-NO')} • {log.observationCount} observasjoner
+                          {new Date(log.createdAt).toLocaleString('no-NO')} • {log.observationIds.length} observasjoner
                         </div>
                       </div>
                       {log.filePath && (
@@ -168,7 +175,7 @@ function ExportDialog({ observations, onClose }: ExportDialogProps) {
                           onClick={() => handleDownloadPrevious(log.filePath!, log.fileName)}
                           disabled={isDownloading}
                         >
-                          <Download size={16} className="mr-1" />
+                          <Download size={16} className="mr-1"/>
                           Last ned
                         </Button>
                       )}

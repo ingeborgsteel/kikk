@@ -172,7 +172,7 @@ const ObservationForm = ({observation, onClose, location, zoom = 13}: Observatio
                 render={({field: {value, onChange}}) => (
                   <div>
                     <Label htmlFor="locationName" className="text-bark dark:text-sand">
-                      Stedsnavn
+                      Lokalitet
                     </Label>
                     <div className="relative">
                       <Input
@@ -398,7 +398,7 @@ const ObservationForm = ({observation, onClose, location, zoom = 13}: Observatio
                     </Label>
                     <Textarea
                       id="comment"
-                      placeholder="Legg til notater om den generelle observasjonen..."
+                      placeholder="Legg til notater om lokaliteten..."
                       value={value}
                       onChange={(e) => onChange(e.target.value)}
                       className="mt-1"

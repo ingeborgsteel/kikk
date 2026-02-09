@@ -1,27 +1,27 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '../context/AuthContext';
-import { isSupabaseConfigured } from '../lib/supabase';
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import {useAuth} from '../context/AuthContext';
+import {isSupabaseConfigured} from '../lib/supabase';
 import {
+  downloadExcelFile,
+  downloadExcelFromStorage,
   fetchExportLogs,
   generateExcelFromObservations,
-  downloadExcelFile,
-  saveExportLog,
   markObservationsAsExported,
+  saveExportLog,
   uploadExcelToStorage,
-  downloadExcelFromStorage,
 } from '../api/exports';
-import { Observation } from '../types/observation';
-import { ExportLog } from '../types/export';
+import {Observation} from '../types/observation';
+import {Export} from '../types/export';
 
 /**
  * Hook to fetch export logs
  */
 export function useExportLogs() {
-  const { user } = useAuth();
+  const {user} = useAuth();
   const supabaseConfigured = isSupabaseConfigured();
 
-  return useQuery<ExportLog[]>({
-    queryKey: ['exportLogs', user?.id],
+  return useQuery<Export[]>({
+    queryKey: ['exports', user?.id],
     queryFn: () => fetchExportLogs(user?.id),
     enabled: supabaseConfigured,
   });
@@ -31,20 +31,20 @@ export function useExportLogs() {
  * Hook to export observations to Excel
  */
 export function useExportObservations() {
-  const { user } = useAuth();
+  const {user} = useAuth();
   const queryClient = useQueryClient();
   const supabaseConfigured = isSupabaseConfigured();
 
   return useMutation({
     mutationFn: async ({
-      observations,
-      saveToStorage = true,
-    }: {
+                         observations,
+                         saveToStorage = true,
+                       }: {
       observations: Observation[];
       saveToStorage?: boolean;
     }) => {
       // Generate Excel file
-      const timestamp = new Date().toISOString().split('T')[0];
+      const timestamp = new Date().toLocaleString();
       const fileName = `observations-export-${timestamp}.xlsx`;
       const blob = await generateExcelFromObservations(observations);
 
@@ -69,12 +69,12 @@ export function useExportObservations() {
         }
       }
 
-      return { fileName, blob };
+      return {fileName, blob};
     },
     onSuccess: () => {
       // Invalidate queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ['exportLogs'] });
-      queryClient.invalidateQueries({ queryKey: ['observations'] });
+      queryClient.invalidateQueries({queryKey: ['exports']});
+      queryClient.invalidateQueries({queryKey: ['observations']});
     },
   });
 }
@@ -84,10 +84,10 @@ export function useExportObservations() {
  */
 export function useDownloadExport() {
   return useMutation({
-    mutationFn: async ({ filePath, fileName }: { filePath: string; fileName: string }) => {
+    mutationFn: async ({filePath, fileName}: { filePath: string; fileName: string }) => {
       const blob = await downloadExcelFromStorage(filePath);
       downloadExcelFile(blob, fileName);
-      return { fileName };
+      return {fileName};
     },
   });
 }

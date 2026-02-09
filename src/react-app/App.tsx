@@ -11,12 +11,16 @@ import {ThemeToggle} from "./components/ThemeToggle";
 import {LoginForm} from "./components/LoginForm.tsx";
 import {BottomNav} from "./components/BottomNav";
 import {UserProfile} from "./components/UserProfile.tsx";
+import {MapClickDialog} from "./components/MapClickDialog.tsx";
+import {AddLocationForm} from "./components/AddLocationForm.tsx";
 
 function App() {
   const [currentView, setCurrentView] = useState<'map' | 'observations' | 'profile'>('map');
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [selectedZoom, setSelectedZoom] = useState<number>(13); // Default zoom level
   const [showLoginForm, setShowLoginForm] = useState(false);
+  const [showMapClickDialog, setShowMapClickDialog] = useState(false);
+  const [showAddLocationForm, setShowAddLocationForm] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingObservationId, setEditingObservationId] = useState<string | null>(null);
   const {observations} = useObservations();
@@ -26,7 +30,23 @@ function App() {
     setSelectedLocation({lat, lng});
     setSelectedZoom(zoom);
     setEditingObservationId(null);
+    // Show dialog to choose between observation or location
+    setShowMapClickDialog(true);
+  };
+
+  const handleAddObservation = () => {
+    setShowMapClickDialog(false);
     setShowAddForm(true);
+  };
+
+  const handleAddLocation = () => {
+    setShowMapClickDialog(false);
+    setShowAddLocationForm(true);
+  };
+
+  const handleCloseMapClickDialog = () => {
+    setShowMapClickDialog(false);
+    setSelectedLocation(null);
   };
 
   const handleObservationClick = (observationId: string) => {
@@ -49,6 +69,7 @@ function App() {
 
   const onClose = () => {
     setShowAddForm(false);
+    setShowAddLocationForm(false);
     setSelectedLocation(null);
     setEditingObservationId(null);
   };
@@ -125,6 +146,20 @@ function App() {
           location={editingObservation?.location || selectedLocation!}
           zoom={editingObservation ? 13 : selectedZoom}
           observation={editingObservation}
+          onClose={onClose}
+        />
+      )}
+      {showMapClickDialog && selectedLocation && (
+        <MapClickDialog
+          location={selectedLocation}
+          onAddObservation={handleAddObservation}
+          onAddLocation={handleAddLocation}
+          onClose={handleCloseMapClickDialog}
+        />
+      )}
+      {showAddLocationForm && selectedLocation && (
+        <AddLocationForm
+          initialLocation={selectedLocation}
           onClose={onClose}
         />
       )}

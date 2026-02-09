@@ -3,28 +3,22 @@ import { Button } from './ui/button';
 import { useLocations } from '../context/LocationsContext';
 import { useAuth } from '../context/AuthContext';
 import { Trash2, Edit2, MapPin, Plus, LogOut, History, Download } from 'lucide-react';
-import { CreateUserLocation } from '../api/locations';
 import { UserLocation } from '../types/location';
 import { ThemeToggle } from './ThemeToggle';
 import { useDownloadExport, useExportLogs } from '../queries/useExports';
 import { isSupabaseConfigured } from '../lib/supabase';
+import { AddLocationForm } from './AddLocationForm';
 
 interface UserProfileProps {
   onBack: () => void;
 }
 
 export function UserProfile({ onBack }: UserProfileProps) {
-  const { locations, addLocation, updateLocation, deleteLocation } = useLocations();
+  const { locations, deleteLocation } = useLocations();
   const { user, signOut } = useAuth();
-  const [showForm, setShowForm] = useState(false);
+  const [showLocationForm, setShowLocationForm] = useState(false);
   const [editingLocation, setEditingLocation] = useState<UserLocation | null>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    lat: '',
-    lng: '',
-    uncertaintyRadius: '10',
-    description: '',
-  });
+  const [formLocation, setFormLocation] = useState<{ lat: number; lng: number } | null>(null);
   
   const supabaseConfigured = isSupabaseConfigured();
   const { data: exportLogs = [], isLoading: isLoadingLogs } = useExportLogs();
@@ -49,55 +43,17 @@ export function UserProfile({ onBack }: UserProfileProps) {
     );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const lat = parseFloat(formData.lat);
-    const lng = parseFloat(formData.lng);
-    const uncertaintyRadius = parseInt(formData.uncertaintyRadius);
-
-    if (isNaN(lat) || isNaN(lng) || isNaN(uncertaintyRadius)) {
-      alert('Vennligst fyll inn gyldige verdier for koordinater og usikkerhet');
-      return;
-    }
-
-    if (editingLocation) {
-      // Update existing location
-      updateLocation({
-        ...editingLocation,
-        name: formData.name,
-        location: { lat, lng },
-        uncertaintyRadius,
-        description: formData.description,
-      });
-    } else {
-      // Add new location
-      const newLocation: CreateUserLocation = {
-        userId: user?.id || null,
-        name: formData.name,
-        location: { lat, lng },
-        uncertaintyRadius,
-        description: formData.description,
-      };
-      addLocation(newLocation);
-    }
-
-    // Reset form
-    setFormData({ name: '', lat: '', lng: '', uncertaintyRadius: '10', description: '' });
-    setShowForm(false);
+  const handleAddNew = () => {
+    // Use Oslo coordinates as default for new locations
+    setFormLocation({ lat: 59.9139, lng: 10.7522 });
     setEditingLocation(null);
+    setShowLocationForm(true);
   };
 
   const handleEdit = (location: UserLocation) => {
+    setFormLocation(location.location);
     setEditingLocation(location);
-    setFormData({
-      name: location.name,
-      lat: location.location.lat.toString(),
-      lng: location.location.lng.toString(),
-      uncertaintyRadius: location.uncertaintyRadius.toString(),
-      description: location.description || '',
-    });
-    setShowForm(true);
+    setShowLocationForm(true);
   };
 
   const handleDelete = (id: string) => {
@@ -106,10 +62,10 @@ export function UserProfile({ onBack }: UserProfileProps) {
     }
   };
 
-  const handleCancel = () => {
-    setShowForm(false);
+  const handleCloseForm = () => {
+    setShowLocationForm(false);
     setEditingLocation(null);
-    setFormData({ name: '', lat: '', lng: '', uncertaintyRadius: '10', description: '' });
+    setFormLocation(null);
   };
 
   return (
@@ -147,106 +103,13 @@ export function UserProfile({ onBack }: UserProfileProps) {
         {/* My Locations Section */}
         <div className="mb-xxl">
           <h2 className="text-2xl font-bold text-bark dark:text-sand mb-lg">Mine plasseringer</h2>
-          {!showForm && (
-            <Button
-              onClick={() => setShowForm(true)}
-              className="mb-4 flex items-center gap-2"
-            >
-              <Plus size={20} />
-              Legg til ny plassering
-            </Button>
-          )}
-
-          {showForm && (
-            <form onSubmit={handleSubmit} className="mb-6 p-4 bg-moss/5 dark:bg-moss/10 rounded-lg border-2 border-moss">
-              <h3 className="text-lg font-semibold mb-4 text-bark dark:text-sand">
-                {editingLocation ? 'Rediger plassering' : 'Ny plassering'}
-              </h3>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1 text-bark dark:text-sand">
-                    Navn *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full p-2 rounded border-2 border-moss bg-sand dark:bg-bark text-bark dark:text-sand"
-                    placeholder="f.eks. Hjemme, Jobb, Favorittpark"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1 text-bark dark:text-sand">
-                      Breddegrad *
-                    </label>
-                    <input
-                      type="number"
-                      step="any"
-                      required
-                      value={formData.lat}
-                      onChange={(e) => setFormData({ ...formData, lat: e.target.value })}
-                      className="w-full p-2 rounded border-2 border-moss bg-sand dark:bg-bark text-bark dark:text-sand"
-                      placeholder="59.9139"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1 text-bark dark:text-sand">
-                      Lengdegrad *
-                    </label>
-                    <input
-                      type="number"
-                      step="any"
-                      required
-                      value={formData.lng}
-                      onChange={(e) => setFormData({ ...formData, lng: e.target.value })}
-                      className="w-full p-2 rounded border-2 border-moss bg-sand dark:bg-bark text-bark dark:text-sand"
-                      placeholder="10.7522"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1 text-bark dark:text-sand">
-                    Usikkerhet (meter) *
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    min="1"
-                    value={formData.uncertaintyRadius}
-                    onChange={(e) => setFormData({ ...formData, uncertaintyRadius: e.target.value })}
-                    className="w-full p-2 rounded border-2 border-moss bg-sand dark:bg-bark text-bark dark:text-sand"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1 text-bark dark:text-sand">
-                    Beskrivelse
-                  </label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full p-2 rounded border-2 border-moss bg-sand dark:bg-bark text-bark dark:text-sand"
-                    rows={3}
-                    placeholder="Tilleggsinformasjon om plasseringen"
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-2 mt-4">
-                <Button type="submit" variant="default">
-                  {editingLocation ? 'Lagre endringer' : 'Legg til'}
-                </Button>
-                <Button type="button" variant="secondary" onClick={handleCancel}>
-                  Avbryt
-                </Button>
-              </div>
-            </form>
-          )}
+          <Button
+            onClick={handleAddNew}
+            className="mb-4 flex items-center gap-2"
+          >
+            <Plus size={20} />
+            Legg til ny plassering
+          </Button>
 
           <div className="space-y-3">
             {locations.length === 0 ? (
@@ -351,6 +214,15 @@ export function UserProfile({ onBack }: UserProfileProps) {
           </div>
         )}
       </div>
+      
+      {/* Location Form Modal */}
+      {showLocationForm && formLocation && (
+        <AddLocationForm
+          initialLocation={formLocation}
+          onClose={handleCloseForm}
+          editingLocation={editingLocation}
+        />
+      )}
     </div>
   );
 }

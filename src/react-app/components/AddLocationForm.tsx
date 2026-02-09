@@ -1,35 +1,53 @@
 import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
 import { Button } from './ui/button';
 import { useLocations } from '../context/LocationsContext';
 import { useAuth } from '../context/AuthContext';
 import { X } from 'lucide-react';
 import { CreateUserLocation } from '../api/locations';
+import { UserLocation } from '../types/location';
 import { reverseGeocode } from '../lib/utils';
+import { LocationEditor } from './LocationEditor';
 
 interface AddLocationFormProps {
   initialLocation: { lat: number; lng: number };
   onClose: () => void;
+  editingLocation?: UserLocation | null;
 }
 
-export function AddLocationForm({ initialLocation, onClose }: AddLocationFormProps) {
-  const { addLocation } = useLocations();
+interface LocationFormData {
+  name: string;
+  lat: string;
+  lng: string;
+  uncertaintyRadius: string;
+  description: string;
+}
+
+export function AddLocationForm({ initialLocation, onClose, editingLocation }: AddLocationFormProps) {
+  const { addLocation, updateLocation } = useLocations();
   const { user } = useAuth();
-  const [loadingName, setLoadingName] = useState(true);
-  const [formData, setFormData] = useState({
-    name: '',
-    lat: initialLocation.lat.toString(),
-    lng: initialLocation.lng.toString(),
-    uncertaintyRadius: '10',
-    description: '',
+  const [loadingName, setLoadingName] = useState(!editingLocation);
+  const [currentLocation, setCurrentLocation] = useState(initialLocation);
+  
+  const { register, handleSubmit, setValue } = useForm<LocationFormData>({
+    defaultValues: {
+      name: editingLocation?.name || '',
+      lat: initialLocation.lat.toString(),
+      lng: initialLocation.lng.toString(),
+      uncertaintyRadius: editingLocation?.uncertaintyRadius.toString() || '10',
+      description: editingLocation?.description || '',
+    },
   });
 
-  // Fetch suggested name from reverse geocoding
+  // Fetch suggested name from reverse geocoding (only for new locations)
   useEffect(() => {
+    if (editingLocation) return; // Skip for editing
+    
     setLoadingName(true);
     reverseGeocode(initialLocation.lat, initialLocation.lng)
       .then(name => {
         if (name) {
-          setFormData(prev => ({ ...prev, name }));
+          setValue('name', name);
         }
       })
       .catch(err => {
@@ -38,29 +56,46 @@ export function AddLocationForm({ initialLocation, onClose }: AddLocationFormPro
       .finally(() => {
         setLoadingName(false);
       });
-  }, [initialLocation]);
+  }, [initialLocation, editingLocation, setValue]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const lat = parseFloat(formData.lat);
-    const lng = parseFloat(formData.lng);
-    const uncertaintyRadius = parseInt(formData.uncertaintyRadius);
+  // Update coordinates when location changes in map
+  const handleLocationChange = (lat: number, lng: number) => {
+    setCurrentLocation({ lat, lng });
+    setValue('lat', lat.toString());
+    setValue('lng', lng.toString());
+  };
+
+  const onSubmit = (data: LocationFormData) => {
+    const lat = parseFloat(data.lat);
+    const lng = parseFloat(data.lng);
+    const uncertaintyRadius = parseInt(data.uncertaintyRadius);
 
     if (isNaN(lat) || isNaN(lng) || isNaN(uncertaintyRadius)) {
       alert('Vennligst fyll inn gyldige verdier for koordinater og usikkerhet');
       return;
     }
 
-    const newLocation: CreateUserLocation = {
-      userId: user?.id || null,
-      name: formData.name,
-      location: { lat, lng },
-      uncertaintyRadius,
-      description: formData.description,
-    };
+    if (editingLocation) {
+      // Update existing location
+      updateLocation({
+        ...editingLocation,
+        name: data.name,
+        location: { lat, lng },
+        uncertaintyRadius,
+        description: data.description,
+      });
+    } else {
+      // Add new location
+      const newLocation: CreateUserLocation = {
+        userId: user?.id || null,
+        name: data.name,
+        location: { lat, lng },
+        uncertaintyRadius,
+        description: data.description,
+      };
+      addLocation(newLocation);
+    }
     
-    addLocation(newLocation);
     onClose();
   };
 
@@ -68,7 +103,9 @@ export function AddLocationForm({ initialLocation, onClose }: AddLocationFormPro
     <div className="fixed inset-0 z-[2000] flex items-start justify-center overflow-y-auto bg-black/50 backdrop-blur-sm p-4 md:p-8">
       <div className="w-full max-w-lg bg-sand dark:bg-bark rounded-lg shadow-custom-2xl my-8">
         <div className="p-6 border-b-2 border-moss dark:border-moss flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-bark dark:text-sand">Ny plassering</h2>
+          <h2 className="text-2xl font-bold text-bark dark:text-sand">
+            {editingLocation ? 'Rediger plassering' : 'Ny plassering'}
+          </h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-moss/10 rounded-lg transition-colors"
@@ -78,8 +115,26 @@ export function AddLocationForm({ initialLocation, onClose }: AddLocationFormPro
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="p-6">
           <div className="space-y-4">
+            {/* Map Preview */}
+            <div>
+              <label className="block text-sm font-medium mb-1 text-bark dark:text-sand">
+                Plassering
+              </label>
+              <p className="text-xs text-bark/60 dark:text-sand/60 mb-2">
+                Lat: {currentLocation.lat.toFixed(4)}, Lng: {currentLocation.lng.toFixed(4)}
+              </p>
+              <LocationEditor
+                location={currentLocation}
+                onLocationChange={handleLocationChange}
+                zoom={15}
+              />
+              <p className="text-xs text-bark/60 dark:text-sand/60 mt-1">
+                Dra markøren eller klikk for å justere posisjon
+              </p>
+            </div>
+
             <div>
               <label className="block text-sm font-medium mb-1 text-bark dark:text-sand">
                 Navn *
@@ -88,8 +143,7 @@ export function AddLocationForm({ initialLocation, onClose }: AddLocationFormPro
                 <input
                   type="text"
                   required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  {...register('name')}
                   className="w-full p-2 rounded border-2 border-moss bg-sand dark:bg-bark text-bark dark:text-sand"
                   placeholder="f.eks. Hjemme, Jobb, Favorittpark"
                 />
@@ -113,8 +167,7 @@ export function AddLocationForm({ initialLocation, onClose }: AddLocationFormPro
                   type="number"
                   step="any"
                   required
-                  value={formData.lat}
-                  onChange={(e) => setFormData({ ...formData, lat: e.target.value })}
+                  {...register('lat')}
                   className="w-full p-2 rounded border-2 border-moss bg-sand dark:bg-bark text-bark dark:text-sand"
                 />
               </div>
@@ -126,8 +179,7 @@ export function AddLocationForm({ initialLocation, onClose }: AddLocationFormPro
                   type="number"
                   step="any"
                   required
-                  value={formData.lng}
-                  onChange={(e) => setFormData({ ...formData, lng: e.target.value })}
+                  {...register('lng')}
                   className="w-full p-2 rounded border-2 border-moss bg-sand dark:bg-bark text-bark dark:text-sand"
                 />
               </div>
@@ -141,8 +193,7 @@ export function AddLocationForm({ initialLocation, onClose }: AddLocationFormPro
                 type="number"
                 required
                 min="1"
-                value={formData.uncertaintyRadius}
-                onChange={(e) => setFormData({ ...formData, uncertaintyRadius: e.target.value })}
+                {...register('uncertaintyRadius')}
                 className="w-full p-2 rounded border-2 border-moss bg-sand dark:bg-bark text-bark dark:text-sand"
               />
             </div>
@@ -152,8 +203,7 @@ export function AddLocationForm({ initialLocation, onClose }: AddLocationFormPro
                 Beskrivelse
               </label>
               <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                {...register('description')}
                 className="w-full p-2 rounded border-2 border-moss bg-sand dark:bg-bark text-bark dark:text-sand"
                 rows={3}
                 placeholder="Tilleggsinformasjon om plasseringen"
@@ -163,7 +213,7 @@ export function AddLocationForm({ initialLocation, onClose }: AddLocationFormPro
 
           <div className="flex gap-2 mt-6">
             <Button type="submit" variant="default" className="flex-1">
-              Lagre plassering
+              {editingLocation ? 'Lagre endringer' : 'Lagre plassering'}
             </Button>
             <Button type="button" variant="secondary" onClick={onClose}>
               Avbryt

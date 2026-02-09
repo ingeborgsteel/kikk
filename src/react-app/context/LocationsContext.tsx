@@ -43,10 +43,12 @@ export function LocationsProvider({ children }: { children: ReactNode }) {
   // Select the appropriate locations source
   const locations = supabaseConfigured ? supabaseLocations : localLocations;
 
-  // Save locations to localStorage whenever they change (for both modes)
+  // Save locations to localStorage whenever they change (only in local mode)
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(locations));
-  }, [locations]);
+    if (!supabaseConfigured) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(locations));
+    }
+  }, [locations, supabaseConfigured]);
 
   const addLocation = (location: CreateUserLocation) => {
     if (supabaseConfigured) {

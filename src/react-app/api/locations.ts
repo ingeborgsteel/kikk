@@ -5,12 +5,12 @@ export async function fetchUserLocations(userId?: string): Promise<UserLocation[
   let query = supabase
     .from("user_locations")
     .select("*")
-    .order('createdAt', { ascending: false });
+    .order('created_at', { ascending: false });
 
   if (userId) {
-    query = query.eq("userId", userId);
+    query = query.eq("user_id", userId);
   } else {
-    query = query.is("userId", null);
+    query = query.is("user_id", null);
   }
 
   const { data, error } = await query;

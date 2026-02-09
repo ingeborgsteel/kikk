@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import {ChevronDown, ChevronUp, MapPin, Pencil, Sparkles, Trash2} from 'lucide-react';
+import {ChevronDown, ChevronUp, MapPin, Pencil, Sparkles, Trash2, MapPinned} from 'lucide-react';
 import {Observation} from '../types/observation';
 import {Button} from './ui/button';
 
@@ -47,7 +47,10 @@ function ObservationItem({
           <div className="flex-1">
             <div className="flex items-center gap-sm">
               {observation.locationName && (
-                <div className="font-medium text-bark">
+                <div className="font-medium text-bark flex items-center gap-1">
+                  {observation.locationId && (
+                    <MapPinned size={18} className="text-violet-600 dark:text-violet-400" />
+                  )}
                   {observation.locationName}
                 </div>
               )}

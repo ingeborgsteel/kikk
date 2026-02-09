@@ -1,28 +1,48 @@
 import { MapPin, Binoculars } from 'lucide-react';
 import { Button } from './ui/button';
+import { LocationEditor } from './LocationEditor';
+import { useState } from 'react';
 
 interface MapClickDialogProps {
   location: { lat: number; lng: number };
-  onAddObservation: () => void;
-  onAddLocation: () => void;
+  onAddObservation: (location: { lat: number; lng: number }) => void;
+  onAddLocation: (location: { lat: number; lng: number }) => void;
   onClose: () => void;
 }
 
-export function MapClickDialog({ location, onAddObservation, onAddLocation, onClose }: MapClickDialogProps) {
+export function MapClickDialog({ location: initialLocation, onAddObservation, onAddLocation, onClose }: MapClickDialogProps) {
+  const [location, setLocation] = useState(initialLocation);
+
+  const handleLocationChange = (lat: number, lng: number) => {
+    setLocation({ lat, lng });
+  };
+
   return (
     <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="w-full max-w-md bg-sand dark:bg-bark rounded-lg shadow-custom-2xl">
+      <div className="w-full max-w-2xl bg-sand dark:bg-bark rounded-lg shadow-custom-2xl">
         <div className="p-6">
           <h2 className="text-xl font-bold text-bark dark:text-sand mb-2">
             Hva vil du gjøre?
           </h2>
-          <p className="text-sm text-bark/70 dark:text-sand/70 mb-6">
+          <p className="text-sm text-bark/70 dark:text-sand/70 mb-4">
             {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
+          </p>
+          
+          {/* Map Editor */}
+          <div className="mb-4 border-2 border-moss rounded-lg overflow-hidden">
+            <LocationEditor
+              location={location}
+              onLocationChange={handleLocationChange}
+              zoom={15}
+            />
+          </div>
+          <p className="text-xs text-bark/60 dark:text-sand/60 mb-6 text-center">
+            Dra markøren eller klikk for å justere posisjon
           </p>
           
           <div className="space-y-3">
             <Button
-              onClick={onAddObservation}
+              onClick={() => onAddObservation(location)}
               className="w-full flex items-center justify-center gap-2 h-auto py-4"
               variant="default"
             >
@@ -34,7 +54,7 @@ export function MapClickDialog({ location, onAddObservation, onAddLocation, onCl
             </Button>
             
             <Button
-              onClick={onAddLocation}
+              onClick={() => onAddLocation(location)}
               className="w-full flex items-center justify-center gap-2 h-auto py-4"
               variant="secondary"
             >

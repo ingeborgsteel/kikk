@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { useLocations } from '../context/LocationsContext';
 import { useAuth } from '../context/AuthContext';
 import { X } from 'lucide-react';
 import { CreateUserLocation } from '../api/locations';
+import { reverseGeocode } from '../lib/utils';
 
 interface AddLocationFormProps {
   initialLocation: { lat: number; lng: number };
@@ -13,6 +14,7 @@ interface AddLocationFormProps {
 export function AddLocationForm({ initialLocation, onClose }: AddLocationFormProps) {
   const { addLocation } = useLocations();
   const { user } = useAuth();
+  const [loadingName, setLoadingName] = useState(true);
   const [formData, setFormData] = useState({
     name: '',
     lat: initialLocation.lat.toString(),
@@ -20,6 +22,23 @@ export function AddLocationForm({ initialLocation, onClose }: AddLocationFormPro
     uncertaintyRadius: '10',
     description: '',
   });
+
+  // Fetch suggested name from reverse geocoding
+  useEffect(() => {
+    setLoadingName(true);
+    reverseGeocode(initialLocation.lat, initialLocation.lng)
+      .then(name => {
+        if (name) {
+          setFormData(prev => ({ ...prev, name }));
+        }
+      })
+      .catch(err => {
+        console.error('Failed to get location name suggestion:', err);
+      })
+      .finally(() => {
+        setLoadingName(false);
+      });
+  }, [initialLocation]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,14 +84,24 @@ export function AddLocationForm({ initialLocation, onClose }: AddLocationFormPro
               <label className="block text-sm font-medium mb-1 text-bark dark:text-sand">
                 Navn *
               </label>
-              <input
-                type="text"
-                required
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full p-2 rounded border-2 border-moss bg-sand dark:bg-bark text-bark dark:text-sand"
-                placeholder="f.eks. Hjemme, Jobb, Favorittpark"
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  required
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full p-2 rounded border-2 border-moss bg-sand dark:bg-bark text-bark dark:text-sand"
+                  placeholder="f.eks. Hjemme, Jobb, Favorittpark"
+                />
+                {loadingName && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <div className="w-4 h-4 border-2 border-slate-border border-t-rust rounded-full animate-spin"></div>
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-bark/60 dark:text-sand/60 mt-1">
+                {loadingName ? 'Henter forslag...' : 'Du kan endre dette navnet'}
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">

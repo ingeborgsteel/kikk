@@ -23,6 +23,7 @@ function App() {
   const [showAddLocationForm, setShowAddLocationForm] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingObservationId, setEditingObservationId] = useState<string | null>(null);
+  const [presetLocationName, setPresetLocationName] = useState<string | null>(null);
   const {observations} = useObservations();
   const {locations} = useLocations();
 
@@ -30,16 +31,19 @@ function App() {
     setSelectedLocation({lat, lng});
     setSelectedZoom(zoom);
     setEditingObservationId(null);
+    setPresetLocationName(null); // Clear preset location name
     // Show dialog to choose between observation or location
     setShowMapClickDialog(true);
   };
 
-  const handleAddObservation = () => {
+  const handleAddObservation = (location: { lat: number; lng: number }) => {
+    setSelectedLocation(location);
     setShowMapClickDialog(false);
     setShowAddForm(true);
   };
 
-  const handleAddLocation = () => {
+  const handleAddLocation = (location: { lat: number; lng: number }) => {
+    setSelectedLocation(location);
     setShowMapClickDialog(false);
     setShowAddLocationForm(true);
   };
@@ -47,11 +51,13 @@ function App() {
   const handleCloseMapClickDialog = () => {
     setShowMapClickDialog(false);
     setSelectedLocation(null);
+    setPresetLocationName(null);
   };
 
   const handleObservationClick = (observationId: string) => {
     setEditingObservationId(observationId);
     setSelectedLocation(null);
+    setPresetLocationName(null);
     setShowAddForm(true);
   };
 
@@ -61,6 +67,7 @@ function App() {
     if (userLocation) {
       // Set the location to create a new observation at this preset location
       setSelectedLocation(userLocation.location);
+      setPresetLocationName(userLocation.name); // Set preset location name to lock it
       setSelectedZoom(13);
       setEditingObservationId(null);
       setShowAddForm(true);
@@ -71,6 +78,7 @@ function App() {
     setShowAddForm(false);
     setShowAddLocationForm(false);
     setSelectedLocation(null);
+    setPresetLocationName(null);
     setEditingObservationId(null);
   };
 
@@ -146,6 +154,7 @@ function App() {
           location={editingObservation?.location || selectedLocation!}
           zoom={editingObservation ? 13 : selectedZoom}
           observation={editingObservation}
+          presetLocationName={presetLocationName}
           onClose={onClose}
         />
       )}

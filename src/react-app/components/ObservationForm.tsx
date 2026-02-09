@@ -18,10 +18,11 @@ interface ObservationFormProps {
   observation?: Observation,
   onClose: () => void,
   location: { lat: number; lng: number },
-  zoom?: number
+  zoom?: number,
+  presetLocationName?: string | null
 }
 
-const ObservationForm = ({observation, onClose, location, zoom = 13}: ObservationFormProps) => {
+const ObservationForm = ({observation, onClose, location, zoom = 13, presetLocationName}: ObservationFormProps) => {
   const {addObservation, updateObservation, observations} = useObservations();
   const [searchTerm, setSearchTerm] = useState('');
   const [showResults, setShowResults] = useState(false);
@@ -41,7 +42,7 @@ const ObservationForm = ({observation, onClose, location, zoom = 13}: Observatio
     defaultValues: {
       startDate: observation?.startDate || defaultStartDate,
       endDate: observation?.endDate || defaultStartDate,
-      locationName: observation?.locationName || '',
+      locationName: observation?.locationName || presetLocationName || '',
       location: currentLocation,
       uncertaintyRadius: observation?.uncertaintyRadius || 10,
       ...observation
@@ -50,6 +51,11 @@ const ObservationForm = ({observation, onClose, location, zoom = 13}: Observatio
 
   // Handle location change from map editor
   const handleLocationChange = useCallback((lat: number, lng: number) => {
+    // Don't allow location changes if we have a preset location name (locked)
+    if (presetLocationName) {
+      return;
+    }
+    
     const newLocation = {lat, lng};
     setCurrentLocation(newLocation);
     setValue('location', newLocation);
@@ -80,7 +86,7 @@ const ObservationForm = ({observation, onClose, location, zoom = 13}: Observatio
           setLoadingLocationName(false);
         });
     }
-  }, [currentLocation, setValue]);
+  }, [currentLocation, setValue, presetLocationName]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -98,8 +104,8 @@ const ObservationForm = ({observation, onClose, location, zoom = 13}: Observatio
   // Fetch location name when form opens for a new observation
   useEffect(() => {
     const currentLocationName = getValues('locationName');
-    // Only fetch if this is a new observation and locationName is not yet set
-    if (!observation && currentLocationName === '') {
+    // Only fetch if this is a new observation, locationName is not yet set, and no preset location name
+    if (!observation && currentLocationName === '' && !presetLocationName) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoadingLocationName(true);
       setGeocodingFailed(false);
@@ -120,8 +126,11 @@ const ObservationForm = ({observation, onClose, location, zoom = 13}: Observatio
           setLoadingLocationName(false);
           setFormReady(true); // Form is ready after geocoding completes (success or failure)
         });
+    } else if (presetLocationName) {
+      // If we have a preset location name, form is ready immediately
+      setFormReady(true);
     }
-  }, [observation, currentLocation, setValue, getValues]);
+  }, [observation, currentLocation, setValue, getValues, presetLocationName]);
 
   const save = useCallback((data: Observation) => {
     const {startDate, endDate} = data;
@@ -172,11 +181,23 @@ const ObservationForm = ({observation, onClose, location, zoom = 13}: Observatio
                 <p className="text-sm text-slate mt-1 mb-2">
                   Lat: {currentLocation.lat.toFixed(4)}, Lng: {currentLocation.lng.toFixed(4)}
                 </p>
-                <LocationEditor
-                  location={currentLocation}
-                  onLocationChange={handleLocationChange}
-                  zoom={zoom}
-                />
+                {!presetLocationName && (
+                  <>
+                    <LocationEditor
+                      location={currentLocation}
+                      onLocationChange={handleLocationChange}
+                      zoom={zoom}
+                    />
+                    <p className="text-xs text-slate mt-1">
+                      Dra markøren eller klikk for å justere posisjon
+                    </p>
+                  </>
+                )}
+                {presetLocationName && (
+                  <p className="text-sm text-bark/70 dark:text-sand/70 mt-1">
+                    Låst til forhåndsinnstilt plassering: <strong>{presetLocationName}</strong>
+                  </p>
+                )}
               </div>
 
               <Controller
@@ -195,6 +216,8 @@ const ObservationForm = ({observation, onClose, location, zoom = 13}: Observatio
                         value={value}
                         onChange={(e) => onChange(e.target.value)}
                         className="mt-1"
+                        readOnly={!!presetLocationName}
+                        disabled={!!presetLocationName}
                       />
                       {loadingLocationName && (
                         <div className="absolute right-3 top-1/2 -translate-y-1/2">

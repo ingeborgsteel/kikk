@@ -11,7 +11,7 @@ export function GitHubSuggestionButton({onClick}: GitHubSuggestionButtonProps) {
       onClick={onClick}
       size="icon"
       className="fixed bottom-20 md:bottom-6 right-6 z-[1000] shadow-custom-xl hover:shadow-custom-2xl transition-all"
-      aria-label="Suggest improvements"
+      aria-label="Forslag til forbedring"
       title="Forslag til forbedring"
     >
       <MessageSquare size={20}/>

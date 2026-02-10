@@ -16,8 +16,10 @@ export function GitHubIssueForm({onClose, showForm}: GitHubIssueFormProps) {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
+    if (!showForm) return;
+
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && showForm) {
+      if (e.key === 'Escape') {
         e.preventDefault();
         e.stopPropagation();
         onClose();
@@ -48,11 +50,12 @@ export function GitHubIssueForm({onClose, showForm}: GitHubIssueFormProps) {
         setMessage('');
         onClose();
       }, 1500);
-    } catch {
+    } catch (error) {
+      console.error('Error opening GitHub issue form:', error);
       setMessage('Noe gikk galt. Prøv igjen.');
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   if (!showForm) {

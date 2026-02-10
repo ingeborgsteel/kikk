@@ -7,7 +7,7 @@ import {UserLocation} from "./types/location";
 // Fix for default marker icons in Leaflet with bundlers
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
-import {kartverketAttribution, kartverketTopo, mapboxAttribution, mapboxSatellite} from "./lib/mapUtils.ts";
+import {kartverketAttribution, kartverketTopo, mapboxAttribution, mapboxSatellite, mapboxTopo} from "./lib/mapUtils.ts";
 
 const DefaultIcon = L.icon({
   iconUrl: icon,
@@ -116,7 +116,7 @@ function Map({
     lat: number;
     lng: number;
   } | null>(null);
-  const [currentLayer, setCurrentLayer] = useState<'standard' | 'aerial'>('standard');
+  const [currentLayer, setCurrentLayer] = useState<'standard' | 'topo' | 'aerial'>('standard');
   const tileLayerRef = useRef<L.TileLayer | null>(null);
 
   // Update the ref whenever onLocationSelect changes
@@ -350,6 +350,10 @@ function Map({
         tileUrl = mapboxSatellite;
         attribution = mapboxAttribution;
         break;
+      case 'topo':
+        tileUrl = mapboxTopo;
+        attribution = mapboxAttribution;
+        break;
       default:
         // Norwegian topographic map from Kartverket
         tileUrl = kartverketTopo;
@@ -371,6 +375,17 @@ function Map({
           onClick={() => setCurrentLayer('standard')}
           className={`px-3 py-2 rounded-lg shadow-custom-lg font-medium text-sm transition-all ${
             currentLayer === 'standard'
+              ? 'bg-moss text-sand border-2 border-sand'
+              : 'bg-sand dark:bg-bark text-bark dark:text-sand border-2 border-moss hover:bg-moss dark:hover:bg-moss'
+          }`}
+          title="Standard kart"
+        >
+          Kartverket
+        </button>
+        <button
+          onClick={() => setCurrentLayer('topo')}
+          className={`px-3 py-2 rounded-lg shadow-custom-lg font-medium text-sm transition-all ${
+            currentLayer === 'topo'
               ? 'bg-moss text-sand border-2 border-sand'
               : 'bg-sand dark:bg-bark text-bark dark:text-sand border-2 border-moss hover:bg-moss dark:hover:bg-moss'
           }`}

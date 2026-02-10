@@ -5,7 +5,7 @@ import "leaflet/dist/leaflet.css";
 // Fix for default marker icons in Leaflet with bundlers
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
-import {kartverketAttribution, kartverketTopo} from "../lib/mapUtils.ts";
+import {mapboxAttribution, mapboxTopo} from "../lib/mapUtils.ts";
 
 const DefaultIcon = L.icon({
   iconUrl: icon,
@@ -18,6 +18,7 @@ const DefaultIcon = L.icon({
 const createRustMarkerSVG = () => {
   const svg = `
     <svg width="25" height="41" viewBox="0 0 25 41" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12.5 0C5.6 0 0 5.6 0 12.5c0 8.4 12.5 28.5 12.5 28.5S25 20.9 25 12.5C25 5.6 19.4 0 12.5 0z" 
       <path d="M12.5 0C5.6 0 0 5.6 0 12.5c0 8.4 12.5 28.5 12.5 28.5S25 20.9 25 12.5C25 5.6 19.4 0 12.5 0z" 
             fill="#C76D4B" stroke="#8B4513" stroke-width="1"/>
       <circle cx="12.5" cy="12.5" r="4" fill="#FFF" opacity="0.3"/>
@@ -57,9 +58,9 @@ export const LocationEditor = ({location, onLocationChange, zoom = 13}: Location
     }).setView([location.lat, location.lng], zoom);
 
     // Add OpenStreetMap tiles
-    L.tileLayer(kartverketTopo, {
+    L.tileLayer(mapboxTopo, {
       maxZoom: 19,
-      attribution: kartverketAttribution
+      attribution: mapboxAttribution
     }).addTo(map.current);
 
     // Add draggable marker

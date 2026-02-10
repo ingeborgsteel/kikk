@@ -203,13 +203,12 @@ const ObservationForm = ({observation, onClose, location, zoom = 13, presetLocat
                 <div className="flex items-center justify-between mb-2">
                   <Label className="text-bark dark:text-sand">Plassering</Label>
                   {!presetLocation && (
-                    <button
-                      type="button"
+                    <Button
+                      variant={"accent"}
                       onClick={() => setShowMapPreview(!showMapPreview)}
-                      className="text-sm text-moss hover:text-moss/80 dark:text-moss dark:hover:text-moss/80 flex items-center gap-1"
                     >
                       {showMapPreview ? '🗺️ Skjul kart' : '🗺️ Vis kart'}
-                    </button>
+                    </Button>
                   )}
                 </div>
                 <p className="text-sm text-slate mt-1 mb-2">
@@ -297,7 +296,7 @@ const ObservationForm = ({observation, onClose, location, zoom = 13, presetLocat
                   render={({field: {value, onChange}}) => (
                     <div>
                       <Label htmlFor="startDate" className="text-bark dark:text-sand">
-                        Startdato og tid (valgfri tid)
+                        Startdato og tid
                       </Label>
                       <div className="flex gap-2">
                         <Input
@@ -325,7 +324,6 @@ const ObservationForm = ({observation, onClose, location, zoom = 13, presetLocat
                           placeholder="00:00"
                         />
                       </div>
-                      <p className="text-xs text-slate mt-1">Tid er valgfri. 24-timers format.</p>
                     </div>
                   )}
                 />
@@ -336,7 +334,7 @@ const ObservationForm = ({observation, onClose, location, zoom = 13, presetLocat
                   render={({field: {value, onChange}}) => (
                     <div>
                       <Label htmlFor="endDate" className="text-bark dark:text-sand">
-                        Sluttdato og tid (valgfri tid)
+                        Sluttdato og tid
                       </Label>
                       <div className="flex gap-2">
                         <Input
@@ -364,7 +362,6 @@ const ObservationForm = ({observation, onClose, location, zoom = 13, presetLocat
                           placeholder="00:00"
                         />
                       </div>
-                      <p className="text-xs text-slate mt-1">Tid er valgfri. Auto-satt til startdato.</p>
                     </div>
                   )}
                 />

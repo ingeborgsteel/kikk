@@ -91,6 +91,7 @@ export function LoginForm({closeLoginForm, showLoginForm}: { closeLoginForm: () 
             <Input
               type="password"
               placeholder="Passord"
+              className={"pl-8"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required

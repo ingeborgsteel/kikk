@@ -1,5 +1,5 @@
 import {useCallback, useEffect, useMemo, useState} from 'react';
-import {X} from 'lucide-react';
+import {MapPinned, X} from 'lucide-react';
 import {Button} from './ui/button';
 import {Input} from './ui/input';
 import {Label} from './ui/label';
@@ -14,6 +14,7 @@ import {LocationEditor} from "./LocationEditor.tsx";
 import {CreateSpecies} from "../api/observations.ts";
 import SpeciesItem from "./SpeciesItem.tsx";
 import {UserLocation} from "../types/location.ts";
+import {twMerge} from "tailwind-merge";
 
 interface ObservationFormProps {
   observation?: Observation,
@@ -206,13 +207,15 @@ const ObservationForm = ({observation, onClose, location, zoom = 13, presetLocat
                       Lokalitet
                     </Label>
                     <div className="relative">
+                      {presetLocation && <MapPinned size={18}
+                                                    className="absolute left-3 top-1/2 -translate-y-1/2 text-violet-600 dark:text-violet-400"/>}
                       <Input
                         id="locationName"
                         type="text"
                         placeholder="F.eks. Oslo, Nordmarka"
                         value={value}
                         onChange={(e) => onChange(e.target.value)}
-                        className="mt-1"
+                        className={twMerge("mt-1", presetLocation && "pl-8")}
                         readOnly={!!presetLocation}
                         disabled={!!presetLocation}
                       />

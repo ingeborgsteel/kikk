@@ -5,6 +5,9 @@ import {Button} from './ui/button';
 import {Input} from './ui/input';
 import {Textarea} from './ui/textarea';
 
+const GITHUB_OWNER = 'ingeborgsteel';
+const GITHUB_REPO = 'kikk';
+
 interface GitHubIssueFormProps {
   onClose: () => void;
   showForm: boolean;
@@ -50,9 +53,9 @@ export function GitHubIssueForm({onClose, showForm}: GitHubIssueFormProps) {
       });
 
       await octokit.request('POST /repos/{owner}/{repo}/issues', {
-        owner: 'ingeborgsteel',
-        repo: 'kikk',
-        title: title,
+        owner: GITHUB_OWNER,
+        repo: GITHUB_REPO,
+        title,
         body: description,
         headers: {
           'X-GitHub-Api-Version': '2022-11-28'

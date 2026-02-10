@@ -33,6 +33,7 @@ Built with modern web technologies for a fast, responsive experience:
 - 📥 **Export History** - View and re-download previous exports (with Supabase)
 - 💾 **Local Storage** - Your observations are stored locally in your browser
 - 🔐 **Optional Authentication** - Sign in with email and password for enhanced features
+- 💡 **GitHub Suggestions** - Submit feature requests and bug reports directly from the app
 - 📱 **Responsive Design** - Works seamlessly on desktop and mobile devices
 
 ## Getting Started
@@ -73,6 +74,27 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 The app works fully without authentication - it's completely optional. Local storage will continue to work whether
 you're logged in or not. Export functionality works locally without Supabase, but export logs and file storage require
 Supabase.
+
+#### Optional: GitHub Issue Creation Setup
+
+To enable users to submit feature requests and bug reports directly from the app:
+
+1. Create a GitHub Personal Access Token:
+    - Go to GitHub Settings > Developer settings > Personal access tokens > Tokens (classic)
+    - Click "Generate new token (classic)"
+    - Give it a descriptive name (e.g., "kikk suggestions")
+    - Select the `public_repo` scope (or `repo` if your repository is private)
+    - Generate and copy the token
+
+2. Add the token to your `.env` file:
+
+```bash
+VITE_GITHUB_TOKEN=your_github_token_here
+```
+
+**Security Note**: This token is exposed in the client-side bundle. Only use a token with minimal permissions (e.g., only `public_repo` scope) and consider it public. For production use, it's recommended to implement a backend endpoint that securely handles token storage and issue creation.
+
+The floating suggestions button will appear on all pages, allowing users to submit issues to the repository.
 
 Start the development server:
 

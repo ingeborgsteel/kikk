@@ -7,6 +7,7 @@ import {UserLocation} from "./types/location";
 // Fix for default marker icons in Leaflet with bundlers
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
+import {kartverketAttribution, kartverketTopo, mapboxAttribution, mapboxSatellite, mapboxTopo} from "./lib/mapUtils.ts";
 
 const DefaultIcon = L.icon({
   iconUrl: icon,
@@ -91,7 +92,13 @@ interface MapProps {
   onUserLocationClick?: (locationId: string) => void;
 }
 
-function Map({onLocationSelect, observations = [], onObservationClick, userLocations = [], onUserLocationClick}: MapProps) {
+function Map({
+               onLocationSelect,
+               observations = [],
+               onObservationClick,
+               userLocations = [],
+               onUserLocationClick
+             }: MapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const onLocationSelectRef = useRef(onLocationSelect);
@@ -109,6 +116,8 @@ function Map({onLocationSelect, observations = [], onObservationClick, userLocat
     lat: number;
     lng: number;
   } | null>(null);
+  const [currentLayer, setCurrentLayer] = useState<'standard' | 'topo' | 'aerial'>('standard');
+  const tileLayerRef = useRef<L.TileLayer | null>(null);
 
   // Update the ref whenever onLocationSelect changes
   useEffect(() => {
@@ -124,11 +133,10 @@ function Map({onLocationSelect, observations = [], onObservationClick, userLocat
 
     map.current = L.map(mapContainer.current).setView(defaultCenter, defaultZoom);
 
-    // Add OpenStreetMap tiles
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    // Add initial tile layer (standard OpenStreetMap)
+    tileLayerRef.current = L.tileLayer(kartverketTopo, {
       maxZoom: 19,
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      attribution: kartverketAttribution,
     }).addTo(map.current);
 
     // Ensure the map container is properly sized
@@ -170,14 +178,14 @@ function Map({onLocationSelect, observations = [], onObservationClick, userLocat
         (position) => {
           const {latitude, longitude} = position.coords;
           setUserLocation({lat: latitude, lng: longitude});
-          
+
           // Add blue dot for user location
           if (mapInstance) {
             // Remove existing user location marker if any
             if (userLocationMarkerRef.current) {
               userLocationMarkerRef.current.remove();
             }
-            
+
             // Create blue dot with white border
             userLocationMarkerRef.current = L.circleMarker([latitude, longitude], {
               radius: 8,
@@ -187,7 +195,7 @@ function Map({onLocationSelect, observations = [], onObservationClick, userLocat
               opacity: 1,
               fillOpacity: 1,
             }).addTo(mapInstance);
-            
+
             mapInstance.setView([latitude, longitude], 13);
           }
           setIsLocating(false);
@@ -325,8 +333,78 @@ function Map({onLocationSelect, observations = [], onObservationClick, userLocat
     });
   }, [userLocations, onUserLocationClick]);
 
+  // Effect to handle layer switching
+  useEffect(() => {
+    if (!map.current || !tileLayerRef.current) return;
+
+    // Remove current layer
+    tileLayerRef.current.remove();
+
+    // Add new layer based on selection
+    let tileUrl = '';
+    let attribution = '';
+
+    switch (currentLayer) {
+      case 'aerial':
+        // Aerial/flight photos from Kartverket
+        tileUrl = mapboxSatellite;
+        attribution = mapboxAttribution;
+        break;
+      case 'topo':
+        tileUrl = mapboxTopo;
+        attribution = mapboxAttribution;
+        break;
+      default:
+        // Norwegian topographic map from Kartverket
+        tileUrl = kartverketTopo;
+        attribution = kartverketAttribution;
+        break;
+    }
+
+    tileLayerRef.current = L.tileLayer(tileUrl, {
+      maxZoom: 19,
+      attribution,
+    }).addTo(map.current);
+  }, [currentLayer]);
+
   return (
     <div className="w-full h-[calc(100vh-80px)] relative flex-1 overflow-hidden bg-forest">
+      {/* Layer Control */}
+      <div className="absolute top-md right-md z-[1000] flex flex-col gap-2">
+        <button
+          onClick={() => setCurrentLayer('standard')}
+          className={`px-3 py-2 rounded-lg shadow-custom-lg font-medium text-sm transition-all ${
+            currentLayer === 'standard'
+              ? 'bg-moss text-sand border-2 border-sand'
+              : 'bg-sand dark:bg-bark text-bark dark:text-sand border-2 border-moss hover:bg-moss dark:hover:bg-moss'
+          }`}
+          title="Standard kart"
+        >
+          Kartverket
+        </button>
+        <button
+          onClick={() => setCurrentLayer('topo')}
+          className={`px-3 py-2 rounded-lg shadow-custom-lg font-medium text-sm transition-all ${
+            currentLayer === 'topo'
+              ? 'bg-moss text-sand border-2 border-sand'
+              : 'bg-sand dark:bg-bark text-bark dark:text-sand border-2 border-moss hover:bg-moss dark:hover:bg-moss'
+          }`}
+          title="Standard kart"
+        >
+          Kart
+        </button>
+        <button
+          onClick={() => setCurrentLayer('aerial')}
+          className={`px-3 py-2 rounded-lg shadow-custom-lg font-medium text-sm transition-all ${
+            currentLayer === 'aerial'
+              ? 'bg-moss text-sand border-2 border-sand'
+              : 'bg-sand dark:bg-bark text-bark dark:text-sand border-2 border-moss hover:bg-moss dark:hover:bg-moss'
+          }`}
+          title="Flyfoto"
+        >
+          Flyfoto
+        </button>
+      </div>
       {isLocating && (
         <div
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[2000] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-lg rounded-lg shadow-custom-2xl flex flex-col items-center gap-md font-medium text-bark dark:text-sand border-2 border-moss">

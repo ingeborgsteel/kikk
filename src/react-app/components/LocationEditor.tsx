@@ -1,10 +1,11 @@
-import { useEffect, useRef } from "react";
+import {useEffect, useRef} from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
 // Fix for default marker icons in Leaflet with bundlers
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
+import {mapboxAttribution, mapboxTopo} from "../lib/mapUtils.ts";
 
 const DefaultIcon = L.icon({
   iconUrl: icon,
@@ -17,6 +18,7 @@ const DefaultIcon = L.icon({
 const createRustMarkerSVG = () => {
   const svg = `
     <svg width="25" height="41" viewBox="0 0 25 41" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12.5 0C5.6 0 0 5.6 0 12.5c0 8.4 12.5 28.5 12.5 28.5S25 20.9 25 12.5C25 5.6 19.4 0 12.5 0z" 
       <path d="M12.5 0C5.6 0 0 5.6 0 12.5c0 8.4 12.5 28.5 12.5 28.5S25 20.9 25 12.5C25 5.6 19.4 0 12.5 0z" 
             fill="#C76D4B" stroke="#8B4513" stroke-width="1"/>
       <circle cx="12.5" cy="12.5" r="4" fill="#FFF" opacity="0.3"/>
@@ -41,7 +43,7 @@ interface LocationEditorProps {
   zoom?: number;
 }
 
-export const LocationEditor = ({ location, onLocationChange, zoom = 13 }: LocationEditorProps) => {
+export const LocationEditor = ({location, onLocationChange, zoom = 13}: LocationEditorProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
@@ -56,8 +58,9 @@ export const LocationEditor = ({ location, onLocationChange, zoom = 13 }: Locati
     }).setView([location.lat, location.lng], zoom);
 
     // Add OpenStreetMap tiles
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    L.tileLayer(mapboxTopo, {
       maxZoom: 19,
+      attribution: mapboxAttribution
     }).addTo(map.current);
 
     // Add draggable marker
@@ -76,7 +79,7 @@ export const LocationEditor = ({ location, onLocationChange, zoom = 13 }: Locati
 
     // Add click handler to reposition marker
     map.current.on('click', (e: L.LeafletMouseEvent) => {
-      const { lat, lng } = e.latlng;
+      const {lat, lng} = e.latlng;
       if (markerRef.current) {
         markerRef.current.setLatLng([lat, lng]);
       }
@@ -115,8 +118,9 @@ export const LocationEditor = ({ location, onLocationChange, zoom = 13 }: Locati
 
   return (
     <div className="w-full h-[300px] rounded-md overflow-hidden border-2 border-moss relative">
-      <div ref={mapContainer} className="w-full h-full" />
-      <div className="absolute bottom-2 right-2 z-[1000] bg-sand dark:bg-bark px-2 py-1 rounded text-xs text-bark dark:text-sand shadow-md border border-moss/30">
+      <div ref={mapContainer} className="w-full h-full"/>
+      <div
+        className="absolute bottom-2 right-2 z-[1000] bg-sand dark:bg-bark px-2 py-1 rounded text-xs text-bark dark:text-sand shadow-md border border-moss/30">
         Dra markøren eller klikk for å justere posisjon
       </div>
     </div>

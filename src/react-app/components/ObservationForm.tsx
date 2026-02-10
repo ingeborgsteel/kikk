@@ -112,7 +112,6 @@ const ObservationForm = ({observation, onClose, location, zoom = 13, presetLocat
     const currentLocationName = getValues('locationName');
     // Only fetch if this is a new observation, locationName is not yet set, and no preset location name
     if (!observation && currentLocationName === '' && !presetLocation) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoadingLocationName(true);
       setGeocodingFailed(false);
       reverseGeocode(currentLocation.lat, currentLocation.lng)

@@ -41,6 +41,15 @@ const ObservationForm = ({observation, onClose, location, zoom = 13, presetLocat
 
   const defaultStartDate = new Date().toISOString().slice(0, 16);
 
+  // Helper functions for date/time handling
+  const getTimePart = (dateTimeStr: string | undefined): string => {
+    return dateTimeStr && dateTimeStr.length > 10 ? dateTimeStr.slice(11, 16) : '00:00';
+  };
+
+  const getDatePart = (dateTimeStr: string | undefined): string => {
+    return dateTimeStr ? dateTimeStr.slice(0, 10) : new Date().toISOString().slice(0, 10);
+  };
+
   const {control, handleSubmit, setValue, getValues, watch, formState: {isDirty, isValid}} = useForm<Observation>({
     defaultValues: {
       startDate: observation?.startDate || defaultStartDate,
@@ -297,8 +306,7 @@ const ObservationForm = ({observation, onClose, location, zoom = 13, presetLocat
                           value={value ? value.slice(0, 10) : ''}
                           onChange={(e) => {
                             const dateValue = e.target.value;
-                            // Get current time part if exists, otherwise use 00:00
-                            const timePart = value && value.length > 10 ? value.slice(11, 16) : '00:00';
+                            const timePart = getTimePart(value);
                             onChange(dateValue ? `${dateValue}T${timePart}` : '');
                           }}
                           className="mt-1 flex-1"
@@ -307,10 +315,10 @@ const ObservationForm = ({observation, onClose, location, zoom = 13, presetLocat
                         <Input
                           id="startTime"
                           type="time"
-                          value={value && value.length > 10 ? value.slice(11, 16) : ''}
+                          value={getTimePart(value)}
                           onChange={(e) => {
                             const timeValue = e.target.value;
-                            const datePart = value ? value.slice(0, 10) : new Date().toISOString().slice(0, 10);
+                            const datePart = getDatePart(value);
                             onChange(timeValue ? `${datePart}T${timeValue}` : `${datePart}T00:00`);
                           }}
                           className="mt-1 w-28"
@@ -337,8 +345,7 @@ const ObservationForm = ({observation, onClose, location, zoom = 13, presetLocat
                           value={value ? value.slice(0, 10) : ''}
                           onChange={(e) => {
                             const dateValue = e.target.value;
-                            // Get current time part if exists, otherwise use 00:00
-                            const timePart = value && value.length > 10 ? value.slice(11, 16) : '00:00';
+                            const timePart = getTimePart(value);
                             onChange(dateValue ? `${dateValue}T${timePart}` : '');
                           }}
                           className="mt-1 flex-1"
@@ -347,10 +354,10 @@ const ObservationForm = ({observation, onClose, location, zoom = 13, presetLocat
                         <Input
                           id="endTime"
                           type="time"
-                          value={value && value.length > 10 ? value.slice(11, 16) : ''}
+                          value={getTimePart(value)}
                           onChange={(e) => {
                             const timeValue = e.target.value;
-                            const datePart = value ? value.slice(0, 10) : new Date().toISOString().slice(0, 10);
+                            const datePart = getDatePart(value);
                             onChange(timeValue ? `${datePart}T${timeValue}` : `${datePart}T00:00`);
                           }}
                           className="mt-1 w-28"

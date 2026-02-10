@@ -346,7 +346,7 @@ function Map({onLocationSelect, observations = [], onObservationClick, userLocat
         break;
       case 'aerial':
         // Aerial/flight photos from Kartverket
-        tileUrl = 'https://opencache.statkart.no/gatekeeper/gk/gk.open_gmaps?layers=norges_grunnkart&zoom={z}&x={x}&y={y}';
+        tileUrl = 'https://opencache.statkart.no/gatekeeper/gk/gk.open_gmaps?layers=norgeskart_bakgrunn&zoom={z}&x={x}&y={y}';
         attribution = '&copy; <a href="https://www.kartverket.no/">Kartverket</a>';
         break;
       default:

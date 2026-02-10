@@ -109,6 +109,8 @@ function Map({onLocationSelect, observations = [], onObservationClick, userLocat
     lat: number;
     lng: number;
   } | null>(null);
+  const [currentLayer, setCurrentLayer] = useState<'standard' | 'topo' | 'aerial'>('standard');
+  const tileLayerRef = useRef<L.TileLayer | null>(null);
 
   // Update the ref whenever onLocationSelect changes
   useEffect(() => {
@@ -124,8 +126,8 @@ function Map({onLocationSelect, observations = [], onObservationClick, userLocat
 
     map.current = L.map(mapContainer.current).setView(defaultCenter, defaultZoom);
 
-    // Add OpenStreetMap tiles
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    // Add initial tile layer (standard OpenStreetMap)
+    tileLayerRef.current = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -325,8 +327,78 @@ function Map({onLocationSelect, observations = [], onObservationClick, userLocat
     });
   }, [userLocations, onUserLocationClick]);
 
+  // Effect to handle layer switching
+  useEffect(() => {
+    if (!map.current || !tileLayerRef.current) return;
+
+    // Remove current layer
+    tileLayerRef.current.remove();
+
+    // Add new layer based on selection
+    let tileUrl = '';
+    let attribution = '';
+    
+    switch (currentLayer) {
+      case 'topo':
+        // Norwegian topographic map from Kartverket
+        tileUrl = 'https://opencache.statkart.no/gatekeeper/gk/gk.open_gmaps?layers=topo4&zoom={z}&x={x}&y={y}';
+        attribution = '&copy; <a href="https://www.kartverket.no/">Kartverket</a>';
+        break;
+      case 'aerial':
+        // Aerial/flight photos from Kartverket
+        tileUrl = 'https://opencache.statkart.no/gatekeeper/gk/gk.open_gmaps?layers=norges_grunnkart&zoom={z}&x={x}&y={y}';
+        attribution = '&copy; <a href="https://www.kartverket.no/">Kartverket</a>';
+        break;
+      default:
+        // Standard OpenStreetMap
+        tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+        attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+    }
+
+    tileLayerRef.current = L.tileLayer(tileUrl, {
+      maxZoom: 19,
+      attribution,
+    }).addTo(map.current);
+  }, [currentLayer]);
+
   return (
     <div className="w-full h-[calc(100vh-80px)] relative flex-1 overflow-hidden bg-forest">
+      {/* Layer Control */}
+      <div className="absolute top-md right-md z-[1000] flex flex-col gap-2">
+        <button
+          onClick={() => setCurrentLayer('standard')}
+          className={`px-3 py-2 rounded-lg shadow-custom-lg font-medium text-sm transition-all ${
+            currentLayer === 'standard'
+              ? 'bg-moss text-sand border-2 border-sand'
+              : 'bg-sand dark:bg-bark text-bark dark:text-sand border-2 border-moss hover:bg-moss/10 dark:hover:bg-moss/20'
+          }`}
+          title="Standard kart"
+        >
+          Kart
+        </button>
+        <button
+          onClick={() => setCurrentLayer('topo')}
+          className={`px-3 py-2 rounded-lg shadow-custom-lg font-medium text-sm transition-all ${
+            currentLayer === 'topo'
+              ? 'bg-moss text-sand border-2 border-sand'
+              : 'bg-sand dark:bg-bark text-bark dark:text-sand border-2 border-moss hover:bg-moss/10 dark:hover:bg-moss/20'
+          }`}
+          title="Topografisk kart"
+        >
+          Topo
+        </button>
+        <button
+          onClick={() => setCurrentLayer('aerial')}
+          className={`px-3 py-2 rounded-lg shadow-custom-lg font-medium text-sm transition-all ${
+            currentLayer === 'aerial'
+              ? 'bg-moss text-sand border-2 border-sand'
+              : 'bg-sand dark:bg-bark text-bark dark:text-sand border-2 border-moss hover:bg-moss/10 dark:hover:bg-moss/20'
+          }`}
+          title="Flyfoto"
+        >
+          Flyfoto
+        </button>
+      </div>
       {isLocating && (
         <div
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[2000] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-lg rounded-lg shadow-custom-2xl flex flex-col items-center gap-md font-medium text-bark dark:text-sand border-2 border-moss">

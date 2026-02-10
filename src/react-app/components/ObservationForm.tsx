@@ -32,6 +32,7 @@ const ObservationForm = ({observation, onClose, location, zoom = 13, presetLocat
   const [geocodingFailed, setGeocodingFailed] = useState(false);
   const [formReady, setFormReady] = useState(!!observation); // Form is ready immediately if editing
   const [currentLocation, setCurrentLocation] = useState(location);
+  const [showMapPreview, setShowMapPreview] = useState(true);
 
   const {data: searchResults = [], isLoading} = useSpeciesSearch(searchTerm);
 
@@ -40,7 +41,7 @@ const ObservationForm = ({observation, onClose, location, zoom = 13, presetLocat
 
   const defaultStartDate = new Date().toISOString().slice(0, 16);
 
-  const {control, handleSubmit, setValue, getValues, formState: {isDirty, isValid}} = useForm<Observation>({
+  const {control, handleSubmit, setValue, getValues, watch, formState: {isDirty, isValid}} = useForm<Observation>({
     defaultValues: {
       startDate: observation?.startDate || defaultStartDate,
       endDate: observation?.endDate || defaultStartDate,
@@ -50,6 +51,9 @@ const ObservationForm = ({observation, onClose, location, zoom = 13, presetLocat
       ...observation
     }
   })
+
+  // Watch startDate to auto-update endDate
+  const startDate = watch('startDate');
 
   // Handle location change from map editor
   const handleLocationChange = useCallback((lat: number, lng: number) => {
@@ -134,6 +138,14 @@ const ObservationForm = ({observation, onClose, location, zoom = 13, presetLocat
     }
   }, [observation, currentLocation, setValue, getValues, presetLocation]);
 
+  // Auto-update endDate when startDate changes
+  useEffect(() => {
+    if (startDate && !observation) {
+      // Only auto-update for new observations
+      setValue('endDate', startDate);
+    }
+  }, [startDate, setValue, observation]);
+
   const save = useCallback((data: Observation) => {
     const {startDate, endDate} = data;
 
@@ -180,11 +192,22 @@ const ObservationForm = ({observation, onClose, location, zoom = 13, presetLocat
           <form onSubmit={handleSubmit(save)}>
             <div className="p-lg space-y-lg overflow-x-hidden">
               <div>
-                <Label className="text-bark dark:text-sand">Plassering</Label>
+                <div className="flex items-center justify-between mb-2">
+                  <Label className="text-bark dark:text-sand">Plassering</Label>
+                  {!presetLocation && (
+                    <button
+                      type="button"
+                      onClick={() => setShowMapPreview(!showMapPreview)}
+                      className="text-sm text-moss hover:text-moss/80 dark:text-moss dark:hover:text-moss/80 flex items-center gap-1"
+                    >
+                      {showMapPreview ? '🗺️ Skjul kart' : '🗺️ Vis kart'}
+                    </button>
+                  )}
+                </div>
                 <p className="text-sm text-slate mt-1 mb-2">
                   Lat: {currentLocation.lat.toFixed(4)}, Lng: {currentLocation.lng.toFixed(4)}
                 </p>
-                {!presetLocation && (
+                {!presetLocation && showMapPreview && (
                   <>
                     <LocationEditor
                       location={currentLocation}
@@ -266,15 +289,36 @@ const ObservationForm = ({observation, onClose, location, zoom = 13, presetLocat
                   render={({field: {value, onChange}}) => (
                     <div>
                       <Label htmlFor="startDate" className="text-bark dark:text-sand">
-                        Starttid
+                        Startdato og tid (valgfri tid)
                       </Label>
-                      <Input
-                        id="startDate"
-                        type="datetime-local"
-                        value={value}
-                        onChange={(e) => onChange(e.target.value)}
-                        className="mt-1 max-w-full"
-                      />
+                      <div className="flex gap-2">
+                        <Input
+                          id="startDate"
+                          type="date"
+                          value={value ? value.slice(0, 10) : ''}
+                          onChange={(e) => {
+                            const dateValue = e.target.value;
+                            // Get current time part if exists, otherwise use 00:00
+                            const timePart = value && value.length > 10 ? value.slice(11, 16) : '00:00';
+                            onChange(dateValue ? `${dateValue}T${timePart}` : '');
+                          }}
+                          className="mt-1 flex-1"
+                          required
+                        />
+                        <Input
+                          id="startTime"
+                          type="time"
+                          value={value && value.length > 10 ? value.slice(11, 16) : ''}
+                          onChange={(e) => {
+                            const timeValue = e.target.value;
+                            const datePart = value ? value.slice(0, 10) : new Date().toISOString().slice(0, 10);
+                            onChange(timeValue ? `${datePart}T${timeValue}` : `${datePart}T00:00`);
+                          }}
+                          className="mt-1 w-28"
+                          placeholder="00:00"
+                        />
+                      </div>
+                      <p className="text-xs text-slate mt-1">Tid er valgfri. 24-timers format.</p>
                     </div>
                   )}
                 />
@@ -285,15 +329,36 @@ const ObservationForm = ({observation, onClose, location, zoom = 13, presetLocat
                   render={({field: {value, onChange}}) => (
                     <div>
                       <Label htmlFor="endDate" className="text-bark dark:text-sand">
-                        Sluttid
+                        Sluttdato og tid (valgfri tid)
                       </Label>
-                      <Input
-                        id="endDate"
-                        type="datetime-local"
-                        value={value}
-                        onChange={(e) => onChange(e.target.value)}
-                        className="mt-1 max-w-full"
-                      />
+                      <div className="flex gap-2">
+                        <Input
+                          id="endDate"
+                          type="date"
+                          value={value ? value.slice(0, 10) : ''}
+                          onChange={(e) => {
+                            const dateValue = e.target.value;
+                            // Get current time part if exists, otherwise use 00:00
+                            const timePart = value && value.length > 10 ? value.slice(11, 16) : '00:00';
+                            onChange(dateValue ? `${dateValue}T${timePart}` : '');
+                          }}
+                          className="mt-1 flex-1"
+                          required
+                        />
+                        <Input
+                          id="endTime"
+                          type="time"
+                          value={value && value.length > 10 ? value.slice(11, 16) : ''}
+                          onChange={(e) => {
+                            const timeValue = e.target.value;
+                            const datePart = value ? value.slice(0, 10) : new Date().toISOString().slice(0, 10);
+                            onChange(timeValue ? `${datePart}T${timeValue}` : `${datePart}T00:00`);
+                          }}
+                          className="mt-1 w-28"
+                          placeholder="00:00"
+                        />
+                      </div>
+                      <p className="text-xs text-slate mt-1">Tid er valgfri. Auto-satt til startdato.</p>
                     </div>
                   )}
                 />

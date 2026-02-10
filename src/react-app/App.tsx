@@ -15,6 +15,8 @@ import {MapClickDialog} from "./components/MapClickDialog.tsx";
 import {LocationForm} from "./components/LocationForm.tsx";
 import {AuthButton} from "./components/AuthButton.tsx";
 import {KikkemodusToggle} from "./components/KikkemodusToggle.tsx";
+import {GitHubSuggestionButton} from "./components/GitHubSuggestionButton.tsx";
+import {GitHubIssueForm} from "./components/GitHubIssueForm.tsx";
 import {UserLocation} from "./types/location.ts";
 
 function App() {
@@ -29,6 +31,7 @@ function App() {
   const [editingObservationId, setEditingObservationId] = useState<string | null>(null);
   const [presetLocation, setPresetLocation] = useState<UserLocation | null>(null);
   const [kikkemodusActive, setKikkemodusActive] = useState(false);
+  const [showGitHubIssueForm, setShowGitHubIssueForm] = useState(false);
   const {observations} = useObservations();
   const {locations} = useLocations();
 
@@ -171,6 +174,8 @@ function App() {
         } />
       </Routes>
       <LoginForm closeLoginForm={() => setShowLoginForm(false)} showLoginForm={showLoginForm}/>
+      <GitHubIssueForm onClose={() => setShowGitHubIssueForm(false)} showForm={showGitHubIssueForm}/>
+      <GitHubSuggestionButton onClick={() => setShowGitHubIssueForm(true)}/>
       <BottomNav
         currentView={getCurrentView()}
         onLoginClick={() => setShowLoginForm(true)}

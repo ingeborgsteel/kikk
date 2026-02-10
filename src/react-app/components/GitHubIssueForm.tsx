@@ -1,5 +1,6 @@
 import {useState, useEffect} from 'react';
 import {X, MessageSquare} from 'lucide-react';
+import {Octokit} from '@octokit/core';
 import {Button} from './ui/button';
 import {Input} from './ui/input';
 import {Textarea} from './ui/textarea';
@@ -36,14 +37,29 @@ export function GitHubIssueForm({onClose, showForm}: GitHubIssueFormProps) {
     setMessage('');
 
     try {
-      // Create a GitHub issue by opening a new tab with pre-filled data
-      const repoOwner = 'ingeborgsteel';
-      const repoName = 'kikk';
-      const issueUrl = `https://github.com/${repoOwner}/${repoName}/issues/new?title=${encodeURIComponent(title)}&body=${encodeURIComponent(description)}`;
+      const githubToken = import.meta.env.VITE_GITHUB_TOKEN;
       
-      window.open(issueUrl, '_blank');
+      if (!githubToken) {
+        setMessage('GitHub-token mangler. Kontakt administrator.');
+        setLoading(false);
+        return;
+      }
+
+      const octokit = new Octokit({
+        auth: githubToken
+      });
+
+      await octokit.request('POST /repos/{owner}/{repo}/issues', {
+        owner: 'ingeborgsteel',
+        repo: 'kikk',
+        title: title,
+        body: description,
+        headers: {
+          'X-GitHub-Api-Version': '2022-11-28'
+        }
+      });
       
-      setMessage('Åpnet GitHub i ny fane! 🎉');
+      setMessage('Issue opprettet! 🎉');
       setTimeout(() => {
         setTitle('');
         setDescription('');
@@ -51,7 +67,7 @@ export function GitHubIssueForm({onClose, showForm}: GitHubIssueFormProps) {
         onClose();
       }, 1500);
     } catch (error) {
-      console.error('Error opening GitHub issue form:', error);
+      console.error('Error creating GitHub issue:', error);
       setMessage('Noe gikk galt. Prøv igjen.');
     } finally {
       setLoading(false);
@@ -131,7 +147,7 @@ export function GitHubIssueForm({onClose, showForm}: GitHubIssueFormProps) {
               disabled={loading}
               size="sm"
             >
-              {loading ? 'Åpner...' : 'Åpne GitHub'}
+              {loading ? 'Oppretter...' : 'Opprett issue'}
             </Button>
           </div>
         </form>

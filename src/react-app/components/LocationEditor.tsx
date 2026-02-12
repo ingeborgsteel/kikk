@@ -21,6 +21,20 @@ const EditableIcon = createSelectionIcon();
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
+/**
+ * Helper function to get tile layer configuration based on layer type
+ */
+const getTileLayerConfig = (layer: 'standard' | 'topo' | 'aerial'): {url: string; attribution: string} => {
+  switch (layer) {
+    case 'aerial':
+      return {url: mapboxSatellite, attribution: mapboxAttribution};
+    case 'topo':
+      return {url: mapboxTopo, attribution: mapboxAttribution};
+    default:
+      return {url: kartverketTopo, attribution: kartverketAttribution};
+  }
+};
+
 interface LocationEditorProps {
   location: { lat: number; lng: number };
   onLocationChange: (lat: number, lng: number) => void;
@@ -43,27 +57,11 @@ export const LocationEditor = ({location, onLocationChange, zoom = 13}: Location
       attributionControl: false,
     }).setView([location.lat, location.lng], zoom);
 
-    // Determine tile layer based on current preference
-    let tileUrl = '';
-    let attribution = '';
-
-    switch (currentLayer) {
-      case 'aerial':
-        tileUrl = mapboxSatellite;
-        attribution = mapboxAttribution;
-        break;
-      case 'topo':
-        tileUrl = mapboxTopo;
-        attribution = mapboxAttribution;
-        break;
-      default:
-        tileUrl = kartverketTopo;
-        attribution = kartverketAttribution;
-        break;
-    }
+    // Get tile layer configuration
+    const {url, attribution} = getTileLayerConfig(currentLayer);
 
     // Add tiles
-    tileLayerRef.current = L.tileLayer(tileUrl, {
+    tileLayerRef.current = L.tileLayer(url, {
       maxZoom: 19,
       attribution
     }).addTo(map.current);
@@ -123,26 +121,11 @@ export const LocationEditor = ({location, onLocationChange, zoom = 13}: Location
     // Remove current layer
     tileLayerRef.current.remove();
 
-    // Add new layer based on selection
-    let tileUrl = '';
-    let attribution = '';
+    // Get tile layer configuration
+    const {url, attribution} = getTileLayerConfig(currentLayer);
 
-    switch (currentLayer) {
-      case 'aerial':
-        tileUrl = mapboxSatellite;
-        attribution = mapboxAttribution;
-        break;
-      case 'topo':
-        tileUrl = mapboxTopo;
-        attribution = mapboxAttribution;
-        break;
-      default:
-        tileUrl = kartverketTopo;
-        attribution = kartverketAttribution;
-        break;
-    }
-
-    tileLayerRef.current = L.tileLayer(tileUrl, {
+    // Add new layer
+    tileLayerRef.current = L.tileLayer(url, {
       maxZoom: 19,
       attribution,
     }).addTo(map.current);

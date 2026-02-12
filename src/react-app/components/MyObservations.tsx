@@ -166,12 +166,11 @@ function MyObservations({onBack, setShowLoginForm}: MyObservationsProps) {
         />
       )}
 
-      {showExportDialog && (
-        <ExportDialog
-          observations={observations}
-          onClose={() => setShowExportDialog(false)}
-        />
-      )}
+      <ExportDialog
+        observations={observations}
+        onClose={() => setShowExportDialog(false)}
+        isOpen={showExportDialog}
+      />
     </div>
   );
 }

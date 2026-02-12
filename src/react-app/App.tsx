@@ -162,6 +162,7 @@ function App() {
                 onAddObservation={handleAddObservation}
                 onAddLocation={handleAddLocation}
                 onClose={handleCloseMapClickDialog}
+                isOpen={showMapClickDialog}
               />
             )}
             {showAddLocationForm && selectedLocation && (

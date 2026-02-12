@@ -1,6 +1,7 @@
 import {useState} from 'react';
-import {Download, FileSpreadsheet, History, X} from 'lucide-react';
+import {Download, FileSpreadsheet, History} from 'lucide-react';
 import {Button} from './ui/button';
+import {Modal} from './ui/Modal';
 import {Observation} from '../types/observation';
 import {
   getUnexportedObservations,
@@ -13,9 +14,10 @@ import {isSupabaseConfigured} from '../lib/supabase';
 interface ExportDialogProps {
   observations: Observation[];
   onClose: () => void;
+  isOpen: boolean;
 }
 
-function ExportDialog({observations, onClose}: ExportDialogProps) {
+function ExportDialog({observations, onClose, isOpen}: ExportDialogProps) {
   const [exportType, setExportType] = useState<'all' | 'new'>('new');
   const {mutate: exportObservations, isPending: isExporting} = useExportObservations();
   const {data: exportLogs = [], isLoading: isLoadingLogs} = useExportLogs();
@@ -60,26 +62,14 @@ function ExportDialog({observations, onClose}: ExportDialogProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-lg">
-      <div className="bg-sand dark:bg-bark rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="sticky top-0 bg-forest text-sand p-lg flex justify-between items-center">
-          <h2 className="text-2xl font-bold flex items-center gap-sm">
-            <FileSpreadsheet size={24}/>
-            Eksporter Observasjoner
-          </h2>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="text-sand hover:bg-moss"
-          >
-            <X size={24}/>
-          </Button>
-        </div>
-
-        {/* Content */}
-        <div className="p-lg space-y-lg">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Eksporter Observasjoner"
+      icon={<FileSpreadsheet size={24}/>}
+      maxWidth="max-w-2xl"
+    >
+      <div className="space-y-lg">
           {/* Export Options */}
           <div>
             <h3 className="text-lg font-semibold text-bark dark:text-sand mb-md">
@@ -194,9 +184,8 @@ function ExportDialog({observations, onClose}: ExportDialogProps) {
               </p>
             </div>
           )}
-        </div>
       </div>
-    </div>
+    </Modal>
   );
 }
 

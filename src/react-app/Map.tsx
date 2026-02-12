@@ -8,6 +8,7 @@ import {UserLocation} from "./types/location";
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
 import {kartverketAttribution, kartverketTopo, mapboxAttribution, mapboxSatellite, mapboxTopo} from "./lib/mapUtils.ts";
+import {createObservationIcon, createSelectionIcon, createUserLocationIcon} from "./lib/markerIcons.ts";
 
 const DefaultIcon = L.icon({
   iconUrl: icon,
@@ -16,68 +17,10 @@ const DefaultIcon = L.icon({
   iconAnchor: [12, 41],
 });
 
-// Create custom SVG marker for rust color (new selection)
-const createRustMarkerSVG = () => {
-  const svg = `
-    <svg width="25" height="41" viewBox="0 0 25 41" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12.5 0C5.6 0 0 5.6 0 12.5c0 8.4 12.5 28.5 12.5 28.5S25 20.9 25 12.5C25 5.6 19.4 0 12.5 0z" 
-            fill="#C76D4B" stroke="#8B4513" stroke-width="1"/>
-      <circle cx="12.5" cy="12.5" r="4" fill="#FFF" opacity="0.3"/>
-    </svg>
-  `;
-  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
-};
-
-// Create custom SVG marker for forest green (existing observations)
-const createForestGreenMarkerSVG = () => {
-  const svg = `
-    <svg width="25" height="41" viewBox="0 0 25 41" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12.5 0C5.6 0 0 5.6 0 12.5c0 8.4 12.5 28.5 12.5 28.5S25 20.9 25 12.5C25 5.6 19.4 0 12.5 0z" 
-            fill="#2F5D50" stroke="#1a3d32" stroke-width="1"/>
-      <circle cx="12.5" cy="12.5" r="4" fill="#FFF" opacity="0.3"/>
-    </svg>
-  `;
-  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
-};
-
-// Create custom SVG marker for user locations - purple/blue color
-const createUserLocationMarkerSVG = () => {
-  const svg = `
-    <svg width="25" height="41" viewBox="0 0 25 41" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12.5 0C5.6 0 0 5.6 0 12.5c0 8.4 12.5 28.5 12.5 28.5S25 20.9 25 12.5C25 5.6 19.4 0 12.5 0z" 
-            fill="#7C3AED" stroke="#5B21B6" stroke-width="1"/>
-      <circle cx="12.5" cy="12.5" r="4" fill="#FFF" opacity="0.3"/>
-    </svg>
-  `;
-  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
-};
-
-// Create icon for new selection marker - rust color
-const SelectionIcon = L.icon({
-  iconUrl: createRustMarkerSVG(),
-  shadowUrl: iconShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [0, -41],
-});
-
-// Create icon for existing observations - forest green
-const ObservationIcon = L.icon({
-  iconUrl: createForestGreenMarkerSVG(),
-  shadowUrl: iconShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [0, -41],
-});
-
-// Create icon for user locations - purple
-const UserLocationIcon = L.icon({
-  iconUrl: createUserLocationMarkerSVG(),
-  shadowUrl: iconShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [0, -41],
-});
+// Create icon instances for use in the map
+const SelectionIcon = createSelectionIcon();
+const ObservationIcon = createObservationIcon();
+const UserLocationIcon = createUserLocationIcon();
 
 L.Marker.prototype.options.icon = DefaultIcon;
 

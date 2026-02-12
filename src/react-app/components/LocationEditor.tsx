@@ -6,6 +6,7 @@ import "leaflet/dist/leaflet.css";
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
 import {mapboxAttribution, mapboxTopo} from "../lib/mapUtils.ts";
+import {createSelectionIcon} from "../lib/markerIcons.ts";
 
 const DefaultIcon = L.icon({
   iconUrl: icon,
@@ -14,26 +15,8 @@ const DefaultIcon = L.icon({
   iconAnchor: [12, 41],
 });
 
-// Create custom SVG marker for rust color (editable position)
-const createRustMarkerSVG = () => {
-  const svg = `
-    <svg width="25" height="41" viewBox="0 0 25 41" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12.5 0C5.6 0 0 5.6 0 12.5c0 8.4 12.5 28.5 12.5 28.5S25 20.9 25 12.5C25 5.6 19.4 0 12.5 0z" 
-      <path d="M12.5 0C5.6 0 0 5.6 0 12.5c0 8.4 12.5 28.5 12.5 28.5S25 20.9 25 12.5C25 5.6 19.4 0 12.5 0z" 
-            fill="#C76D4B" stroke="#8B4513" stroke-width="1"/>
-      <circle cx="12.5" cy="12.5" r="4" fill="#FFF" opacity="0.3"/>
-    </svg>
-  `;
-  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
-};
-
-const EditableIcon = L.icon({
-  iconUrl: createRustMarkerSVG(),
-  shadowUrl: iconShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [0, -41],
-});
+// Create icon instance for editable positions
+const EditableIcon = createSelectionIcon();
 
 L.Marker.prototype.options.icon = DefaultIcon;
 

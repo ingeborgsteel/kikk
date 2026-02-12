@@ -63,6 +63,24 @@ src/
 - Keep business logic in hooks or context providers
 - API functions go in `src/react-app/api/`
 
+### Key Unified Components
+**These components are standardized across the codebase - always use them:**
+
+- **Modal (`src/react-app/components/ui/Modal.tsx`)**: Universal modal/dialog component for all forms and pop-ups
+  - Consistent header with title and X button
+  - Automatic close on ESC key
+  - Close on click outside
+  - Optional submit on Enter key
+  - Configurable width via `maxWidth` prop
+  - Used by: ExportDialog, MapClickDialog, and other dialogs
+  
+- **Marker Icons (`src/react-app/lib/markerIcons.ts`)**: Centralized map marker utilities
+  - `createSelectionIcon()`: Rust-colored marker for selections and editable positions
+  - `createObservationIcon()`: Forest green marker for observations
+  - `createUserLocationIcon()`: Purple marker for saved user locations
+  - All markers share consistent styling and sizing
+  - Used by: Map.tsx, LocationEditor component
+
 ### ESLint Configuration
 - Follow the ESLint rules defined in `eslint.config.js`
 - React Hooks rules are enforced

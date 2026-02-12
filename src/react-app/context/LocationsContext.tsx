@@ -1,10 +1,17 @@
-import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
-import { UserLocation } from '../types/location';
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { UserLocation } from "../types/location";
 import {
   useCreateUserLocation,
   useDeleteUserLocation,
   useFetchUserLocations,
-  useUpdateUserLocation
+  useUpdateUserLocation,
 } from "../queries/useUserLocation.ts";
 import { CreateUserLocation } from "../api/locations.ts";
 import { isSupabaseConfigured } from "../lib/supabase.ts";
@@ -16,9 +23,11 @@ interface LocationsContextType {
   deleteLocation: (id: string) => void;
 }
 
-const LocationsContext = createContext<LocationsContextType | undefined>(undefined);
+const LocationsContext = createContext<LocationsContextType | undefined>(
+  undefined,
+);
 
-const STORAGE_KEY = 'kikk_user_locations';
+const STORAGE_KEY = "kikk_user_locations";
 
 export function LocationsProvider({ children }: { children: ReactNode }) {
   // Memoize Supabase configuration check to avoid re-evaluation on every render
@@ -61,7 +70,7 @@ export function LocationsProvider({ children }: { children: ReactNode }) {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-      setLocalLocations(prev => [...prev, newLocation]);
+      setLocalLocations((prev) => [...prev, newLocation]);
     }
   };
 
@@ -70,11 +79,15 @@ export function LocationsProvider({ children }: { children: ReactNode }) {
       update(updatedLocation);
     } else {
       // Local mode: update in state
-      setLocalLocations(prev =>
-        prev.map(loc => loc.id === updatedLocation.id ? {
-          ...updatedLocation,
-          updatedAt: new Date().toISOString(),
-        } : loc)
+      setLocalLocations((prev) =>
+        prev.map((loc) =>
+          loc.id === updatedLocation.id
+            ? {
+                ...updatedLocation,
+                updatedAt: new Date().toISOString(),
+              }
+            : loc,
+        ),
       );
     }
   };
@@ -84,12 +97,14 @@ export function LocationsProvider({ children }: { children: ReactNode }) {
       remove(id);
     } else {
       // Local mode: filter out from state
-      setLocalLocations(prev => prev.filter(loc => loc.id !== id));
+      setLocalLocations((prev) => prev.filter((loc) => loc.id !== id));
     }
   };
 
   return (
-    <LocationsContext.Provider value={{ locations, addLocation, updateLocation, deleteLocation }}>
+    <LocationsContext.Provider
+      value={{ locations, addLocation, updateLocation, deleteLocation }}
+    >
       {children}
     </LocationsContext.Provider>
   );
@@ -98,7 +113,7 @@ export function LocationsProvider({ children }: { children: ReactNode }) {
 export function useLocations() {
   const context = useContext(LocationsContext);
   if (context === undefined) {
-    throw new Error('useLocations must be used within a LocationsProvider');
+    throw new Error("useLocations must be used within a LocationsProvider");
   }
   return context;
 }

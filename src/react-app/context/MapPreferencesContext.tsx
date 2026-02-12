@@ -1,25 +1,33 @@
-import {createContext, ReactNode, useContext, useEffect, useState} from 'react';
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
-type MapLayer = 'standard' | 'topo' | 'aerial';
+type MapLayer = "standard" | "topo" | "aerial";
 
 interface MapPreferencesContextType {
   currentLayer: MapLayer;
   setCurrentLayer: (layer: MapLayer) => void;
 }
 
-const MapPreferencesContext = createContext<MapPreferencesContextType | undefined>(undefined);
+const MapPreferencesContext = createContext<
+  MapPreferencesContextType | undefined
+>(undefined);
 
-const MAP_LAYER_STORAGE_KEY = 'kikk-map-layer';
+const MAP_LAYER_STORAGE_KEY = "kikk-map-layer";
 
 /**
  * Provider for map preferences (selected layer, etc.)
  * Persists preferences to localStorage.
  */
-export function MapPreferencesProvider({children}: {children: ReactNode}) {
+export function MapPreferencesProvider({ children }: { children: ReactNode }) {
   const [currentLayer, setCurrentLayerState] = useState<MapLayer>(() => {
     // Load from localStorage on mount
     const stored = localStorage.getItem(MAP_LAYER_STORAGE_KEY);
-    return (stored as MapLayer) || 'standard';
+    return (stored as MapLayer) || "standard";
   });
 
   const setCurrentLayer = (layer: MapLayer) => {
@@ -35,12 +43,12 @@ export function MapPreferencesProvider({children}: {children: ReactNode}) {
       }
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
   return (
-    <MapPreferencesContext.Provider value={{currentLayer, setCurrentLayer}}>
+    <MapPreferencesContext.Provider value={{ currentLayer, setCurrentLayer }}>
       {children}
     </MapPreferencesContext.Provider>
   );
@@ -52,7 +60,9 @@ export function MapPreferencesProvider({children}: {children: ReactNode}) {
 export function useMapPreferences() {
   const context = useContext(MapPreferencesContext);
   if (context === undefined) {
-    throw new Error('useMapPreferences must be used within a MapPreferencesProvider');
+    throw new Error(
+      "useMapPreferences must be used within a MapPreferencesProvider",
+    );
   }
   return context;
 }

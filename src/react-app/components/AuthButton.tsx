@@ -1,13 +1,16 @@
-import {LogIn, LogOut, User} from 'lucide-react';
-import {useAuth} from '../context/AuthContext';
-import {Button} from './ui/button';
-import {isSupabaseConfigured} from '../lib/supabase';
+import { LogIn, LogOut, User } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { Button } from "./ui/button";
+import { isSupabaseConfigured } from "../lib/supabase";
 
-export function AuthButton({setShowLoginForm, openProfilePage}: {
-  setShowLoginForm: (show: boolean) => void,
-  openProfilePage?: () => void
+export function AuthButton({
+  setShowLoginForm,
+  openProfilePage,
+}: {
+  setShowLoginForm: (show: boolean) => void;
+  openProfilePage?: () => void;
 }) {
-  const {user, signOut} = useAuth();
+  const { user, signOut } = useAuth();
 
   // Don't render if Supabase is not configured
   if (!isSupabaseConfigured()) {
@@ -26,7 +29,7 @@ export function AuthButton({setShowLoginForm, openProfilePage}: {
         variant="secondary"
         className="flex items-center gap-2"
       >
-        <LogIn size={16}/>
+        <LogIn size={16} />
         Logg inn
       </Button>
     );
@@ -39,10 +42,10 @@ export function AuthButton({setShowLoginForm, openProfilePage}: {
         variant="secondary"
         className="flex items-center gap-2"
       >
-        <User size={16}/>
+        <User size={16} />
         Profil
       </Button>
-    )
+    );
   }
 
   return (
@@ -51,7 +54,7 @@ export function AuthButton({setShowLoginForm, openProfilePage}: {
       variant="secondary"
       className="flex items-center gap-2"
     >
-      <LogOut size={16}/>
+      <LogOut size={16} />
       Logg ut
     </Button>
   );

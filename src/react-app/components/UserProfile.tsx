@@ -143,7 +143,7 @@ export function UserProfile({ onBack }: UserProfileProps) {
                 <div
                   key={location.id}
                   onClick={() => handleEdit(location)}
-                  className="p-4 bg-white dark:bg-[#2c2c2c] rounded-lg border-2 border-moss/30 hover:border-moss transition-colors"
+                  className="p-4 bg-white dark:bg-[#2c2c2c] rounded-lg border-2 border-moss/30 hover:border-moss transition-colors cursor-pointer"
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex-1">

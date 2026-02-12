@@ -1,77 +1,77 @@
-import {useState, useEffect} from 'react';
-import {X, MessageSquare} from 'lucide-react';
-import {Octokit} from '@octokit/core';
-import {Button} from './ui/button';
-import {Input} from './ui/input';
-import {Textarea} from './ui/textarea';
+import { useState, useEffect } from "react";
+import { X, MessageSquare } from "lucide-react";
+import { Octokit } from "@octokit/core";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Textarea } from "./ui/textarea";
 
-const GITHUB_OWNER = 'ingeborgsteel';
-const GITHUB_REPO = 'kikk';
+const GITHUB_OWNER = "ingeborgsteel";
+const GITHUB_REPO = "kikk";
 
 interface GitHubIssueFormProps {
   onClose: () => void;
   showForm: boolean;
 }
 
-export function GitHubIssueForm({onClose, showForm}: GitHubIssueFormProps) {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+export function GitHubIssueForm({ onClose, showForm }: GitHubIssueFormProps) {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     if (!showForm) return;
 
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         e.preventDefault();
         e.stopPropagation();
         onClose();
       }
     };
 
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
   }, [onClose, showForm]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setMessage('');
+    setMessage("");
 
     try {
       const githubToken = import.meta.env.VITE_GITHUB_TOKEN;
-      
+
       if (!githubToken) {
-        setMessage('GitHub-token mangler. Kontakt administrator.');
+        setMessage("GitHub-token mangler. Kontakt administrator.");
         setLoading(false);
         return;
       }
 
       const octokit = new Octokit({
-        auth: githubToken
+        auth: githubToken,
       });
 
-      await octokit.request('POST /repos/{owner}/{repo}/issues', {
+      await octokit.request("POST /repos/{owner}/{repo}/issues", {
         owner: GITHUB_OWNER,
         repo: GITHUB_REPO,
         title,
         body: description,
         headers: {
-          'X-GitHub-Api-Version': '2022-11-28'
-        }
+          "X-GitHub-Api-Version": "2022-11-28",
+        },
       });
-      
-      setMessage('Issue opprettet! 🎉');
+
+      setMessage("Issue opprettet! 🎉");
       setTimeout(() => {
-        setTitle('');
-        setDescription('');
-        setMessage('');
+        setTitle("");
+        setDescription("");
+        setMessage("");
         onClose();
       }, 1500);
     } catch (error) {
-      console.error('Error creating GitHub issue:', error);
-      setMessage('Noe gikk galt. Prøv igjen.');
+      console.error("Error creating GitHub issue:", error);
+      setMessage("Noe gikk galt. Prøv igjen.");
     } finally {
       setLoading(false);
     }
@@ -83,11 +83,10 @@ export function GitHubIssueForm({onClose, showForm}: GitHubIssueFormProps) {
 
   return (
     <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50">
-      <div
-        className="bg-sand dark:bg-bark w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg shadow-custom-2xl border-2 border-moss">
+      <div className="bg-sand dark:bg-bark w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg shadow-custom-2xl border-2 border-moss">
         <div className="sticky top-0 bg-forest text-sand p-lg border-b-2 border-moss flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <MessageSquare size={24}/>
+            <MessageSquare size={24} />
             <h2 className="text-xl font-bold">Forslag til forbedring</h2>
           </div>
           <Button
@@ -96,12 +95,15 @@ export function GitHubIssueForm({onClose, showForm}: GitHubIssueFormProps) {
             onClick={onClose}
             aria-label="Close"
           >
-            <X size={24}/>
+            <X size={24} />
           </Button>
         </div>
         <form onSubmit={handleSubmit} className="p-lg space-y-lg">
           <div>
-            <label htmlFor="issue-title" className="block text-sm font-semibold mb-2 text-bark dark:text-sand">
+            <label
+              htmlFor="issue-title"
+              className="block text-sm font-semibold mb-2 text-bark dark:text-sand"
+            >
               Tittel
             </label>
             <Input
@@ -114,7 +116,10 @@ export function GitHubIssueForm({onClose, showForm}: GitHubIssueFormProps) {
             />
           </div>
           <div>
-            <label htmlFor="issue-description" className="block text-sm font-semibold mb-2 text-bark dark:text-sand">
+            <label
+              htmlFor="issue-description"
+              className="block text-sm font-semibold mb-2 text-bark dark:text-sand"
+            >
               Detaljer
             </label>
             <Textarea
@@ -127,7 +132,9 @@ export function GitHubIssueForm({onClose, showForm}: GitHubIssueFormProps) {
             />
           </div>
           {message && (
-            <div className={`p-md rounded-md ${message.includes('galt') ? 'bg-rust/20 text-rust-dark' : 'bg-moss/20 text-forest'}`}>
+            <div
+              className={`p-md rounded-md ${message.includes("galt") ? "bg-rust/20 text-rust-dark" : "bg-moss/20 text-forest"}`}
+            >
               {message}
             </div>
           )}
@@ -136,21 +143,17 @@ export function GitHubIssueForm({onClose, showForm}: GitHubIssueFormProps) {
               type="button"
               onClick={() => {
                 onClose();
-                setTitle('');
-                setDescription('');
-                setMessage('');
+                setTitle("");
+                setDescription("");
+                setMessage("");
               }}
               variant="outline"
               size="sm"
             >
               Avbryt
             </Button>
-            <Button
-              type="submit"
-              disabled={loading}
-              size="sm"
-            >
-              {loading ? 'Oppretter...' : 'Opprett issue'}
+            <Button type="submit" disabled={loading} size="sm">
+              {loading ? "Oppretter..." : "Opprett issue"}
             </Button>
           </div>
         </form>

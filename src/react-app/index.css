@@ -3,75 +3,77 @@
 @tailwind utilities;
 
 @layer base {
-    :root {
-        color-scheme: light;
-        font-synthesis: none;
-        text-rendering: optimizeLegibility;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-    }
+  :root {
+    color-scheme: light;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 
-    * {
-        box-sizing: border-box;
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    min-width: 320px;
+    min-height: 100vh;
+    background-color: #f2efea;
+    color: #4a3f35;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+      "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+      sans-serif;
+    line-height: 1.6;
+    font-weight: 400;
+  }
+
+  .dark body {
+    background-color: #4a3f35;
+    color: #f2efea;
+  }
+
+  a {
+    @apply font-medium text-sky no-underline transition-colors duration-200;
+  }
+
+  a:hover {
+    @apply text-forest;
+  }
+
+  h1 {
+    @apply text-[clamp(1.8rem,5vw,3.2rem)] leading-tight font-bold m-0;
+    color: #4a3f35;
+  }
+
+  .dark h1 {
+    color: #f2efea;
+  }
+
+  h2 {
+    @apply text-[clamp(1.4rem,4vw,2rem)] font-semibold;
+    color: #4a3f35;
+  }
+
+  .dark h2 {
+    color: #f2efea;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color: #f2efea;
+      background-color: #4a3f35;
     }
 
     body {
-        margin: 0;
-        min-width: 320px;
-        min-height: 100vh;
-        background-color: #F2EFEA;
-        color: #4A3F35;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-        sans-serif;
-        line-height: 1.6;
-        font-weight: 400;
+      color: #f2efea;
+      background-color: #4a3f35;
     }
 
-    .dark body {
-        background-color: #4A3F35;
-        color: #F2EFEA;
-    }
-
-    a {
-        @apply font-medium text-sky no-underline transition-colors duration-200;
-    }
-
-    a:hover {
-        @apply text-forest;
-    }
-
-    h1 {
-        @apply text-[clamp(1.8rem,5vw,3.2rem)] leading-tight font-bold m-0;
-        color: #4A3F35;
-    }
-
-    .dark h1 {
-        color: #F2EFEA;
-    }
-
+    h1,
     h2 {
-        @apply text-[clamp(1.4rem,4vw,2rem)] font-semibold;
-        color: #4A3F35;
+      color: #f2efea;
     }
-
-    .dark h2 {
-        color: #F2EFEA;
-    }
-
-    @media (prefers-color-scheme: dark) {
-        :root {
-            color: #F2EFEA;
-            background-color: #4A3F35;
-        }
-
-        body {
-            color: #F2EFEA;
-            background-color: #4A3F35;
-        }
-
-        h1, h2 {
-            color: #F2EFEA;
-        }
-    }
+  }
 }

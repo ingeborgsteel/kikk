@@ -1,13 +1,20 @@
-import {createContext, ReactNode, useContext, useEffect, useMemo, useState} from 'react';
-import {Observation} from '../types/observation';
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { Observation } from "../types/observation";
 import {
   useCreateObservation,
   useDeleteObservation,
   useFetchObservations,
-  useUpdateObservation
+  useUpdateObservation,
 } from "../queries/useObservation.ts";
-import {CreateObservation} from "../api/observations.ts";
-import {isSupabaseConfigured} from "../lib/supabase.ts";
+import { CreateObservation } from "../api/observations.ts";
+import { isSupabaseConfigured } from "../lib/supabase.ts";
 
 interface ObservationsContextType {
   observations: Observation[];
@@ -16,32 +23,38 @@ interface ObservationsContextType {
   deleteObservation: (id: string) => void;
 }
 
-const ObservationsContext = createContext<ObservationsContextType | undefined>(undefined);
+const ObservationsContext = createContext<ObservationsContextType | undefined>(
+  undefined,
+);
 
-const STORAGE_KEY = 'kikk_observations';
+const STORAGE_KEY = "kikk_observations";
 
-export function ObservationsProvider({children}: { children: ReactNode }) {
+export function ObservationsProvider({ children }: { children: ReactNode }) {
   // Memoize Supabase configuration check to avoid re-evaluation on every render
   const supabaseConfigured = useMemo(() => isSupabaseConfigured(), []);
 
   // Local state for when Supabase is not configured
-  const [localObservations, setLocalObservations] = useState<Observation[]>(() => {
-    if (supabaseConfigured) return [];
-    // Load observations from localStorage on mount
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
-  });
+  const [localObservations, setLocalObservations] = useState<Observation[]>(
+    () => {
+      if (supabaseConfigured) return [];
+      // Load observations from localStorage on mount
+      const stored = localStorage.getItem(STORAGE_KEY);
+      return stored ? JSON.parse(stored) : [];
+    },
+  );
 
   // Supabase hooks (disabled when not configured to avoid unnecessary network requests)
-  const {data: supabaseObservations = []} = useFetchObservations({
+  const { data: supabaseObservations = [] } = useFetchObservations({
     enabled: supabaseConfigured,
   });
-  const {mutateAsync: create} = useCreateObservation();
-  const {mutateAsync: remove} = useDeleteObservation();
-  const {mutateAsync: update} = useUpdateObservation();
+  const { mutateAsync: create } = useCreateObservation();
+  const { mutateAsync: remove } = useDeleteObservation();
+  const { mutateAsync: update } = useUpdateObservation();
 
   // Select the appropriate observations source
-  const observations = supabaseConfigured ? supabaseObservations : localObservations;
+  const observations = supabaseConfigured
+    ? supabaseObservations
+    : localObservations;
 
   // Save observations to localStorage whenever they change (for both modes)
   useEffect(() => {
@@ -64,9 +77,9 @@ export function ObservationsProvider({children}: { children: ReactNode }) {
           ...s,
           id: crypto.randomUUID(),
           createdAt: new Date().toISOString(),
-        }))
+        })),
       };
-      setLocalObservations(prev => [...prev, newObservation]);
+      setLocalObservations((prev) => [...prev, newObservation]);
     }
   };
 
@@ -75,16 +88,20 @@ export function ObservationsProvider({children}: { children: ReactNode }) {
       update(updatedObservation);
     } else {
       // Local mode: update in state
-      setLocalObservations(prev =>
-        prev.map(obs => obs.id === updatedObservation.id ? {
-          ...updatedObservation,
-          updatedAt: new Date().toISOString(),
-          species: obs.species.map((s) => ({
-            ...s,
-            id: crypto.randomUUID(),
-            createdAt: new Date().toISOString(),
-          }))
-        } : obs)
+      setLocalObservations((prev) =>
+        prev.map((obs) =>
+          obs.id === updatedObservation.id
+            ? {
+                ...updatedObservation,
+                updatedAt: new Date().toISOString(),
+                species: obs.species.map((s) => ({
+                  ...s,
+                  id: crypto.randomUUID(),
+                  createdAt: new Date().toISOString(),
+                })),
+              }
+            : obs,
+        ),
       );
     }
   };
@@ -94,12 +111,19 @@ export function ObservationsProvider({children}: { children: ReactNode }) {
       remove(id);
     } else {
       // Local mode: filter out from state
-      setLocalObservations(prev => prev.filter(obs => obs.id !== id));
+      setLocalObservations((prev) => prev.filter((obs) => obs.id !== id));
     }
   };
 
   return (
-    <ObservationsContext.Provider value={{observations, addObservation, updateObservation, deleteObservation}}>
+    <ObservationsContext.Provider
+      value={{
+        observations,
+        addObservation,
+        updateObservation,
+        deleteObservation,
+      }}
+    >
       {children}
     </ObservationsContext.Provider>
   );
@@ -108,7 +132,9 @@ export function ObservationsProvider({children}: { children: ReactNode }) {
 export function useObservations() {
   const context = useContext(ObservationsContext);
   if (context === undefined) {
-    throw new Error('useObservations must be used within an ObservationsProvider');
+    throw new Error(
+      "useObservations must be used within an ObservationsProvider",
+    );
   }
   return context;
 }

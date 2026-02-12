@@ -1,11 +1,13 @@
-import {MessageSquare} from 'lucide-react';
-import {Button} from './ui/button';
+import { MessageSquare } from "lucide-react";
+import { Button } from "./ui/button";
 
 interface GitHubSuggestionButtonProps {
   onClick: () => void;
 }
 
-export function GitHubSuggestionButton({onClick}: GitHubSuggestionButtonProps) {
+export function GitHubSuggestionButton({
+  onClick,
+}: GitHubSuggestionButtonProps) {
   return (
     <Button
       onClick={onClick}
@@ -14,7 +16,7 @@ export function GitHubSuggestionButton({onClick}: GitHubSuggestionButtonProps) {
       aria-label="Forslag til forbedring"
       title="Forslag til forbedring"
     >
-      <MessageSquare size={20}/>
+      <MessageSquare size={20} />
     </Button>
   );
 }

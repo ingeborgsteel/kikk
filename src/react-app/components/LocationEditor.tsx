@@ -10,9 +10,12 @@ import {
   kartverketTopo,
   mapboxAttribution,
   mapboxSatellite,
-  mapboxTopo
+  mapboxTopo,
 } from "../lib/mapUtils.ts";
-import { createSelectionIcon, createUserLocationIcon } from "../lib/markerIcons.ts";
+import {
+  createSelectionIcon,
+  createUserLocationIcon,
+} from "../lib/markerIcons.ts";
 import { useMapPreferences } from "../context/MapPreferencesContext.tsx";
 import { Button } from "./ui/button.tsx";
 

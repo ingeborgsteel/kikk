@@ -9,6 +9,7 @@ import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
 import {kartverketAttribution, kartverketTopo, mapboxAttribution, mapboxSatellite, mapboxTopo} from "./lib/mapUtils.ts";
 import {createObservationIcon, createSelectionIcon, createUserLocationIcon} from "./lib/markerIcons.ts";
+import {useMapPreferences} from "./context/MapPreferencesContext.tsx";
 
 const DefaultIcon = L.icon({
   iconUrl: icon,
@@ -59,7 +60,7 @@ function Map({
     lat: number;
     lng: number;
   } | null>(null);
-  const [currentLayer, setCurrentLayer] = useState<'standard' | 'topo' | 'aerial'>('standard');
+  const {currentLayer, setCurrentLayer} = useMapPreferences();
   const tileLayerRef = useRef<L.TileLayer | null>(null);
 
   // Update the ref whenever onLocationSelect changes

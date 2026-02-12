@@ -81,6 +81,12 @@ src/
   - All markers share consistent styling and sizing
   - Used by: Map.tsx, LocationEditor component
 
+- **Map Components**: Two map components with shared layer preferences
+  - **Map.tsx**: Full-page interactive map with layer switching controls (standard/topo/aerial)
+  - **LocationEditor**: Embedded map editor (300px) for forms, uses same layer as Map but without controls
+  - Both use `MapPreferencesContext` to persist the selected map layer across components and sessions
+  - Layer selection is stored in localStorage and syncs across tabs
+
 ### ESLint Configuration
 - Follow the ESLint rules defined in `eslint.config.js`
 - React Hooks rules are enforced

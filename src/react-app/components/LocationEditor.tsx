@@ -5,8 +5,9 @@ import "leaflet/dist/leaflet.css";
 // Fix for default marker icons in Leaflet with bundlers
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
-import {mapboxAttribution, mapboxTopo} from "../lib/mapUtils.ts";
+import {kartverketAttribution, kartverketTopo, mapboxAttribution, mapboxSatellite, mapboxTopo} from "../lib/mapUtils.ts";
 import {createSelectionIcon} from "../lib/markerIcons.ts";
+import {useMapPreferences} from "../context/MapPreferencesContext.tsx";
 
 const DefaultIcon = L.icon({
   iconUrl: icon,
@@ -30,6 +31,8 @@ export const LocationEditor = ({location, onLocationChange, zoom = 13}: Location
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
+  const tileLayerRef = useRef<L.TileLayer | null>(null);
+  const {currentLayer} = useMapPreferences();
 
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
@@ -40,10 +43,29 @@ export const LocationEditor = ({location, onLocationChange, zoom = 13}: Location
       attributionControl: false,
     }).setView([location.lat, location.lng], zoom);
 
-    // Add OpenStreetMap tiles
-    L.tileLayer(mapboxTopo, {
+    // Determine tile layer based on current preference
+    let tileUrl = '';
+    let attribution = '';
+
+    switch (currentLayer) {
+      case 'aerial':
+        tileUrl = mapboxSatellite;
+        attribution = mapboxAttribution;
+        break;
+      case 'topo':
+        tileUrl = mapboxTopo;
+        attribution = mapboxAttribution;
+        break;
+      default:
+        tileUrl = kartverketTopo;
+        attribution = kartverketAttribution;
+        break;
+    }
+
+    // Add tiles
+    tileLayerRef.current = L.tileLayer(tileUrl, {
       maxZoom: 19,
-      attribution: mapboxAttribution
+      attribution
     }).addTo(map.current);
 
     // Add draggable marker
@@ -86,10 +108,45 @@ export const LocationEditor = ({location, onLocationChange, zoom = 13}: Location
       if (markerRef.current) {
         markerRef.current = null;
       }
+      if (tileLayerRef.current) {
+        tileLayerRef.current = null;
+      }
     };
     // Empty deps: only initialize once on mount. location/onLocationChange handled by separate effect
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Update tile layer when currentLayer preference changes
+  useEffect(() => {
+    if (!map.current || !tileLayerRef.current) return;
+
+    // Remove current layer
+    tileLayerRef.current.remove();
+
+    // Add new layer based on selection
+    let tileUrl = '';
+    let attribution = '';
+
+    switch (currentLayer) {
+      case 'aerial':
+        tileUrl = mapboxSatellite;
+        attribution = mapboxAttribution;
+        break;
+      case 'topo':
+        tileUrl = mapboxTopo;
+        attribution = mapboxAttribution;
+        break;
+      default:
+        tileUrl = kartverketTopo;
+        attribution = kartverketAttribution;
+        break;
+    }
+
+    tileLayerRef.current = L.tileLayer(tileUrl, {
+      maxZoom: 19,
+      attribution,
+    }).addTo(map.current);
+  }, [currentLayer]);
 
   // Update marker position when location prop changes externally
   useEffect(() => {

@@ -1,8 +1,8 @@
-import { MapPin, Binoculars } from 'lucide-react';
-import { Button } from './ui/button';
-import { Modal } from './ui/Modal';
-import { LocationEditor } from './LocationEditor';
-import { useState } from 'react';
+import { Binoculars, MapPin } from "lucide-react";
+import { Button } from "./ui/button";
+import { Modal } from "./ui/Modal";
+import { LocationEditor } from "./LocationEditor";
+import { useState } from "react";
 
 interface MapClickDialogProps {
   location: { lat: number; lng: number };
@@ -10,9 +10,17 @@ interface MapClickDialogProps {
   onAddLocation: (location: { lat: number; lng: number }) => void;
   onClose: () => void;
   isOpen: boolean;
+  zoom?: number;
 }
 
-export function MapClickDialog({ location: initialLocation, onAddObservation, onAddLocation, onClose, isOpen }: MapClickDialogProps) {
+export function MapClickDialog({
+  location: initialLocation,
+  onAddObservation,
+  onAddLocation,
+  onClose,
+  isOpen,
+  zoom,
+}: MapClickDialogProps) {
   const [location, setLocation] = useState(initialLocation);
 
   const handleLocationChange = (lat: number, lng: number) => {
@@ -26,23 +34,13 @@ export function MapClickDialog({ location: initialLocation, onAddObservation, on
       title="Hva vil du gjøre?"
       maxWidth="max-w-2xl"
     >
-      <p className="text-sm text-bark/70 dark:text-sand/70 mb-4">
-        {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
-      </p>
-      
-      {/* Map Editor */}
-      <div className="mb-4 border-2 border-moss rounded-lg overflow-hidden">
+      <div className="space-y-3">
         <LocationEditor
           location={location}
           onLocationChange={handleLocationChange}
-          zoom={15}
+          zoom={zoom}
         />
-      </div>
-      <p className="text-xs text-bark/60 dark:text-sand/60 mb-6 text-center">
-        Dra markøren eller klikk for å justere posisjon
-      </p>
-      
-      <div className="space-y-3">
+
         <Button
           onClick={() => onAddObservation(location)}
           className="w-full flex items-center justify-center gap-2 h-auto py-4"
@@ -51,10 +49,12 @@ export function MapClickDialog({ location: initialLocation, onAddObservation, on
           <Binoculars size={24} />
           <div className="text-left">
             <div className="font-semibold">Legg til observasjon</div>
-            <div className="text-xs opacity-90">Registrer arter du har sett</div>
+            <div className="text-xs opacity-90">
+              Registrer arter du har sett
+            </div>
           </div>
         </Button>
-        
+
         <Button
           onClick={() => onAddLocation(location)}
           className="w-full flex items-center justify-center gap-2 h-auto py-4"
@@ -62,17 +62,15 @@ export function MapClickDialog({ location: initialLocation, onAddObservation, on
         >
           <MapPin size={24} />
           <div className="text-left">
-            <div className="font-semibold">Lagre som min plassering</div>
-            <div className="text-xs opacity-90">Opprett en forhåndsinnstilt plassering</div>
+            <div className="font-semibold">Lagre som min lokalitet</div>
+            <div className="text-xs opacity-90">
+              Opprett en forhåndsinnstilt lokalitet
+            </div>
           </div>
         </Button>
       </div>
-      
-      <Button
-        onClick={onClose}
-        className="w-full mt-4"
-        variant="outline"
-      >
+
+      <Button onClick={onClose} className="w-full mt-4" variant="outline">
         Avbryt
       </Button>
     </Modal>

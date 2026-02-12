@@ -133,7 +133,7 @@ function MyObservations({onBack, setShowLoginForm}: MyObservationsProps) {
         {filteredObservations.length === 0 && observations.length > 0 ? (
           <div className="text-center py-xxl">
             <MapPin size={48} className="mx-auto text-slate mb-md"/>
-            <p className="text-lg text-slate">Ingen observasjoner på denne plasseringen</p>
+            <p className="text-lg text-slate">Ingen observasjoner på denne lokaliteten</p>
             <p className="text-sm text-slate mt-sm">Prøv et annet filter eller legg til en ny observasjon!</p>
           </div>
         ) : observations.length === 0 ? (
@@ -160,6 +160,7 @@ function MyObservations({onBack, setShowLoginForm}: MyObservationsProps) {
 
       {editingId && editingObservation && (
         <ObservationForm
+          isOpen
           location={editingObservation.location}
           observation={editingObservation}
           onClose={() => setEditingId(null)}

@@ -1,34 +1,35 @@
-import {useEffect, ReactNode} from 'react';
+import {JSX, ReactNode, useEffect} from 'react';
 import {X} from 'lucide-react';
 import {Button} from './button';
 
 interface ModalProps {
   /** Whether the modal is open */
-  isOpen: boolean;
+  isOpen: boolean,
   /** Callback when modal should close */
-  onClose: () => void;
+  onClose: () => void,
   /** Modal title */
-  title: string;
+  title: string,
   /** Modal content */
-  children: ReactNode;
+  children: ReactNode,
   /** Optional max width (e.g., 'max-w-2xl', 'max-w-4xl') */
-  maxWidth?: string;
+  maxWidth?: string,
   /** Optional callback when Enter is pressed (for forms) */
-  onSubmit?: () => void;
+  onSubmit?: () => void,
   /** Optional icon to display next to title */
-  icon?: ReactNode;
+  icon?: ReactNode,
+  footer?: JSX.Element
 }
 
 /**
  * Unified Modal component for all dialogs and forms.
- * 
+ *
  * Features:
  * - Consistent header style with X button and title
  * - Close on ESC key
  * - Close on click outside
  * - Optional submit on Enter key
  * - Configurable width
- * 
+ *
  * Usage:
  * ```tsx
  * <Modal
@@ -42,14 +43,15 @@ interface ModalProps {
  * ```
  */
 export function Modal({
-  isOpen,
-  onClose,
-  title,
-  children,
-  maxWidth = 'max-w-2xl',
-  onSubmit,
-  icon
-}: ModalProps) {
+                        isOpen,
+                        onClose,
+                        title,
+                        children,
+                        maxWidth = 'max-w-2xl',
+                        onSubmit,
+                        icon,
+                        footer
+                      }: ModalProps) {
   useEffect(() => {
     if (!isOpen) return;
 
@@ -84,13 +86,15 @@ export function Modal({
   };
 
   return (
-    <div 
+    <div
       className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
       onClick={handleBackdropClick}
     >
-      <div className={`w-full ${maxWidth} bg-sand dark:bg-bark rounded-lg shadow-custom-2xl max-h-[90vh] overflow-y-auto`}>
+      <div
+        className={`w-full ${maxWidth} bg-sand dark:bg-bark rounded-lg shadow-custom-2xl max-h-[90vh] overflow-y-auto border-2 border-moss`}>
         {/* Header with consistent styling */}
-        <div className="sticky top-0 bg-forest text-sand p-lg flex justify-between items-center z-10">
+        <div
+          className="sticky top-0 bg-forest text-sand p-lg flex justify-between items-center z-[2000] border-b-2 border-moss">
           <h2 className="text-2xl font-bold flex items-center gap-sm">
             {icon}
             {title}
@@ -110,6 +114,7 @@ export function Modal({
         <div className="p-lg">
           {children}
         </div>
+        {footer}
       </div>
     </div>
   );

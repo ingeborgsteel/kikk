@@ -67,9 +67,9 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
 6. In your Supabase project, configure Email Auth:
-    - Go to Authentication > Providers
-    - Enable Email provider
-    - Disable "Confirm email" if you want to allow immediate login without email confirmation
+   - Go to Authentication > Providers
+   - Enable Email provider
+   - Disable "Confirm email" if you want to allow immediate login without email confirmation
 
 The app works fully without authentication - it's completely optional. Local storage will continue to work whether
 you're logged in or not. Export functionality works locally without Supabase, but export logs and file storage require
@@ -80,11 +80,11 @@ Supabase.
 To enable users to submit feature requests and bug reports directly from the app:
 
 1. Create a GitHub Personal Access Token:
-    - Go to GitHub Settings > Developer settings > Personal access tokens > Tokens (classic)
-    - Click "Generate new token (classic)"
-    - Give it a descriptive name (e.g., "kikk suggestions")
-    - Select the `public_repo` scope (or `repo` if your repository is private)
-    - Generate and copy the token
+   - Go to GitHub Settings > Developer settings > Personal access tokens > Tokens (classic)
+   - Click "Generate new token (classic)"
+   - Give it a descriptive name (e.g., "kikk suggestions")
+   - Select the `public_repo` scope (or `repo` if your repository is private)
+   - Generate and copy the token
 
 2. Add the token to your `.env` file:
 
@@ -144,11 +144,11 @@ npx wrangler tail
 
 1. **Add an Observation**: Click anywhere on the map to select a location
 2. **Enter Details**:
-    - Search for and select species from the Artsdatabanken database
-    - Specify gender (male/female/unknown) and count
-    - Add location uncertainty radius in meters
-    - Set observation date and time
-    - Add field notes and per-species comments
+   - Search for and select species from the Artsdatabanken database
+   - Specify gender (male/female/unknown) and count
+   - Add location uncertainty radius in meters
+   - Set observation date and time
+   - Add field notes and per-species comments
 3. **Save**: Your observation is stored locally
 4. **View**: Click "Kikket på" to see all your recorded observations
 5. **Manage**: Edit or delete observations as needed
@@ -159,8 +159,8 @@ The app provides Excel export functionality to help you share and analyze your o
 
 1. **Open Export Dialog**: Click "Eksporter til Excel" button on the observations page
 2. **Choose Export Type**:
-    - **Kun nye observasjoner**: Export only observations that haven't been exported before (marked with "Ny" badge)
-    - **Alle observasjoner**: Export all observations regardless of export status
+   - **Kun nye observasjoner**: Export only observations that haven't been exported before (marked with "Ny" badge)
+   - **Alle observasjoner**: Export all observations regardless of export status
 3. **Download**: Click export button to download the Excel file
 
 **Export Features:**

@@ -1,11 +1,13 @@
-import {supabase} from "../lib/supabase.ts";
-import {UserLocation} from "../types/location.ts";
+import { supabase } from "../lib/supabase.ts";
+import { UserLocation } from "../types/location.ts";
 
-export async function fetchUserLocations(userId?: string): Promise<UserLocation[]> {
+export async function fetchUserLocations(
+  userId?: string,
+): Promise<UserLocation[]> {
   let query = supabase
     .from("locations")
     .select("*")
-    .order('createdAt', {ascending: false});
+    .order("createdAt", { ascending: false });
 
   if (userId) {
     query = query.eq("userId", userId);
@@ -13,20 +15,23 @@ export async function fetchUserLocations(userId?: string): Promise<UserLocation[
     query = query.is("userId", null);
   }
 
-  const {data, error} = await query;
+  const { data, error } = await query;
 
   if (error) throw error;
 
   return data;
 }
 
-export type CreateUserLocation = Omit<UserLocation, "id" | "createdAt" | "updatedAt">;
+export type CreateUserLocation = Omit<
+  UserLocation,
+  "id" | "createdAt" | "updatedAt"
+>;
 
 export async function createUserLocation(
   location: CreateUserLocation,
   user: { id: string } | null = null,
 ): Promise<UserLocation> {
-  const {data, error} = await supabase
+  const { data, error } = await supabase
     .from("locations")
     .insert({
       ...location,
@@ -41,8 +46,10 @@ export async function createUserLocation(
   return data;
 }
 
-export async function updateUserLocation(location: UserLocation): Promise<UserLocation> {
-  const {data, error} = await supabase
+export async function updateUserLocation(
+  location: UserLocation,
+): Promise<UserLocation> {
+  const { data, error } = await supabase
     .from("locations")
     .update({
       ...location,
@@ -59,7 +66,7 @@ export async function updateUserLocation(location: UserLocation): Promise<UserLo
 }
 
 export async function deleteUserLocation(locationId: string): Promise<void> {
-  const {error} = await supabase
+  const { error } = await supabase
     .from("locations")
     .delete()
     .eq("id", locationId);

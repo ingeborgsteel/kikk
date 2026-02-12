@@ -23,7 +23,8 @@ export function useCreateUserLocation() {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: (location: CreateUserLocation) => createUserLocation(location, user),
+    mutationFn: (location: CreateUserLocation) =>
+      createUserLocation(location, user),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user-locations"] });
     },

@@ -1,10 +1,10 @@
-import {TaxonRecord} from "./artsdatabanken.ts";
+import { TaxonRecord } from "./artsdatabanken.ts";
 
 export interface Species {
   id: string;
   createdAt: string;
   species: TaxonRecord;
-  gender: 'male' | 'female' | 'unknown';
+  gender: "male" | "female" | "unknown";
   count: number;
   age?: string; // Age of the observed species
   method?: string; // Observation method

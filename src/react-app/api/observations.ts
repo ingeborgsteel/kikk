@@ -1,11 +1,13 @@
-import {supabase} from "../lib/supabase.ts";
-import {Observation, Species} from "../types/observation.ts";
+import { supabase } from "../lib/supabase.ts";
+import { Observation, Species } from "../types/observation.ts";
 
-export async function fetchObservations(userId?: string): Promise<Observation[]> {
+export async function fetchObservations(
+  userId?: string,
+): Promise<Observation[]> {
   let query = supabase
     .from("observations")
     .select("*, species (*)")
-    .order('createdAt', {ascending: false});
+    .order("createdAt", { ascending: false });
 
   if (userId) {
     query = query.eq("userId", userId);
@@ -13,7 +15,7 @@ export async function fetchObservations(userId?: string): Promise<Observation[]>
     query = query.is("userId", null);
   }
 
-  const {data, error} = await query;
+  const { data, error } = await query;
 
   if (error) throw error;
   return data ?? [];
@@ -30,16 +32,16 @@ export async function createObservation(
   observation: CreateObservation,
   user: { id: string } | null = null,
 ): Promise<Observation> {
-  const {species, ...observationRow} = observation;
+  const { species, ...observationRow } = observation;
 
-  const {data: insertedObs, error: obsError} = await supabase
+  const { data: insertedObs, error: obsError } = await supabase
     .from("observations")
-    .insert({...observationRow, userId: user?.id})
+    .insert({ ...observationRow, userId: user?.id })
     .select(
       `
       *,
       species:species (*)
-      `
+      `,
     )
     .single();
 
@@ -48,9 +50,11 @@ export async function createObservation(
 
   // 2) insert child rows (if any)
   if (species.length > 0) {
-    const {error: childError} = await supabase
+    const { error: childError } = await supabase
       .from("species")
-      .insert(species.map((obs) => ({...obs, observationId: insertedObs.id})));
+      .insert(
+        species.map((obs) => ({ ...obs, observationId: insertedObs.id })),
+      );
 
     if (childError) throw childError;
   }
@@ -58,21 +62,29 @@ export async function createObservation(
   return insertedObs;
 }
 
-export async function updateObservation(updatedObservation: Observation): Promise<Observation> {
-  const {id: observationId, species, ...observationPatch} = updatedObservation;
+export async function updateObservation(
+  updatedObservation: Observation,
+): Promise<Observation> {
+  const {
+    id: observationId,
+    species,
+    ...observationPatch
+  } = updatedObservation;
 
   // 1) Update parent (only if there are fields to update)
-  const {data: observation, error: parentError} = await supabase
+  const { data: observation, error: parentError } = await supabase
     .from("observations")
     .update({
       ...observationPatch,
       updatedAt: new Date().toISOString(),
     })
     .eq("id", observationId)
-    .select(`
+    .select(
+      `
       *,
       species:species (*)
-      `)
+      `,
+    )
     .single();
 
   if (parentError) throw parentError;
@@ -80,7 +92,7 @@ export async function updateObservation(updatedObservation: Observation): Promis
   // 2) Replace children if provided
   if (species) {
     // delete existing child rows
-    const {error: delError} = await supabase
+    const { error: delError } = await supabase
       .from("species")
       .delete()
       .eq("observationId", observationId);
@@ -90,13 +102,15 @@ export async function updateObservation(updatedObservation: Observation): Promis
     // insert new child rows (if any)
     if (species.length > 0) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const updatedSpecies = species.map(({id, ...obs}) => ({
+      const updatedSpecies = species.map(({ id, ...obs }) => ({
         ...obs,
-        createdAt: obs.createdAt ? new Date(obs.createdAt).toISOString() : new Date().toISOString(),
+        createdAt: obs.createdAt
+          ? new Date(obs.createdAt).toISOString()
+          : new Date().toISOString(),
         observationId,
       }));
 
-      const {error: insError} = await supabase
+      const { error: insError } = await supabase
         .from("species")
         .insert(updatedSpecies);
 
@@ -108,7 +122,7 @@ export async function updateObservation(updatedObservation: Observation): Promis
 }
 
 export async function deleteObservation(observationId: string): Promise<void> {
-  const {error} = await supabase
+  const { error } = await supabase
     .from("observations")
     .delete()
     .eq("id", observationId);

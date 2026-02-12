@@ -1,7 +1,15 @@
-import {useState} from 'react';
-import {ChevronDown, ChevronUp, MapPin, Pencil, Sparkles, Trash2, MapPinned} from 'lucide-react';
-import {Observation} from '../types/observation';
-import {Button} from './ui/button';
+import { useState } from "react";
+import {
+  ChevronDown,
+  ChevronUp,
+  MapPin,
+  Pencil,
+  Sparkles,
+  Trash2,
+  MapPinned,
+} from "lucide-react";
+import { Observation } from "../types/observation";
+import { Button } from "./ui/button";
 
 interface ObservationItemProps {
   observation: Observation;
@@ -12,12 +20,12 @@ interface ObservationItemProps {
 }
 
 function ObservationItem({
-                           observation,
-                           onEdit,
-                           onDelete,
-                           formatDate,
-                           formatDateRange,
-                         }: ObservationItemProps) {
+  observation,
+  onEdit,
+  onDelete,
+  formatDate,
+  formatDateRange,
+}: ObservationItemProps) {
   // Automatically collapse exported observations
   const [isExpanded, setIsExpanded] = useState(!observation.lastExportedAt);
 
@@ -26,21 +34,20 @@ function ObservationItem({
   return (
     <div
       className={`bg-white rounded-lg shadow-custom border-2 relative transition-all ${
-        !isExported ? 'border-moss border-opacity-60' : 'border-slate-border'
+        !isExported ? "border-moss border-opacity-60" : "border-slate-border"
       }`}
     >
       {/* New observation badge */}
       {!isExported && (
-        <div
-          className="absolute top-2 right-2 bg-moss text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 z-10">
-          <Sparkles size={12}/>
+        <div className="absolute top-2 right-2 bg-moss text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 z-10">
+          <Sparkles size={12} />
           Ny
         </div>
       )}
 
       {/* Header - Always visible */}
       <div
-        className={`p-lg ${isExported ? 'cursor-pointer hover:bg-sand hover:bg-opacity-30' : ''}`}
+        className={`p-lg ${isExported ? "cursor-pointer hover:bg-sand hover:bg-opacity-30" : ""}`}
         onClick={() => isExported && setIsExpanded(!isExpanded)}
       >
         <div className="flex justify-between items-center">
@@ -49,7 +56,10 @@ function ObservationItem({
               {observation.locationName && (
                 <div className="font-medium text-bark flex items-center gap-1">
                   {observation.locationId && (
-                    <MapPinned size={18} className="text-violet-600 dark:text-violet-400" />
+                    <MapPinned
+                      size={18}
+                      className="text-violet-600 dark:text-violet-400"
+                    />
                   )}
                   {observation.locationName}
                 </div>
@@ -57,16 +67,22 @@ function ObservationItem({
               {isExported && (
                 <div
                   className="text-slate hover:text-bark transition-colors"
-                  aria-label={isExpanded ? 'Collapse' : 'Expand'}
+                  aria-label={isExpanded ? "Collapse" : "Expand"}
                 >
-                  {isExpanded ? <ChevronUp size={20}/> : <ChevronDown size={20}/>}
+                  {isExpanded ? (
+                    <ChevronUp size={20} />
+                  ) : (
+                    <ChevronDown size={20} />
+                  )}
                 </div>
               )}
             </div>
             <div className="flex items-center gap-sm text-sm text-slate mb-xs">
-              <MapPin size={16}/>
+              <MapPin size={16} />
               <span>
-                {observation.location.lat.toFixed(4)}, {observation.location.lng.toFixed(4)} ±{observation.uncertaintyRadius}m
+                {observation.location.lat.toFixed(4)},{" "}
+                {observation.location.lng.toFixed(4)} ±
+                {observation.uncertaintyRadius}m
               </span>
             </div>
             <p className="text-sm text-slate">
@@ -83,26 +99,26 @@ function ObservationItem({
           </div>
           <div className="flex gap-sm">
             <Button
-              variant={'accent'}
-              size={'icon'}
+              variant={"accent"}
+              size={"icon"}
               onClick={(e) => {
                 e.stopPropagation();
                 onEdit(observation.id);
               }}
               aria-label="Edit observation"
             >
-              <Pencil size={18}/>
+              <Pencil size={18} />
             </Button>
             <Button
-              variant={'accent'}
-              size={'icon'}
+              variant={"accent"}
+              size={"icon"}
               onClick={(e) => {
                 e.stopPropagation();
                 onDelete(observation.id);
               }}
               aria-label="Delete observation"
             >
-              <Trash2 size={18}/>
+              <Trash2 size={18} />
             </Button>
           </div>
         </div>

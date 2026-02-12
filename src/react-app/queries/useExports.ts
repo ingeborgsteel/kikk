@@ -1,6 +1,6 @@
-import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
-import {useAuth} from '../context/AuthContext';
-import {isSupabaseConfigured} from '../lib/supabase';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "../context/AuthContext";
+import { isSupabaseConfigured } from "../lib/supabase";
 import {
   downloadExcelFile,
   downloadExcelFromStorage,
@@ -9,19 +9,19 @@ import {
   markObservationsAsExported,
   saveExportLog,
   uploadExcelToStorage,
-} from '../api/exports';
-import {Observation} from '../types/observation';
-import {Export} from '../types/export';
+} from "../api/exports";
+import { Observation } from "../types/observation";
+import { Export } from "../types/export";
 
 /**
  * Hook to fetch export logs
  */
 export function useExportLogs() {
-  const {user} = useAuth();
+  const { user } = useAuth();
   const supabaseConfigured = isSupabaseConfigured();
 
   return useQuery<Export[]>({
-    queryKey: ['exports', user?.id],
+    queryKey: ["exports", user?.id],
     queryFn: () => fetchExportLogs(user?.id),
     enabled: supabaseConfigured,
   });
@@ -31,15 +31,15 @@ export function useExportLogs() {
  * Hook to export observations to Excel
  */
 export function useExportObservations() {
-  const {user} = useAuth();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const supabaseConfigured = isSupabaseConfigured();
 
   return useMutation({
     mutationFn: async ({
-                         observations,
-                         saveToStorage = true,
-                       }: {
+      observations,
+      saveToStorage = true,
+    }: {
       observations: Observation[];
       saveToStorage?: boolean;
     }) => {
@@ -55,26 +55,35 @@ export function useExportObservations() {
       if (supabaseConfigured && saveToStorage) {
         try {
           // Upload to storage
-          const filePath = await uploadExcelToStorage(blob, fileName, user?.id || null);
+          const filePath = await uploadExcelToStorage(
+            blob,
+            fileName,
+            user?.id || null,
+          );
 
           // Save export log
           const observationIds = observations.map((obs) => obs.id);
-          await saveExportLog(observationIds, fileName, filePath, user?.id || null);
+          await saveExportLog(
+            observationIds,
+            fileName,
+            filePath,
+            user?.id || null,
+          );
 
           // Mark observations as exported
           await markObservationsAsExported(observationIds);
         } catch (error) {
-          console.error('Failed to save export to Supabase:', error);
+          console.error("Failed to save export to Supabase:", error);
           // Still return success since local download worked
         }
       }
 
-      return {fileName, blob};
+      return { fileName, blob };
     },
     onSuccess: () => {
       // Invalidate queries to refresh data
-      queryClient.invalidateQueries({queryKey: ['exports']});
-      queryClient.invalidateQueries({queryKey: ['observations']});
+      queryClient.invalidateQueries({ queryKey: ["exports"] });
+      queryClient.invalidateQueries({ queryKey: ["observations"] });
     },
   });
 }
@@ -84,10 +93,16 @@ export function useExportObservations() {
  */
 export function useDownloadExport() {
   return useMutation({
-    mutationFn: async ({filePath, fileName}: { filePath: string; fileName: string }) => {
+    mutationFn: async ({
+      filePath,
+      fileName,
+    }: {
+      filePath: string;
+      fileName: string;
+    }) => {
       const blob = await downloadExcelFromStorage(filePath);
       downloadExcelFile(blob, fileName);
-      return {fileName};
+      return { fileName };
     },
   });
 }
@@ -95,7 +110,9 @@ export function useDownloadExport() {
 /**
  * Get observations that have never been exported
  */
-export function getUnexportedObservations(observations: Observation[]): Observation[] {
+export function getUnexportedObservations(
+  observations: Observation[],
+): Observation[] {
   return observations.filter((obs) => !obs.lastExportedAt);
 }
 

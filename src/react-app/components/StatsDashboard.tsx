@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  ArrowUpDown,
+  ArrowDown,
+  ArrowUp,
   BarChart3,
   Binoculars,
   Calendar,
@@ -443,6 +444,94 @@ export function StatsDashboard({ onBack }: StatsDashboardProps) {
           </div>
         </div>
 
+        {/* Life list / Artsliste */}
+        <div className="bg-white dark:bg-[#2c2c2c] rounded-lg border-2 border-moss/30 p-md">
+          <h2 className="text-lg font-bold text-bark dark:text-sand mb-md flex items-center gap-sm">
+            <ListChecks size={20} className="text-moss" />
+            Artsliste
+          </h2>
+
+          {/* Group breakdown badges */}
+          {groupStats.length > 0 && (
+            <div className="mb-md flex flex-wrap gap-2">
+              {groupStats.map(([group, count]) => (
+                <span
+                  key={group}
+                  className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-moss/20 text-bark dark:text-sand text-sm border border-moss/30"
+                >
+                  {group}
+                  <span className="font-semibold">{count}</span>
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Search and sort controls */}
+          {lifeList.length > 0 && (
+            <div className="mb-md flex flex-col sm:flex-row gap-sm">
+              <div className="relative flex-1">
+                <Search
+                  size={20}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-bark/40 dark:text-sand/40"
+                />
+                <input
+                  type="text"
+                  placeholder="Søk etter art, familie eller orden..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 p-2 rounded border-2 border-moss/30 bg-white dark:bg-bark text-bark dark:text-sand placeholder:text-bark/40 dark:placeholder:text-sand/40"
+                />
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                <SortButton
+                  label="Navn"
+                  field="name"
+                  currentField={sortField}
+                  direction={sortDirection}
+                  onClick={handleSort}
+                />
+                <SortButton
+                  label="Antall"
+                  field="count"
+                  currentField={sortField}
+                  direction={sortDirection}
+                  onClick={handleSort}
+                />
+                <SortButton
+                  label="Sist sett"
+                  field="lastSeen"
+                  currentField={sortField}
+                  direction={sortDirection}
+                  onClick={handleSort}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Species list */}
+          {lifeList.length === 0 ? (
+            <p className="text-sm text-bark/60 dark:text-sand/60">
+              Ingen arter registrert ennå.
+            </p>
+          ) : filteredAndSorted.length === 0 ? (
+            <div className="text-center py-md">
+              <Search size={32} className="mx-auto text-bark/30 dark:text-sand/30 mb-sm" />
+              <p className="text-sm text-bark/60 dark:text-sand/60">
+                Ingen arter samsvarer med søket
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-sm">
+              <div className="text-sm text-bark/60 dark:text-sand/60 mb-sm">
+                Viser {filteredAndSorted.length} av {lifeList.length} arter
+              </div>
+              {filteredAndSorted.map((entry) => (
+                <LifeListItem key={entry.species.Id} entry={entry} />
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* Observations over time */}
         <div className="bg-white dark:bg-[#2c2c2c] rounded-lg border-2 border-moss/30 p-md">
           <h2 className="text-lg font-bold text-bark dark:text-sand mb-md flex items-center gap-sm">
@@ -550,94 +639,6 @@ export function StatsDashboard({ onBack }: StatsDashboardProps) {
             </div>
           )}
         </div>
-
-        {/* Life list / Artsliste */}
-        <div className="bg-white dark:bg-[#2c2c2c] rounded-lg border-2 border-moss/30 p-md">
-          <h2 className="text-lg font-bold text-bark dark:text-sand mb-md flex items-center gap-sm">
-            <ListChecks size={20} className="text-moss" />
-            Artsliste
-          </h2>
-
-          {/* Group breakdown badges */}
-          {groupStats.length > 0 && (
-            <div className="mb-md flex flex-wrap gap-2">
-              {groupStats.map(([group, count]) => (
-                <span
-                  key={group}
-                  className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-moss/20 text-bark dark:text-sand text-sm border border-moss/30"
-                >
-                  {group}
-                  <span className="font-semibold">{count}</span>
-                </span>
-              ))}
-            </div>
-          )}
-
-          {/* Search and sort controls */}
-          {lifeList.length > 0 && (
-            <div className="mb-md flex flex-col sm:flex-row gap-sm">
-              <div className="relative flex-1">
-                <Search
-                  size={20}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-bark/40 dark:text-sand/40"
-                />
-                <input
-                  type="text"
-                  placeholder="Søk etter art, familie eller orden..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 p-2 rounded border-2 border-moss/30 bg-white dark:bg-bark text-bark dark:text-sand placeholder:text-bark/40 dark:placeholder:text-sand/40"
-                />
-              </div>
-              <div className="flex gap-2 flex-wrap">
-                <SortButton
-                  label="Navn"
-                  field="name"
-                  currentField={sortField}
-                  direction={sortDirection}
-                  onClick={handleSort}
-                />
-                <SortButton
-                  label="Antall"
-                  field="count"
-                  currentField={sortField}
-                  direction={sortDirection}
-                  onClick={handleSort}
-                />
-                <SortButton
-                  label="Sist sett"
-                  field="lastSeen"
-                  currentField={sortField}
-                  direction={sortDirection}
-                  onClick={handleSort}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Species list */}
-          {lifeList.length === 0 ? (
-            <p className="text-sm text-bark/60 dark:text-sand/60">
-              Ingen arter registrert ennå.
-            </p>
-          ) : filteredAndSorted.length === 0 ? (
-            <div className="text-center py-md">
-              <Search size={32} className="mx-auto text-bark/30 dark:text-sand/30 mb-sm" />
-              <p className="text-sm text-bark/60 dark:text-sand/60">
-                Ingen arter samsvarer med søket
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-sm">
-              <div className="text-sm text-bark/60 dark:text-sand/60 mb-sm">
-                Viser {filteredAndSorted.length} av {lifeList.length} arter
-              </div>
-              {filteredAndSorted.map((entry) => (
-                <LifeListItem key={entry.species.Id} entry={entry} />
-              ))}
-            </div>
-          )}
-        </div>
       </div>
 
       {/* Observation form for adding from stats */}
@@ -678,10 +679,9 @@ function SortButton({
     >
       {label}
       {isActive && (
-        <ArrowUpDown
-          size={14}
-          className={direction === "desc" ? "rotate-180" : ""}
-        />
+        direction === "asc"
+          ? <ArrowUp size={14} />
+          : <ArrowDown size={14} />
       )}
     </button>
   );

@@ -43,12 +43,9 @@ export function getRecentSpecies(
 
 /**
  * Rank and sort species search results by relevance to the search term.
- * Scoring criteria (higher = more relevant):
- *   - Exact match on popular/scientific name
- *   - Name starts with search term (prefix match)
- *   - Name contains search term
- *   - Previously observed species get a boost
- *   - Species that exist in Norway get a boost
+ * Popular name matching is prioritised over scientific name matching.
+ * Shorter names that closely match the search term rank higher
+ * (e.g. "kråke" ranks above "kråkefamilien" when searching "kråke").
  * Ties are broken by original API order.
  */
 export function rankSpeciesResults(
@@ -66,32 +63,37 @@ export function rankSpeciesResults(
     const scientific = species.ValidScientificName?.toLowerCase() ?? "";
     const matched = species.MatchedName?.toLowerCase() ?? "";
 
-    // Exact match on popular name
+    // Popular name matching (primary criterion)
     if (popular === term) {
-      score += 100;
+      score += 200;
     } else if (popular.startsWith(term)) {
-      score += 75;
+      // Shorter names that closely match the term score higher.
+      // Ratio is 1.0 for exact length, approaches 0 for very long names.
+      const closeness = term.length / popular.length;
+      score += 100 + Math.round(closeness * 50);
     } else if (popular.includes(term)) {
-      score += 30;
+      const closeness = term.length / popular.length;
+      score += 40 + Math.round(closeness * 20);
     }
 
-    // Exact match on scientific name
+    // Scientific name matching (secondary)
     if (scientific === term) {
-      score += 90;
+      score += 50;
     } else if (scientific.startsWith(term)) {
-      score += 65;
+      score += 35;
     } else if (scientific.includes(term)) {
-      score += 25;
+      score += 15;
     }
 
     // MatchedName starts with search term
     if (matched.startsWith(term)) {
-      score += 60;
+      const closeness = term.length / matched.length;
+      score += 30 + Math.round(closeness * 20);
     }
 
     // Boost previously observed species
     if (previouslyObservedIds.has(species.Id)) {
-      score += 20;
+      score += 25;
     }
 
     // Boost species existing in Norway

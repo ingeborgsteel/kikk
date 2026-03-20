@@ -1,10 +1,10 @@
-import { Binoculars, ListChecks, Map, User } from "lucide-react";
+import { BarChart3, Binoculars, ListChecks, Map, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { isSupabaseConfigured } from "../lib/supabase";
 
 interface BottomNavProps {
-  currentView: "map" | "observations" | "profile" | "lifelist";
+  currentView: "map" | "observations" | "stats" | "profile" | "lifelist";
   onLoginClick: () => void;
 }
 
@@ -53,6 +53,16 @@ export function BottomNav({ currentView, onLoginClick }: BottomNavProps) {
         >
           <ListChecks size={24} />
           <span className="text-xs font-medium">Artsliste</span>
+        </button>
+        <button
+          onClick={() => navigate("/stats")}
+          className={`flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors ${
+            currentView === "stats" ? "text-sunlit" : "text-sand"
+          }`}
+          aria-label="Statistics"
+        >
+          <BarChart3 size={24} />
+          <span className="text-xs font-medium">Statistikk</span>
         </button>
         {supabaseConfigured && (
           <button

@@ -18,6 +18,7 @@ import { AuthButton } from "./components/AuthButton.tsx";
 import { KikkemodusToggle } from "./components/KikkemodusToggle.tsx";
 import { GitHubSuggestionButton } from "./components/GitHubSuggestionButton.tsx";
 import { GitHubIssueForm } from "./components/GitHubIssueForm.tsx";
+import { StatsDashboard } from "./components/StatsDashboard.tsx";
 import { UserLocation } from "./types/location.ts";
 import { getLifeList } from "./lib/utils.ts";
 
@@ -114,8 +115,9 @@ function App() {
     : undefined;
 
   // Determine current view from location pathname
-  const getCurrentView = (): "map" | "observations" | "profile" | "lifelist" => {
+  const getCurrentView = (): "map" | "observations" | "stats" | "profile" => {
     if (location.pathname === "/observations") return "observations";
+    if (location.pathname === "/stats") return "stats";
     if (location.pathname === "/lifelist") return "lifelist";
     if (location.pathname === "/profile") return "profile";
     return "map";
@@ -127,6 +129,10 @@ function App() {
         <Route
           path="/profile"
           element={<UserProfile onBack={() => navigate("/")} />}
+        />
+        <Route
+          path="/stats"
+          element={<StatsDashboard onBack={() => navigate("/")} />}
         />
         <Route
           path="/observations"
@@ -172,6 +178,12 @@ function App() {
                     variant="secondary"
                   >
                     Kikket på ({observations.length})
+                  </Button>
+                  <Button
+                    onClick={() => navigate("/stats")}
+                    variant="secondary"
+                  >
+                    Statistikk
                   </Button>
                   <AuthButton
                     setShowLoginForm={setShowLoginForm}

@@ -7,7 +7,11 @@ import { useObservations } from "../context/ObservationsContext";
 import { Observation, Species } from "../types/observation";
 import { useSpeciesSearch } from "../queries/useSpeciesSearch.ts";
 import { Controller, useForm } from "react-hook-form";
-import { getRecentSpecies, reverseGeocode } from "../lib/utils.ts";
+import {
+  getRecentSpecies,
+  rankSpeciesResults,
+  reverseGeocode,
+} from "../lib/utils.ts";
 import { LocationEditor } from "./LocationEditor.tsx";
 import { UserLocation } from "../types/location.ts";
 import { Modal } from "./ui/Modal.tsx";
@@ -48,6 +52,23 @@ const ObservationForm = ({
   const recentSpecies = useMemo(
     () => getRecentSpecies(observations, 5),
     [observations],
+  );
+
+  // Build set of previously observed species IDs for ranking boost
+  const previouslyObservedIds = useMemo(() => {
+    const ids = new Set<number>();
+    for (const obs of observations) {
+      for (const s of obs.species) {
+        ids.add(s.species.Id);
+      }
+    }
+    return ids;
+  }, [observations]);
+
+  // Rank search results by relevance to the search term
+  const rankedResults = useMemo(
+    () => rankSpeciesResults(searchResults, searchTerm, previouslyObservedIds),
+    [searchResults, searchTerm, previouslyObservedIds],
   );
 
   const defaultStartDate = new Date().toISOString().slice(0, 16);
@@ -388,7 +409,7 @@ const ObservationForm = ({
                           }}
                           onFocus={() =>
                             searchTerm.length >= 2 &&
-                            searchResults.length > 0 &&
+                            rankedResults.length > 0 &&
                             setShowResults(true)
                           }
                         />
@@ -399,9 +420,9 @@ const ObservationForm = ({
                         )}
 
                         {/* Search Results Dropdown */}
-                        {showResults && searchResults.length > 0 && (
+                        {showResults && rankedResults.length > 0 && (
                           <div className="absolute z-10 w-full mt-1 bg-white dark:bg-bark border-2 border-slate-border dark:border-slate rounded-md shadow-custom-lg max-h-60 overflow-y-auto">
-                            {searchResults.map((species) => (
+                            {rankedResults.map((species) => (
                               <button
                                 key={species.Id}
                                 type="button"

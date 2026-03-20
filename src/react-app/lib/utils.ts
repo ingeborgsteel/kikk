@@ -42,6 +42,74 @@ export function getRecentSpecies(
 }
 
 /**
+ * Rank and sort species search results by relevance to the search term.
+ * Popular name matching is prioritised over scientific name matching.
+ * Shorter names that closely match the search term rank higher
+ * (e.g. "kråke" ranks above "kråkefamilien" when searching "kråke").
+ * Ties are broken by original API order.
+ */
+export function rankSpeciesResults(
+  results: TaxonRecord[],
+  searchTerm: string,
+  previouslyObservedIds: Set<number> = new Set(),
+): TaxonRecord[] {
+  if (!searchTerm || results.length === 0) return results;
+
+  const term = searchTerm.toLowerCase();
+
+  const scored = results.map((species, index) => {
+    let score = 0;
+    const popular = species.PrefferedPopularname?.toLowerCase() ?? "";
+    const scientific = species.ValidScientificName?.toLowerCase() ?? "";
+    const matched = species.MatchedName?.toLowerCase() ?? "";
+
+    // Popular name matching (primary criterion)
+    if (popular === term) {
+      score += 200;
+    } else if (popular.startsWith(term)) {
+      // Shorter names that closely match the term score higher.
+      // Ratio is 1.0 for exact length, approaches 0 for very long names.
+      const closeness = term.length / popular.length;
+      score += 100 + Math.round(closeness * 50);
+    } else if (popular.includes(term)) {
+      const closeness = term.length / popular.length;
+      score += 40 + Math.round(closeness * 20);
+    }
+
+    // Scientific name matching (secondary)
+    if (scientific === term) {
+      score += 50;
+    } else if (scientific.startsWith(term)) {
+      score += 35;
+    } else if (scientific.includes(term)) {
+      score += 15;
+    }
+
+    // MatchedName starts with search term
+    if (matched.startsWith(term)) {
+      const closeness = term.length / matched.length;
+      score += 30 + Math.round(closeness * 20);
+    }
+
+    // Boost previously observed species
+    if (previouslyObservedIds.has(species.Id)) {
+      score += 25;
+    }
+
+    // Boost species existing in Norway
+    if (species.ExistsInCountry) {
+      score += 10;
+    }
+
+    return { species, score, index };
+  });
+
+  return scored
+    .sort((a, b) => b.score - a.score || a.index - b.index)
+    .map((entry) => entry.species);
+}
+
+/**
  * Reverse geocode coordinates to get a human-readable location name
  * Uses OpenStreetMap Nominatim API
  */

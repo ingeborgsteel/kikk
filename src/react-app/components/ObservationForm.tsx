@@ -238,14 +238,14 @@ const ObservationForm = ({
           startDate,
           endDate,
         });
-        // Auto-activate kikkemodus on first observation
-        if (observations.length === 0 && onActivateKikkemodus) {
+        // Auto-activate kikkemodus when adding a new observation
+        if (onActivateKikkemodus) {
           onActivateKikkemodus();
         }
       }
       onClose();
     },
-    [onClose, updateObservation, addObservation, presetLocation, observations.length, onActivateKikkemodus],
+    [onClose, updateObservation, addObservation, presetLocation, onActivateKikkemodus],
   );
 
   const saveAndAddAnother = useCallback(
@@ -259,8 +259,8 @@ const ObservationForm = ({
         endDate,
       });
 
-      // Auto-activate kikkemodus on first observation
-      if (observations.length === 0 && onActivateKikkemodus) {
+      // Auto-activate kikkemodus when adding a new observation
+      if (onActivateKikkemodus) {
         onActivateKikkemodus();
       }
 
@@ -283,7 +283,7 @@ const ObservationForm = ({
       setSearchTerm("");
       setShowResults(false);
     },
-    [addObservation, presetLocation, reset, getValues, currentLocation, successTimeout, observations.length, onActivateKikkemodus],
+    [addObservation, presetLocation, reset, getValues, currentLocation, successTimeout, onActivateKikkemodus],
   );
 
   return (

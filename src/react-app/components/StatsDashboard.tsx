@@ -61,13 +61,6 @@ interface StatsDashboardProps {
   onBack: () => void;
 }
 
-interface SpeciesStat {
-  name: string;
-  scientificName: string;
-  count: number;
-  taxonId: number;
-}
-
 interface LocationStat {
   locationId: string | undefined;
   locationName: string;
@@ -81,32 +74,6 @@ interface MonthStat {
   count: number;
 }
 
-function computeSpeciesStats(observations: Observation[]): SpeciesStat[] {
-  const speciesMap = new Map<
-    number,
-    { name: string; scientificName: string; count: number }
-  >();
-
-  for (const obs of observations) {
-    for (const s of obs.species) {
-      const taxonId = s.species.TaxonId;
-      const existing = speciesMap.get(taxonId);
-      if (existing) {
-        existing.count += s.count;
-      } else {
-        speciesMap.set(taxonId, {
-          name: s.species.PrefferedPopularname,
-          scientificName: s.species.ValidScientificName,
-          count: s.count,
-        });
-      }
-    }
-  }
-
-  return Array.from(speciesMap.entries())
-    .map(([taxonId, data]) => ({ taxonId, ...data }))
-    .sort((a, b) => b.count - a.count);
-}
 
 function computeLocationStats(observations: Observation[]): LocationStat[] {
   const locationMap = new Map<
@@ -242,10 +209,6 @@ export function StatsDashboard({ onBack }: StatsDashboardProps) {
   );
   const totalIndividuals = useMemo(
     () => countTotalIndividuals(observations),
-    [observations],
-  );
-  const speciesStats = useMemo(
-    () => computeSpeciesStats(observations),
     [observations],
   );
   const locationStats = useMemo(
@@ -526,7 +489,7 @@ export function StatsDashboard({ onBack }: StatsDashboardProps) {
                 Viser {filteredAndSorted.length} av {lifeList.length} arter
               </div>
               {filteredAndSorted.map((entry) => (
-                <LifeListItem key={entry.species.Id} entry={entry} />
+                <LifeListItem key={entry.species.Id} entry={entry} onAdd={handleAddFromSpecies} />
               ))}
             </div>
           )}
@@ -539,52 +502,6 @@ export function StatsDashboard({ onBack }: StatsDashboardProps) {
             Observasjoner siste 12 måneder
           </h2>
           <SimpleBarChart data={monthlyStats} />
-        </div>
-
-        {/* Most observed species */}
-        <div className="bg-white dark:bg-[#2c2c2c] rounded-lg border-2 border-moss/30 p-md">
-          <h2 className="text-lg font-bold text-bark dark:text-sand mb-md flex items-center gap-sm">
-            <TrendingUp size={20} className="text-moss" />
-            Mest observerte arter
-          </h2>
-          {speciesStats.length === 0 ? (
-            <p className="text-sm text-bark/60 dark:text-sand/60">
-              Ingen arter registrert ennå.
-            </p>
-          ) : (
-            <div className="space-y-sm">
-              {speciesStats.slice(0, 10).map((stat) => (
-                <div
-                  key={stat.taxonId}
-                  className="flex items-center justify-between p-sm rounded-md hover:bg-sand dark:hover:bg-bark/50 transition-colors"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-bark dark:text-sand truncate">
-                      {stat.name}
-                    </div>
-                    <div className="text-xs text-bark/60 dark:text-sand/60 italic truncate">
-                      {stat.scientificName}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-sm ml-sm">
-                    <span className="text-sm font-semibold text-moss whitespace-nowrap">
-                      {stat.count} {stat.count === 1 ? "individ" : "individer"}
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={handleAddFromSpecies}
-                      aria-label={`Legg til observasjon av ${stat.name}`}
-                      title="Ny observasjon"
-                      className="text-moss hover:text-rust shrink-0"
-                    >
-                      <Plus size={18} />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
 
         {/* Most active locations */}
@@ -687,7 +604,7 @@ function SortButton({
   );
 }
 
-function LifeListItem({ entry }: { entry: LifeListEntry }) {
+function LifeListItem({ entry, onAdd }: { entry: LifeListEntry; onAdd: () => void }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const statusBadge = getStatusBadge(entry.species.Status);
 
@@ -724,6 +641,19 @@ function LifeListItem({ entry }: { entry: LifeListEntry }) {
             </div>
             <div className="text-xs text-bark/60 dark:text-sand/60">obs.</div>
           </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAdd();
+            }}
+            aria-label={`Legg til observasjon av ${entry.species.PrefferedPopularname || entry.species.ValidScientificName}`}
+            title="Ny observasjon"
+            className="text-moss hover:text-rust shrink-0"
+          >
+            <Plus size={18} />
+          </Button>
           <span className="text-bark/40 dark:text-sand/40 text-sm">
             {isExpanded ? "▲" : "▼"}
           </span>

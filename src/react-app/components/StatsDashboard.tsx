@@ -294,8 +294,22 @@ export function StatsDashboard({ onBack }: StatsDashboardProps) {
   };
 
   const handleAddFromSpecies = () => {
-    // Navigate to map so user can pick a location for a new observation
-    navigate("/");
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setAddFormLocation({ lat: latitude, lng: longitude });
+          setPresetLocation(null);
+          setAddFormOpen(true);
+        },
+        () => {
+          // Geolocation denied or unavailable — fall back to map
+          navigate("/");
+        },
+      );
+    } else {
+      navigate("/");
+    }
   };
 
   const handleCloseForm = () => {

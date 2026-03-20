@@ -18,7 +18,7 @@ import { Modal } from "./ui/Modal.tsx";
 import { TaxonRecord } from "../types/artsdatabanken.ts";
 import { CreateSpecies } from "../api/observations.ts";
 import SpeciesItem from "./SpeciesItem.tsx";
-import { Check, MapPinned } from "lucide-react";
+import { Check, MapPin, MapPinned } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 
 interface ObservationFormProps {
@@ -28,6 +28,8 @@ interface ObservationFormProps {
   zoom?: number;
   presetLocation?: UserLocation | null;
   isOpen: boolean;
+  onSaveAsLocation?: (location: { lat: number; lng: number }) => void;
+  onActivateKikkemodus?: () => void;
 }
 
 const ObservationForm = ({
@@ -37,6 +39,8 @@ const ObservationForm = ({
   zoom,
   presetLocation,
   isOpen,
+  onSaveAsLocation,
+  onActivateKikkemodus,
 }: ObservationFormProps) => {
   const { addObservation, updateObservation, observations } = useObservations();
   const [searchTerm, setSearchTerm] = useState("");
@@ -227,10 +231,14 @@ const ObservationForm = ({
           startDate,
           endDate,
         });
+        // Auto-activate kikkemodus on first observation
+        if (observations.length === 0 && onActivateKikkemodus) {
+          onActivateKikkemodus();
+        }
       }
       onClose();
     },
-    [onClose, updateObservation, addObservation, presetLocation],
+    [onClose, updateObservation, addObservation, presetLocation, observations.length, onActivateKikkemodus],
   );
 
   const saveAndAddAnother = useCallback(
@@ -243,6 +251,11 @@ const ObservationForm = ({
         startDate,
         endDate,
       });
+
+      // Auto-activate kikkemodus on first observation
+      if (observations.length === 0 && onActivateKikkemodus) {
+        onActivateKikkemodus();
+      }
 
       // Show success message
       if (successTimeout) clearTimeout(successTimeout);
@@ -263,7 +276,7 @@ const ObservationForm = ({
       setSearchTerm("");
       setShowResults(false);
     },
-    [addObservation, presetLocation, reset, getValues, currentLocation, successTimeout],
+    [addObservation, presetLocation, reset, getValues, currentLocation, successTimeout, observations.length, onActivateKikkemodus],
   );
 
   return (
@@ -516,6 +529,17 @@ const ObservationForm = ({
                 onLocationChange={handleLocationChange}
                 zoom={zoom}
               />
+              {!observation && !presetLocation && onSaveAsLocation && (
+                <button
+                  type="button"
+                  onClick={() => onSaveAsLocation(currentLocation)}
+                  className="mt-2 flex items-center gap-1.5 text-sm text-slate hover:text-bark dark:hover:text-sand transition-colors"
+                  aria-label="Lagre denne posisjonen som min lokalitet"
+                >
+                  <MapPin size={14} />
+                  Lagre som min lokalitet
+                </button>
+              )}
             </div>
 
             <Controller

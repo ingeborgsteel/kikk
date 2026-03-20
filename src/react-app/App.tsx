@@ -95,6 +95,12 @@ function App() {
     }
   };
 
+  const handleSaveAsLocation = (loc: { lat: number; lng: number }) => {
+    setShowAddForm(false);
+    setSelectedLocation(loc);
+    setShowAddLocationForm(true);
+  };
+
   const onClose = () => {
     setShowAddForm(false);
     setShowAddLocationForm(false);
@@ -173,6 +179,8 @@ function App() {
                   observation={editingObservation}
                   presetLocation={presetLocation}
                   onClose={onClose}
+                  onSaveAsLocation={handleSaveAsLocation}
+                  onActivateKikkemodus={() => setKikkemodusActive(true)}
                 />
               )}
               {showMapClickDialog && selectedLocation && (

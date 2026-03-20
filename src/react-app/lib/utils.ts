@@ -42,6 +42,72 @@ export function getRecentSpecies(
 }
 
 /**
+ * Rank and sort species search results by relevance to the search term.
+ * Scoring criteria (higher = more relevant):
+ *   - Exact match on popular/scientific name
+ *   - Name starts with search term (prefix match)
+ *   - Name contains search term
+ *   - Previously observed species get a boost
+ *   - Species that exist in Norway get a boost
+ * Ties are broken by original API order.
+ */
+export function rankSpeciesResults(
+  results: TaxonRecord[],
+  searchTerm: string,
+  previouslyObservedIds: Set<number> = new Set(),
+): TaxonRecord[] {
+  if (!searchTerm || results.length === 0) return results;
+
+  const term = searchTerm.toLowerCase();
+
+  const scored = results.map((species, index) => {
+    let score = 0;
+    const popular = species.PrefferedPopularname?.toLowerCase() ?? "";
+    const scientific = species.ValidScientificName?.toLowerCase() ?? "";
+    const matched = species.MatchedName?.toLowerCase() ?? "";
+
+    // Exact match on popular name
+    if (popular === term) {
+      score += 100;
+    } else if (popular.startsWith(term)) {
+      score += 75;
+    } else if (popular.includes(term)) {
+      score += 30;
+    }
+
+    // Exact match on scientific name
+    if (scientific === term) {
+      score += 90;
+    } else if (scientific.startsWith(term)) {
+      score += 65;
+    } else if (scientific.includes(term)) {
+      score += 25;
+    }
+
+    // MatchedName starts with search term
+    if (matched.startsWith(term)) {
+      score += 60;
+    }
+
+    // Boost previously observed species
+    if (previouslyObservedIds.has(species.Id)) {
+      score += 20;
+    }
+
+    // Boost species existing in Norway
+    if (species.ExistsInCountry) {
+      score += 10;
+    }
+
+    return { species, score, index };
+  });
+
+  return scored
+    .sort((a, b) => b.score - a.score || a.index - b.index)
+    .map((entry) => entry.species);
+}
+
+/**
  * Reverse geocode coordinates to get a human-readable location name
  * Uses OpenStreetMap Nominatim API
  */

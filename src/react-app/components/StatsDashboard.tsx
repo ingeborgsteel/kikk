@@ -19,6 +19,7 @@ import { Button } from "./ui/button";
 import { ThemeToggle } from "./ThemeToggle";
 import { Observation } from "../types/observation";
 import { UserLocation } from "../types/location";
+import { TaxonRecord } from "../types/artsdatabanken";
 import { getLifeList, LifeListEntry } from "../lib/utils";
 import ObservationForm from "./ObservationForm.tsx";
 
@@ -197,6 +198,9 @@ export function StatsDashboard({ onBack }: StatsDashboardProps) {
   const [presetLocation, setPresetLocation] = useState<UserLocation | null>(
     null,
   );
+  const [addFormSpecies, setAddFormSpecies] = useState<TaxonRecord | null>(
+    null,
+  );
 
   // Life list state
   const [searchTerm, setSearchTerm] = useState("");
@@ -293,13 +297,14 @@ export function StatsDashboard({ onBack }: StatsDashboardProps) {
     setAddFormOpen(true);
   };
 
-  const handleAddFromSpecies = () => {
+  const handleAddFromSpecies = (species: TaxonRecord) => {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
           setAddFormLocation({ lat: latitude, lng: longitude });
           setPresetLocation(null);
+          setAddFormSpecies(species);
           setAddFormOpen(true);
         },
         () => {
@@ -316,6 +321,7 @@ export function StatsDashboard({ onBack }: StatsDashboardProps) {
     setAddFormOpen(false);
     setAddFormLocation(null);
     setPresetLocation(null);
+    setAddFormSpecies(null);
   };
 
   if (observations.length === 0) {
@@ -578,6 +584,7 @@ export function StatsDashboard({ onBack }: StatsDashboardProps) {
           isOpen={addFormOpen}
           location={addFormLocation}
           presetLocation={presetLocation}
+          presetSpecies={addFormSpecies}
           onClose={handleCloseForm}
         />
       )}
@@ -618,7 +625,7 @@ function SortButton({
   );
 }
 
-function LifeListItem({ entry, onAdd }: { entry: LifeListEntry; onAdd: () => void }) {
+function LifeListItem({ entry, onAdd }: { entry: LifeListEntry; onAdd: (species: TaxonRecord) => void }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const statusBadge = getStatusBadge(entry.species.Status);
 
@@ -660,7 +667,7 @@ function LifeListItem({ entry, onAdd }: { entry: LifeListEntry; onAdd: () => voi
             size="icon"
             onClick={(e) => {
               e.stopPropagation();
-              onAdd();
+              onAdd(entry.species);
             }}
             aria-label={`Legg til observasjon av ${entry.species.PrefferedPopularname || entry.species.ValidScientificName}`}
             title="Ny observasjon"

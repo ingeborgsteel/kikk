@@ -376,7 +376,7 @@ export function StatsDashboard({ onBack }: StatsDashboardProps) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleAddFromSpecies()}
+                      onClick={handleAddFromSpecies}
                       aria-label={`Legg til observasjon av ${stat.name}`}
                       title="Ny observasjon"
                       className="text-moss hover:text-rust shrink-0"

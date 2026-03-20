@@ -1,10 +1,10 @@
-import { Binoculars, Map, User } from "lucide-react";
+import { Binoculars, ListChecks, Map, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { isSupabaseConfigured } from "../lib/supabase";
 
 interface BottomNavProps {
-  currentView: "map" | "observations" | "profile";
+  currentView: "map" | "observations" | "profile" | "lifelist";
   onLoginClick: () => void;
 }
 
@@ -43,6 +43,16 @@ export function BottomNav({ currentView, onLoginClick }: BottomNavProps) {
         >
           <Binoculars size={24} />
           <span className="text-xs font-medium">Kikket på</span>
+        </button>
+        <button
+          onClick={() => navigate("/lifelist")}
+          className={`flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors ${
+            currentView === "lifelist" ? "text-sunlit" : "text-sand"
+          }`}
+          aria-label="Artsliste"
+        >
+          <ListChecks size={24} />
+          <span className="text-xs font-medium">Artsliste</span>
         </button>
         {supabaseConfigured && (
           <button

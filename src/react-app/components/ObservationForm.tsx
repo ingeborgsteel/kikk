@@ -45,6 +45,7 @@ const ObservationForm = ({
   const [geocodingFailed, setGeocodingFailed] = useState(false);
   const [currentLocation, setCurrentLocation] = useState(location);
   const [successMessage, setSuccessMessage] = useState("");
+  const [successTimeout, setSuccessTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
 
   const { data: searchResults = [], isLoading } = useSpeciesSearch(searchTerm);
 
@@ -168,6 +169,13 @@ const ObservationForm = ({
     return () => document.removeEventListener("keydown", handleEscape);
   }, [onClose]);
 
+  // Cleanup success message timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (successTimeout) clearTimeout(successTimeout);
+    };
+  }, [successTimeout]);
+
   // Fetch location name when form opens for a new observation
   useEffect(() => {
     const currentLocationName = getValues("locationName");
@@ -237,8 +245,9 @@ const ObservationForm = ({
       });
 
       // Show success message
+      if (successTimeout) clearTimeout(successTimeout);
       setSuccessMessage("Observasjon lagret!");
-      setTimeout(() => setSuccessMessage(""), 3000);
+      setSuccessTimeout(setTimeout(() => setSuccessMessage(""), 3000));
 
       // Reset form for a new observation, keeping location
       const newStartDate = new Date().toISOString().slice(0, 16);
@@ -248,13 +257,13 @@ const ObservationForm = ({
         locationName: getValues("locationName"),
         location: currentLocation,
         uncertaintyRadius: getValues("uncertaintyRadius"),
-        species: [] as Observation["species"],
+        species: [],
         comment: "",
       });
       setSearchTerm("");
       setShowResults(false);
     },
-    [addObservation, presetLocation, reset, getValues, currentLocation],
+    [addObservation, presetLocation, reset, getValues, currentLocation, successTimeout],
   );
 
   return (

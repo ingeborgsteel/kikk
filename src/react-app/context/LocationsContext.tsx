@@ -18,7 +18,7 @@ import { isSupabaseConfigured } from "../lib/supabase.ts";
 
 interface LocationsContextType {
   locations: UserLocation[];
-  addLocation: (location: CreateUserLocation) => void;
+  addLocation: (location: CreateUserLocation) => UserLocation;
   updateLocation: (location: UserLocation) => void;
   deleteLocation: (id: string) => void;
 }
@@ -59,19 +59,23 @@ export function LocationsProvider({ children }: { children: ReactNode }) {
     }
   }, [locations, supabaseConfigured]);
 
-  const addLocation = (location: CreateUserLocation) => {
+  const addLocation = (location: CreateUserLocation): UserLocation => {
+    const newLocation: UserLocation = {
+      ...location,
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
     if (supabaseConfigured) {
+      // Note: Server will assign its own ID; the returned local ID is optimistic.
+      // For Supabase users, the locationId link may not match after query refresh.
       create(location);
     } else {
-      // Local mode: add with generated ID and timestamps
-      const newLocation: UserLocation = {
-        ...location,
-        id: crypto.randomUUID(),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
       setLocalLocations((prev) => [...prev, newLocation]);
     }
+
+    return newLocation;
   };
 
   const updateLocation = (updatedLocation: UserLocation) => {

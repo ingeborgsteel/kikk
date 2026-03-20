@@ -39,6 +39,7 @@ function App() {
   );
   const [kikkemodusActive, setKikkemodusActive] = useState(false);
   const [showGitHubIssueForm, setShowGitHubIssueForm] = useState(false);
+  const [returnToObservationAfterSave, setReturnToObservationAfterSave] = useState(false);
   const { observations } = useObservations();
   const { locations } = useLocations();
 
@@ -98,7 +99,31 @@ function App() {
   const handleSaveAsLocation = (loc: { lat: number; lng: number }) => {
     setShowAddForm(false);
     setSelectedLocation(loc);
+    setReturnToObservationAfterSave(true);
     setShowAddLocationForm(true);
+  };
+
+  const handleLocationSaved = (savedLocation: UserLocation) => {
+    setShowAddLocationForm(false);
+    setPresetLocation(savedLocation);
+    setSelectedLocation(savedLocation.location);
+    setShowAddForm(true);
+    setReturnToObservationAfterSave(false);
+  };
+
+  const handleLocationFormClose = () => {
+    setShowAddLocationForm(false);
+
+    if (returnToObservationAfterSave) {
+      // Return to observation form
+      setShowAddForm(true);
+      setReturnToObservationAfterSave(false);
+    } else {
+      // Normal close
+      setSelectedLocation(null);
+      setPresetLocation(null);
+      setEditingObservationId(null);
+    }
   };
 
   const onClose = () => {
@@ -107,6 +132,7 @@ function App() {
     setSelectedLocation(null);
     setPresetLocation(null);
     setEditingObservationId(null);
+    setReturnToObservationAfterSave(false);
   };
 
   const editingObservation = editingObservationId
@@ -197,7 +223,8 @@ function App() {
                 <LocationForm
                   isOpen={showAddLocationForm}
                   initialLocation={selectedLocation}
-                  onClose={onClose}
+                  onClose={handleLocationFormClose}
+                  onSaved={returnToObservationAfterSave ? handleLocationSaved : undefined}
                   zoom={selectedZoom}
                 />
               )}

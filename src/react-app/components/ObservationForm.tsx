@@ -183,8 +183,14 @@ const ObservationForm = ({
   // Fetch location name when form opens for a new observation
   useEffect(() => {
     const currentLocationName = getValues("locationName");
-    // Only fetch if this is a new observation, locationName is not yet set, and no preset location name
-    if (!observation && currentLocationName === "" && !presetLocation) {
+    // When a preset location is set, use its name
+    if (presetLocation) {
+      setValue("locationName", presetLocation.name, { shouldDirty: true });
+      setGeocodingFailed(false);
+      return;
+    }
+    // Only fetch if this is a new observation, locationName is not yet set
+    if (!observation && currentLocationName === "") {
       setLoadingLocationName(true);
       setGeocodingFailed(false);
       reverseGeocode(currentLocation.lat, currentLocation.lng)
@@ -221,6 +227,7 @@ const ObservationForm = ({
       if (data.id) {
         updateObservation({
           ...data,
+          locationId: presetLocation?.id ?? data.locationId,
           startDate,
           endDate,
         });
@@ -516,7 +523,7 @@ const ObservationForm = ({
                       )}
                     </div>
                     <p className="text-xs text-slate mt-1">
-                      {geocodingFailed
+                      {geocodingFailed && !presetLocation
                         ? "Kunne ikke hente stedsnavn automatisk. Vennligst fyll inn manuelt."
                         : ""}
                     </p>
@@ -529,7 +536,7 @@ const ObservationForm = ({
                 onLocationChange={handleLocationChange}
                 zoom={zoom}
               />
-              {!observation && !presetLocation && onSaveAsLocation && (
+              {!presetLocation && onSaveAsLocation && (
                 <button
                   type="button"
                   onClick={() => onSaveAsLocation(currentLocation)}

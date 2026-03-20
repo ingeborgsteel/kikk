@@ -18,7 +18,7 @@ import { Modal } from "./ui/Modal.tsx";
 import { TaxonRecord } from "../types/artsdatabanken.ts";
 import { CreateSpecies } from "../api/observations.ts";
 import SpeciesItem from "./SpeciesItem.tsx";
-import { MapPinned } from "lucide-react";
+import { Check, MapPin, MapPinned } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 
 interface ObservationFormProps {
@@ -28,6 +28,8 @@ interface ObservationFormProps {
   zoom?: number;
   presetLocation?: UserLocation | null;
   isOpen: boolean;
+  onSaveAsLocation?: (location: { lat: number; lng: number }) => void;
+  onActivateKikkemodus?: () => void;
 }
 
 const ObservationForm = ({
@@ -37,14 +39,17 @@ const ObservationForm = ({
   zoom,
   presetLocation,
   isOpen,
+  onSaveAsLocation,
+  onActivateKikkemodus,
 }: ObservationFormProps) => {
   const { addObservation, updateObservation, observations } = useObservations();
   const [searchTerm, setSearchTerm] = useState("");
   const [showResults, setShowResults] = useState(false);
   const [loadingLocationName, setLoadingLocationName] = useState(false);
   const [geocodingFailed, setGeocodingFailed] = useState(false);
-  const [formReady, setFormReady] = useState(!!observation); // Form is ready immediately if editing
   const [currentLocation, setCurrentLocation] = useState(location);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [successTimeout, setSuccessTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
 
   const { data: searchResults = [], isLoading } = useSpeciesSearch(searchTerm);
 
@@ -92,6 +97,7 @@ const ObservationForm = ({
     setValue,
     getValues,
     watch,
+    reset,
     formState: { isDirty, isValid },
   } = useForm<Observation>({
     defaultValues: {
@@ -167,11 +173,24 @@ const ObservationForm = ({
     return () => document.removeEventListener("keydown", handleEscape);
   }, [onClose]);
 
+  // Cleanup success message timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (successTimeout) clearTimeout(successTimeout);
+    };
+  }, [successTimeout]);
+
   // Fetch location name when form opens for a new observation
   useEffect(() => {
     const currentLocationName = getValues("locationName");
-    // Only fetch if this is a new observation, locationName is not yet set, and no preset location name
-    if (!observation && currentLocationName === "" && !presetLocation) {
+    // When a preset location is set, use its name
+    if (presetLocation) {
+      setValue("locationName", presetLocation.name, { shouldDirty: true });
+      setGeocodingFailed(false);
+      return;
+    }
+    // Only fetch if this is a new observation, locationName is not yet set
+    if (!observation && currentLocationName === "") {
       setLoadingLocationName(true);
       setGeocodingFailed(false);
       reverseGeocode(currentLocation.lat, currentLocation.lng)
@@ -189,11 +208,7 @@ const ObservationForm = ({
         })
         .finally(() => {
           setLoadingLocationName(false);
-          setFormReady(true); // Form is ready after geocoding completes (success or failure)
         });
-    } else if (presetLocation) {
-      // If we have a preset location name, form is ready immediately
-      setFormReady(true);
     }
   }, [observation, currentLocation, setValue, getValues, presetLocation]);
 
@@ -212,6 +227,7 @@ const ObservationForm = ({
       if (data.id) {
         updateObservation({
           ...data,
+          locationId: presetLocation?.id ?? data.locationId,
           startDate,
           endDate,
         });
@@ -222,10 +238,52 @@ const ObservationForm = ({
           startDate,
           endDate,
         });
+        // Auto-activate kikkemodus when adding a new observation
+        if (onActivateKikkemodus) {
+          onActivateKikkemodus();
+        }
       }
       onClose();
     },
-    [onClose, updateObservation, addObservation, presetLocation],
+    [onClose, updateObservation, addObservation, presetLocation, onActivateKikkemodus],
+  );
+
+  const saveAndAddAnother = useCallback(
+    (data: Observation) => {
+      const { startDate, endDate } = data;
+
+      addObservation({
+        ...data,
+        locationId: presetLocation?.id,
+        startDate,
+        endDate,
+      });
+
+      // Auto-activate kikkemodus when adding a new observation
+      if (onActivateKikkemodus) {
+        onActivateKikkemodus();
+      }
+
+      // Show success message
+      if (successTimeout) clearTimeout(successTimeout);
+      setSuccessMessage("Observasjon lagret!");
+      setSuccessTimeout(setTimeout(() => setSuccessMessage(""), 3000));
+
+      // Reset form for a new observation, keeping location
+      const newStartDate = new Date().toISOString().slice(0, 16);
+      reset({
+        startDate: newStartDate,
+        endDate: newStartDate,
+        locationName: getValues("locationName"),
+        location: currentLocation,
+        uncertaintyRadius: getValues("uncertaintyRadius"),
+        species: [],
+        comment: "",
+      });
+      setSearchTerm("");
+      setShowResults(false);
+    },
+    [addObservation, presetLocation, reset, getValues, currentLocation, successTimeout, onActivateKikkemodus],
   );
 
   return (
@@ -235,76 +293,35 @@ const ObservationForm = ({
         onClose={onClose}
         title={observation ? "Rediger kikk" : "Opprett kikk"}
         footer={
-          <div className="flex gap-md justify-end pt-md sticky bottom-0 bg-sand dark:bg-bark border-t-2 border-moss p-md z-10">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Avbryt
-            </Button>
-            <Button type="submit" disabled={!isDirty || !isValid}>
-              Lagre
-            </Button>
+          <div className="space-y-sm sticky bottom-0 bg-sand dark:bg-bark border-t-2 border-moss p-md z-10">
+            {successMessage && (
+              <div className="flex items-center gap-2 text-sm text-forest dark:text-moss bg-moss/10 dark:bg-moss/20 px-3 py-2 rounded-md">
+                <Check size={16} />
+                {successMessage}
+              </div>
+            )}
+            <div className="flex gap-md justify-end">
+              <Button type="button" variant="outline" onClick={onClose}>
+                Avbryt
+              </Button>
+              {!observation && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={!isDirty || !isValid}
+                  onClick={handleSubmit(saveAndAddAnother)}
+                >
+                  Lagre og legg til ny
+                </Button>
+              )}
+              <Button type="submit" disabled={!isDirty || !isValid}>
+                Lagre
+              </Button>
+            </div>
           </div>
         }
       >
-        {!formReady ? (
-          <div className="p-xl flex flex-col items-center justify-center min-h-[300px]">
-            <div className="w-12 h-12 border-4 border-moss/30 border-t-moss rounded-full animate-spin mb-md"></div>
-            <p className="text-bark dark:text-sand text-lg">
-              Henter stedsinformasjon...
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div>
-              <Controller
-                name={"locationName"}
-                control={control}
-                render={({ field: { value, onChange } }) => (
-                  <div>
-                    <Label
-                      htmlFor="locationName"
-                      className="text-bark dark:text-sand"
-                    >
-                      Lokalitet
-                    </Label>
-                    <div className="relative">
-                      {presetLocation && (
-                        <MapPinned
-                          size={18}
-                          className="absolute left-3 top-1/2 -translate-y-1/2 text-violet-600 dark:text-violet-400"
-                        />
-                      )}
-                      <Input
-                        id="locationName"
-                        type="text"
-                        placeholder="F.eks. Oslo, Nordmarka"
-                        value={value}
-                        onChange={(e) => onChange(e.target.value)}
-                        className={twMerge("mt-1", presetLocation && "pl-8")}
-                        readOnly={!!presetLocation}
-                        disabled={!!presetLocation}
-                      />
-                      {loadingLocationName && (
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                          <div className="w-4 h-4 border-2 border-slate-border border-t-rust rounded-full animate-spin"></div>
-                        </div>
-                      )}
-                    </div>
-                    <p className="text-xs text-slate mt-1">
-                      {geocodingFailed
-                        ? "Kunne ikke hente stedsnavn automatisk. Vennligst fyll inn manuelt."
-                        : ""}
-                    </p>
-                  </div>
-                )}
-              />
-              <LocationEditor
-                isPresetLocation={!!presetLocation}
-                location={currentLocation}
-                onLocationChange={handleLocationChange}
-                zoom={zoom}
-              />
-            </div>
-
+        <div className="space-y-4">
             <Controller
               name={"species"}
               control={control}
@@ -470,6 +487,68 @@ const ObservationForm = ({
               }}
             />
 
+            <div>
+              <Controller
+                name={"locationName"}
+                control={control}
+                render={({ field: { value, onChange } }) => (
+                  <div>
+                    <Label
+                      htmlFor="locationName"
+                      className="text-bark dark:text-sand"
+                    >
+                      Lokalitet
+                    </Label>
+                    <div className="relative">
+                      {presetLocation && (
+                        <MapPinned
+                          size={18}
+                          className="absolute left-3 top-1/2 -translate-y-1/2 text-violet-600 dark:text-violet-400"
+                        />
+                      )}
+                      <Input
+                        id="locationName"
+                        type="text"
+                        placeholder="F.eks. Oslo, Nordmarka"
+                        value={value}
+                        onChange={(e) => onChange(e.target.value)}
+                        className={twMerge("mt-1", presetLocation && "pl-8")}
+                        readOnly={!!presetLocation}
+                        disabled={!!presetLocation}
+                      />
+                      {loadingLocationName && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          <div className="w-4 h-4 border-2 border-slate-border border-t-rust rounded-full animate-spin"></div>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate mt-1">
+                      {geocodingFailed && !presetLocation
+                        ? "Kunne ikke hente stedsnavn automatisk. Vennligst fyll inn manuelt."
+                        : ""}
+                    </p>
+                  </div>
+                )}
+              />
+              <LocationEditor
+                isPresetLocation={!!presetLocation}
+                location={currentLocation}
+                onLocationChange={handleLocationChange}
+                zoom={zoom}
+              />
+              {!presetLocation && onSaveAsLocation && (
+                <button
+                  type="button"
+                  onClick={() => onSaveAsLocation(currentLocation)}
+                  className="mt-2 flex items-center gap-1.5 text-sm text-slate hover:text-bark dark:hover:text-sand transition-colors"
+                  aria-label="Lagre denne posisjonen som min lokalitet"
+                >
+                  <MapPin size={14} />
+                  Lagre som min lokalitet
+                </button>
+              )}
+            </div>
+
             <Controller
               name={"uncertaintyRadius"}
               control={control}
@@ -611,7 +690,6 @@ const ObservationForm = ({
               )}
             />
           </div>
-        )}
       </Modal>
     </form>
   );

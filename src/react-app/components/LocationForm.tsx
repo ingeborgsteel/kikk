@@ -18,6 +18,7 @@ interface AddLocationFormProps {
   editingLocation?: UserLocation | null;
   isOpen: boolean;
   zoom?: number;
+  onSaved?: (savedLocation: UserLocation) => void;
 }
 
 interface LocationFormData {
@@ -34,6 +35,7 @@ export function LocationForm({
   editingLocation,
   isOpen,
   zoom,
+  onSaved,
 }: AddLocationFormProps) {
   const { addLocation, updateLocation } = useLocations();
   const { user } = useAuth();
@@ -97,6 +99,7 @@ export function LocationForm({
         uncertaintyRadius,
         description: data.description,
       });
+      onClose();
     } else {
       // Add new location
       const newLocation: CreateUserLocation = {
@@ -106,10 +109,14 @@ export function LocationForm({
         uncertaintyRadius,
         description: data.description,
       };
-      addLocation(newLocation);
-    }
+      const savedLocation = addLocation(newLocation);
 
-    onClose();
+      if (onSaved) {
+        onSaved(savedLocation);
+      } else {
+        onClose();
+      }
+    }
   };
 
   return (

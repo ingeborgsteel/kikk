@@ -1,10 +1,9 @@
 // src/App.tsx
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import Map from "./Map";
 import MyObservations from "./components/MyObservations";
-import LifeList from "./components/LifeList";
 import { Button } from "./components/ui/button";
 import { useObservations } from "./context/ObservationsContext";
 import { useLocations } from "./context/LocationsContext";
@@ -20,7 +19,6 @@ import { GitHubSuggestionButton } from "./components/GitHubSuggestionButton.tsx"
 import { GitHubIssueForm } from "./components/GitHubIssueForm.tsx";
 import { StatsDashboard } from "./components/StatsDashboard.tsx";
 import { UserLocation } from "./types/location.ts";
-import { getLifeList } from "./lib/utils.ts";
 
 function App() {
   const navigate = useNavigate();
@@ -44,10 +42,6 @@ function App() {
   const [showGitHubIssueForm, setShowGitHubIssueForm] = useState(false);
   const { observations } = useObservations();
   const { locations } = useLocations();
-  const lifeListCount = useMemo(
-    () => getLifeList(observations).length,
-    [observations],
-  );
 
   const handleLocationSelect = (lat: number, lng: number, zoom: number) => {
     setSelectedLocation({ lat, lng });
@@ -118,7 +112,6 @@ function App() {
   const getCurrentView = (): "map" | "observations" | "stats" | "profile" => {
     if (location.pathname === "/observations") return "observations";
     if (location.pathname === "/stats") return "stats";
-    if (location.pathname === "/lifelist") return "lifelist";
     if (location.pathname === "/profile") return "profile";
     return "map";
   };
@@ -144,15 +137,6 @@ function App() {
           }
         />
         <Route
-          path="/lifelist"
-          element={
-            <LifeList
-              onBack={() => navigate("/")}
-              setShowLoginForm={setShowLoginForm}
-            />
-          }
-        />
-        <Route
           path="/"
           element={
             <div className="w-full min-h-screen p-0 flex flex-col bg-sand dark:bg-bark pb-16 md:pb-0">
@@ -167,12 +151,6 @@ function App() {
                   />
                 </div>
                 <div className="absolute right-lg top-1/2 -translate-y-1/2 hidden md:flex items-center gap-2">
-                  <Button
-                    onClick={() => navigate("/lifelist")}
-                    variant="secondary"
-                  >
-                    Artsliste ({lifeListCount})
-                  </Button>
                   <Button
                     onClick={() => navigate("/observations")}
                     variant="secondary"

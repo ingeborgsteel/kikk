@@ -58,7 +58,6 @@ export function LocationForm({
   useEffect(() => {
     if (editingLocation) return; // Skip for editing
 
-    setLoadingName(true);
     reverseGeocode(currentLocation.lat, currentLocation.lng)
       .then((name) => {
         if (name) {
@@ -78,6 +77,9 @@ export function LocationForm({
     setCurrentLocation({ lat, lng });
     setValue("lat", lat.toString());
     setValue("lng", lng.toString());
+    if (!editingLocation) {
+      setLoadingName(true);
+    }
   };
 
   const onSubmit = (data: LocationFormData) => {

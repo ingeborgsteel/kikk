@@ -27,6 +27,7 @@ interface ObservationFormProps {
   location: { lat: number; lng: number };
   zoom?: number;
   presetLocation?: UserLocation | null;
+  presetSpecies?: TaxonRecord | null;
   isOpen: boolean;
   onSaveAsLocation?: (location: { lat: number; lng: number }) => void;
   onActivateKikkemodus?: () => void;
@@ -38,6 +39,7 @@ const ObservationForm = ({
   location,
   zoom,
   presetLocation,
+  presetSpecies,
   isOpen,
   onSaveAsLocation,
   onActivateKikkemodus,
@@ -107,6 +109,13 @@ const ObservationForm = ({
       location: currentLocation,
       uncertaintyRadius: observation?.uncertaintyRadius || 10,
       ...observation,
+      ...(!observation && presetSpecies
+        ? {
+            species: [
+              { species: presetSpecies, gender: "unknown" as const, count: 1 },
+            ],
+          }
+        : {}),
     },
   });
 

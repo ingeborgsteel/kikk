@@ -42,6 +42,78 @@ export function getRecentSpecies(
 }
 
 /**
+ * Represents a single entry in a user's life list (unique species checklist).
+ */
+export interface LifeListEntry {
+  species: TaxonRecord;
+  totalCount: number;
+  observationCount: number;
+  firstSeen: string; // ISO date string
+  lastSeen: string; // ISO date string
+  firstLocation?: string;
+  lastLocation?: string;
+}
+
+/**
+ * Build a life list from all observations.
+ * Returns an array of unique species with aggregated stats:
+ * first/last seen dates, total count, number of observations, and conservation status.
+ * Sorted alphabetically by preferred popular name by default.
+ */
+export function getLifeList(observations: Observation[]): LifeListEntry[] {
+  const speciesMap = new Map<
+    number,
+    {
+      species: TaxonRecord;
+      totalCount: number;
+      observationCount: number;
+      firstSeen: string;
+      lastSeen: string;
+      firstLocation?: string;
+      lastLocation?: string;
+    }
+  >();
+
+  for (const obs of observations) {
+    const obsDate = obs.startDate || obs.createdAt;
+    for (const speciesObs of obs.species) {
+      const speciesId = speciesObs.species.Id;
+      const existing = speciesMap.get(speciesId);
+
+      if (existing) {
+        existing.totalCount += speciesObs.count;
+        existing.observationCount += 1;
+        if (obsDate < existing.firstSeen) {
+          existing.firstSeen = obsDate;
+          existing.firstLocation = obs.locationName;
+        }
+        if (obsDate > existing.lastSeen) {
+          existing.lastSeen = obsDate;
+          existing.lastLocation = obs.locationName;
+        }
+      } else {
+        speciesMap.set(speciesId, {
+          species: speciesObs.species,
+          totalCount: speciesObs.count,
+          observationCount: 1,
+          firstSeen: obsDate,
+          lastSeen: obsDate,
+          firstLocation: obs.locationName,
+          lastLocation: obs.locationName,
+        });
+      }
+    }
+  }
+
+  return Array.from(speciesMap.values()).sort((a, b) =>
+    (a.species.PrefferedPopularname || a.species.ValidScientificName).localeCompare(
+      b.species.PrefferedPopularname || b.species.ValidScientificName,
+      "no",
+    ),
+  );
+}
+
+/**
  * Rank and sort species search results by relevance to the search term.
  * Popular name matching is prioritised over scientific name matching.
  * Shorter names that closely match the search term rank higher

@@ -124,7 +124,9 @@ const SpeciesItem = ({
                 className="mt-1"
               >
                 {!currentAgeInOptions && species.age && (
-                  <option value={species.age}>{species.age}</option>
+                  <option value={species.age}>
+                    {species.age} (egendefinert)
+                  </option>
                 )}
                 {ageOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>

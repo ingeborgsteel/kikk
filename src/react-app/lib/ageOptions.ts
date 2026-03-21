@@ -68,6 +68,13 @@ const INSECT_OPTIONS: AgeOption[] = [
   { value: "imago", label: "Imago (voksen)" },
 ];
 
+const ARACHNID_OPTIONS: AgeOption[] = [
+  UNKNOWN,
+  { value: "egg", label: "Egg" },
+  { value: "nymph", label: "Nymfe" },
+  { value: "adult", label: "Voksen" },
+];
+
 const PLANT_OPTIONS: AgeOption[] = [
   UNKNOWN,
   { value: "seed", label: "Frø" },
@@ -141,8 +148,8 @@ const TAXON_GROUP_AGE_MAP: Record<string, AgeOption[]> = {
   vårfluer: INSECT_OPTIONS,
   øyenstikkere: INSECT_OPTIONS,
   nebbmunner: INSECT_OPTIONS,
-  edderkopper: INSECT_OPTIONS,
-  midd: INSECT_OPTIONS,
+  edderkopper: ARACHNID_OPTIONS,
+  midd: ARACHNID_OPTIONS,
 
   // Vascular plants
   karplanter: PLANT_OPTIONS,

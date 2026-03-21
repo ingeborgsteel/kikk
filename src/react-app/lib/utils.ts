@@ -8,6 +8,15 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
+ * Checks whether an area polygon has enough vertices to be valid (at least 3).
+ */
+export function isValidPolygon(
+  area: [number, number][] | undefined | null,
+): area is [number, number][] {
+  return Array.isArray(area) && area.length >= 3;
+}
+
+/**
  * Extract the 5 most recently observed unique species from observations
  * Species are ordered by the most recent observation date (updatedAt)
  */

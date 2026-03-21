@@ -22,6 +22,7 @@ import {
   mapboxSatellite,
   mapboxTopo,
 } from "./lib/mapUtils.ts";
+import { isValidPolygon } from "./lib/utils.ts";
 import {
   createObservationIcon,
   createSelectionIcon,
@@ -106,7 +107,6 @@ function Map({
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const drawHandlerRef = useRef<L.Draw.Polygon | null>(null);
-  const drawnLayerRef = useRef<L.FeatureGroup | null>(null);
 
   // Update the ref whenever onLocationSelect changes
   useEffect(() => {
@@ -135,10 +135,6 @@ function Map({
       maxZoom: 19,
       attribution: kartverketAttribution,
     }).addTo(map.current);
-
-    // Initialize feature group for drawn items
-    drawnLayerRef.current = new L.FeatureGroup();
-    map.current.addLayer(drawnLayerRef.current);
 
     // Handle polygon draw completion
     map.current.on(L.Draw.Event.CREATED, (e: L.LeafletEvent) => {
@@ -285,9 +281,6 @@ function Map({
         userLocationMarkerRef.current.remove();
         userLocationMarkerRef.current = null;
       }
-      if (drawnLayerRef.current) {
-        drawnLayerRef.current = null;
-      }
       drawHandlerRef.current = null;
       observationMarkersRef.current = [];
       observationPolygonsRef.current = [];
@@ -327,7 +320,7 @@ function Map({
             <strong>${speciesList}</strong><br/>
             <small>${new Date(observation.startDate).toLocaleDateString("no-NO")}</small><br/>
             <small>±${observation.uncertaintyRadius}m</small>
-            ${observation.area ? '<br/><small>📐 Område tegnet</small>' : ""}
+            ${observation.area ? '<br/><small style="color: #2F5D50; font-weight: 600;">▣ Område tegnet</small>' : ""}
           </div>
         `;
 
@@ -343,7 +336,7 @@ function Map({
         observationMarkersRef.current.push(marker);
 
         // Draw polygon if observation has an area
-        if (observation.area && observation.area.length >= 3 && map.current) {
+        if (isValidPolygon(observation.area) && map.current) {
           const polygon = L.polygon(
             observation.area.map(([lat, lng]) => [lat, lng] as L.LatLngTuple),
             {

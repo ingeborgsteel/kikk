@@ -9,6 +9,7 @@ import { useSpeciesSearch } from "../queries/useSpeciesSearch.ts";
 import { Controller, useForm } from "react-hook-form";
 import {
   getRecentSpecies,
+  isValidPolygon,
   rankSpeciesResults,
   reverseGeocode,
 } from "../lib/utils.ts";
@@ -562,7 +563,7 @@ const ObservationForm = ({
                   Lagre som min lokalitet
                 </button>
               )}
-              {currentArea && currentArea.length >= 3 && (
+              {isValidPolygon(currentArea) && (
                 <div className="mt-2 flex items-center justify-between p-2 bg-forest/10 dark:bg-forest/20 rounded-md">
                   <div className="flex items-center gap-2 text-sm text-bark dark:text-sand">
                     <svg

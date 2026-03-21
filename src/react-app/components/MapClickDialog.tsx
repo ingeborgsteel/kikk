@@ -3,6 +3,7 @@ import { Button } from "./ui/button";
 import { Modal } from "./ui/Modal";
 import { LocationEditor } from "./LocationEditor";
 import { useState } from "react";
+import { isValidPolygon } from "../lib/utils.ts";
 
 interface MapClickDialogProps {
   location: { lat: number; lng: number };
@@ -37,7 +38,7 @@ export function MapClickDialog({
       maxWidth="max-w-2xl"
     >
       <div className="space-y-3">
-        {area && area.length >= 3 && (
+        {isValidPolygon(area) && (
           <div className="flex items-center gap-2 p-2 bg-forest/10 dark:bg-forest/20 rounded-md text-sm text-bark dark:text-sand">
             <svg
               width="16"

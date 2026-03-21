@@ -4,8 +4,9 @@ import { Label } from "./ui/label.tsx";
 import { Select } from "./ui/select.tsx";
 import { Input } from "./ui/input.tsx";
 import { Textarea } from "./ui/textarea.tsx";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Species } from "../types/observation.ts";
+import { getAgeOptionsForTaxonGroup } from "../lib/ageOptions.ts";
 
 interface SpeciesItemProps {
   species: Species;
@@ -21,6 +22,16 @@ const SpeciesItem = ({
   key,
 }: SpeciesItemProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
+
+  const ageOptions = useMemo(
+    () => getAgeOptionsForTaxonGroup(species.species.TaxonGroup || ""),
+    [species.species.TaxonGroup],
+  );
+
+  // Check if the current age value exists in the options (backward compatibility)
+  const currentAgeInOptions = ageOptions.some(
+    (opt) => opt.value === (species.age || ""),
+  );
 
   return (
     <div className="bg-white dark:bg-forest rounded-md border-2 border-moss hover:bg-sand/50 dark:hover:bg-bark/50 transition-colors">
@@ -106,14 +117,21 @@ const SpeciesItem = ({
               >
                 Alder
               </Label>
-              <Input
+              <Select
                 id={`age-${key}`}
-                type="text"
-                placeholder="f.eks. voksen"
                 value={species.age || ""}
                 onChange={(e) => updateSpecies("age", e.target.value)}
                 className="mt-1"
-              />
+              >
+                {!currentAgeInOptions && species.age && (
+                  <option value={species.age}>{species.age}</option>
+                )}
+                {ageOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </Select>
             </div>
             <div>
               <Label

@@ -28,6 +28,7 @@ interface ObservationFormProps {
   zoom?: number;
   presetLocation?: UserLocation | null;
   presetSpecies?: TaxonRecord | null;
+  area?: [number, number][];
   isOpen: boolean;
   onSaveAsLocation?: (location: { lat: number; lng: number }) => void;
   onActivateKikkemodus?: () => void;
@@ -40,6 +41,7 @@ const ObservationForm = ({
   zoom,
   presetLocation,
   presetSpecies,
+  area: initialArea,
   isOpen,
   onSaveAsLocation,
   onActivateKikkemodus,
@@ -50,6 +52,7 @@ const ObservationForm = ({
   const [loadingLocationName, setLoadingLocationName] = useState(false);
   const [geocodingFailed, setGeocodingFailed] = useState(false);
   const [currentLocation, setCurrentLocation] = useState(location);
+  const [currentArea, setCurrentArea] = useState<[number, number][] | undefined>(initialArea);
   const [successMessage, setSuccessMessage] = useState("");
   const [successTimeout, setSuccessTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
 
@@ -237,6 +240,7 @@ const ObservationForm = ({
         updateObservation({
           ...data,
           locationId: presetLocation?.id ?? data.locationId,
+          area: currentArea,
           startDate,
           endDate,
         });
@@ -244,6 +248,7 @@ const ObservationForm = ({
         addObservation({
           ...data,
           locationId: presetLocation?.id,
+          area: currentArea,
           startDate,
           endDate,
         });
@@ -254,7 +259,7 @@ const ObservationForm = ({
       }
       onClose();
     },
-    [onClose, updateObservation, addObservation, presetLocation, onActivateKikkemodus],
+    [onClose, updateObservation, addObservation, presetLocation, onActivateKikkemodus, currentArea],
   );
 
   const saveAndAddAnother = useCallback(
@@ -264,6 +269,7 @@ const ObservationForm = ({
       addObservation({
         ...data,
         locationId: presetLocation?.id,
+        area: currentArea,
         startDate,
         endDate,
       });
@@ -292,7 +298,7 @@ const ObservationForm = ({
       setSearchTerm("");
       setShowResults(false);
     },
-    [addObservation, presetLocation, reset, getValues, currentLocation, successTimeout, onActivateKikkemodus],
+    [addObservation, presetLocation, reset, getValues, currentLocation, currentArea, successTimeout, onActivateKikkemodus],
   );
 
   return (
@@ -555,6 +561,31 @@ const ObservationForm = ({
                   <MapPin size={14} />
                   Lagre som min lokalitet
                 </button>
+              )}
+              {currentArea && currentArea.length >= 3 && (
+                <div className="mt-2 flex items-center justify-between p-2 bg-forest/10 dark:bg-forest/20 rounded-md">
+                  <div className="flex items-center gap-2 text-sm text-bark dark:text-sand">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="shrink-0 text-forest"
+                    >
+                      <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
+                    </svg>
+                    <span>Område med {currentArea.length} hjørnepunkter</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentArea(undefined)}
+                    className="text-xs text-rust hover:text-rust/80 transition-colors"
+                  >
+                    Fjern område
+                  </button>
+                </div>
               )}
             </div>
 

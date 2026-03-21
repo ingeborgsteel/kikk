@@ -1,8 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import "leaflet-draw";
+import "leaflet-draw/dist/leaflet.draw.css";
 import { Observation } from "./types/observation";
 import { UserLocation } from "./types/location";
+
+// Norwegian localization for Leaflet.Draw tooltips
+L.drawLocal.draw.handlers.polygon.tooltip.start = "Klikk for å begynne å tegne område.";
+L.drawLocal.draw.handlers.polygon.tooltip.cont = "Klikk for å fortsette å tegne område.";
+L.drawLocal.draw.handlers.polygon.tooltip.end =
+  "Klikk på første punkt for å lukke området.";
 
 // Fix for default marker icons in Leaflet with bundlers
 import icon from "leaflet/dist/images/marker-icon.png";
@@ -56,6 +64,11 @@ const MAP_RESIZE_DELAY_MS = 100;
 
 interface MapProps {
   onLocationSelect?: (lat: number, lng: number, zoom: number) => void;
+  onAreaSelect?: (
+    area: [number, number][],
+    center: { lat: number; lng: number },
+    zoom: number,
+  ) => void;
   observations?: Observation[];
   onObservationClick?: (observationId: string) => void;
   userLocations?: UserLocation[];
@@ -64,6 +77,7 @@ interface MapProps {
 
 function Map({
   onLocationSelect,
+  onAreaSelect,
   observations = [],
   onObservationClick,
   userLocations = [],
@@ -72,12 +86,14 @@ function Map({
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const onLocationSelectRef = useRef(onLocationSelect);
+  const onAreaSelectRef = useRef(onAreaSelect);
   const [selectedLocation, setSelectedLocation] = useState<{
     lat: number;
     lng: number;
   } | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
   const observationMarkersRef = useRef<L.Marker[]>([]);
+  const observationPolygonsRef = useRef<L.Polygon[]>([]);
   const userLocationsMarkersRef = useRef<L.Marker[]>([]);
   const userLocationMarkerRef = useRef<L.CircleMarker | null>(null);
   const [isLocating, setIsLocating] = useState(false);
@@ -88,11 +104,19 @@ function Map({
   } | null>(null);
   const { currentLayer, setCurrentLayer } = useMapPreferences();
   const tileLayerRef = useRef<L.TileLayer | null>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const drawHandlerRef = useRef<L.Draw.Polygon | null>(null);
+  const drawnLayerRef = useRef<L.FeatureGroup | null>(null);
 
   // Update the ref whenever onLocationSelect changes
   useEffect(() => {
     onLocationSelectRef.current = onLocationSelect;
   }, [onLocationSelect]);
+
+  // Update the ref whenever onAreaSelect changes
+  useEffect(() => {
+    onAreaSelectRef.current = onAreaSelect;
+  }, [onAreaSelect]);
 
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
@@ -111,6 +135,41 @@ function Map({
       maxZoom: 19,
       attribution: kartverketAttribution,
     }).addTo(map.current);
+
+    // Initialize feature group for drawn items
+    drawnLayerRef.current = new L.FeatureGroup();
+    map.current.addLayer(drawnLayerRef.current);
+
+    // Handle polygon draw completion
+    map.current.on(L.Draw.Event.CREATED, (e: L.LeafletEvent) => {
+      const event = e as L.DrawEvents.Created;
+      const layer = event.layer as L.Polygon;
+      const latlngs = (layer.getLatLngs()[0] as L.LatLng[]).map(
+        (ll) => [ll.lat, ll.lng] as [number, number],
+      );
+
+      // Calculate centroid of the polygon
+      const centroid = latlngs.reduce(
+        (acc, [lat, lng]) => ({
+          lat: acc.lat + lat / latlngs.length,
+          lng: acc.lng + lng / latlngs.length,
+        }),
+        { lat: 0, lng: 0 },
+      );
+
+      setSelectedLocation(centroid);
+      setIsDrawing(false);
+
+      if (onAreaSelectRef.current && map.current) {
+        const currentZoom = map.current.getZoom();
+        onAreaSelectRef.current(latlngs, centroid, currentZoom);
+      }
+    });
+
+    // Handle draw stop (cancel)
+    map.current.on(L.Draw.Event.DRAWSTOP, () => {
+      setIsDrawing(false);
+    });
 
     // Ensure the map container is properly sized
     // This is necessary when the container size is not immediately available
@@ -226,20 +285,27 @@ function Map({
         userLocationMarkerRef.current.remove();
         userLocationMarkerRef.current = null;
       }
+      if (drawnLayerRef.current) {
+        drawnLayerRef.current = null;
+      }
+      drawHandlerRef.current = null;
       observationMarkersRef.current = [];
+      observationPolygonsRef.current = [];
       userLocationsMarkersRef.current = [];
     };
   }, []);
 
-  // Effect to handle observation markers
+  // Effect to handle observation markers and polygons
   useEffect(() => {
     if (!map.current) return;
 
-    // Remove existing observation markers
+    // Remove existing observation markers and polygons
     observationMarkersRef.current.forEach((marker) => marker.remove());
     observationMarkersRef.current = [];
+    observationPolygonsRef.current.forEach((polygon) => polygon.remove());
+    observationPolygonsRef.current = [];
 
-    // Add markers for each observation
+    // Add markers (and polygons) for each observation
     observations.forEach((observation) => {
       if (map.current) {
         const marker = L.marker(
@@ -261,6 +327,7 @@ function Map({
             <strong>${speciesList}</strong><br/>
             <small>${new Date(observation.startDate).toLocaleDateString("no-NO")}</small><br/>
             <small>±${observation.uncertaintyRadius}m</small>
+            ${observation.area ? '<br/><small>📐 Område tegnet</small>' : ""}
           </div>
         `;
 
@@ -274,6 +341,27 @@ function Map({
         });
 
         observationMarkersRef.current.push(marker);
+
+        // Draw polygon if observation has an area
+        if (observation.area && observation.area.length >= 3 && map.current) {
+          const polygon = L.polygon(
+            observation.area.map(([lat, lng]) => [lat, lng] as L.LatLngTuple),
+            {
+              color: "#2F5D50",
+              fillColor: "#2F5D50",
+              fillOpacity: 0.15,
+              weight: 2,
+            },
+          ).addTo(map.current);
+
+          polygon.on("click", () => {
+            if (onObservationClick) {
+              onObservationClick(observation.id);
+            }
+          });
+
+          observationPolygonsRef.current.push(polygon);
+        }
       }
     });
   }, [observations, onObservationClick]);
@@ -333,6 +421,31 @@ function Map({
     }).addTo(map.current);
   }, [currentLayer]);
 
+  // Toggle polygon drawing mode
+  const toggleDrawing = () => {
+    if (!map.current) return;
+
+    if (isDrawing && drawHandlerRef.current) {
+      // Cancel current drawing
+      drawHandlerRef.current.disable();
+      drawHandlerRef.current = null;
+      setIsDrawing(false);
+    } else {
+      // Start drawing polygon
+      const handler = new L.Draw.Polygon(map.current as L.DrawMap, {
+        shapeOptions: {
+          color: "#C76D4B",
+          fillColor: "#C76D4B",
+          fillOpacity: 0.2,
+          weight: 2,
+        },
+      });
+      handler.enable();
+      drawHandlerRef.current = handler;
+      setIsDrawing(true);
+    }
+  };
+
   return (
     <div className="w-full h-[calc(100vh-80px)] relative flex-1 overflow-hidden bg-forest">
       {/* Layer Control */}
@@ -371,6 +484,36 @@ function Map({
           Flyfoto
         </button>
       </div>
+      {/* Draw Area Button */}
+      <div className="absolute top-[100px] left-[10px] z-[1000]">
+        <button
+          onClick={toggleDrawing}
+          className={`px-3 py-2 rounded-lg shadow-custom-lg font-medium text-sm transition-all flex items-center gap-1.5 ${
+            isDrawing
+              ? "bg-rust text-sand border-2 border-sand"
+              : "bg-sand dark:bg-bark text-bark dark:text-sand border-2 border-moss hover:bg-moss dark:hover:bg-moss"
+          }`}
+          title={isDrawing ? "Avbryt tegning" : "Tegn område"}
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            className="shrink-0"
+          >
+            <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
+          </svg>
+          {isDrawing ? "Avbryt" : "Tegn område"}
+        </button>
+      </div>
+      {isDrawing && (
+        <div className="absolute top-[145px] left-[10px] z-[1000] bg-sand dark:bg-[rgba(44,44,44,0.95)] px-3 py-2 rounded-lg shadow-custom-lg text-xs text-bark dark:text-sand border border-moss/30 max-w-[200px]">
+          Klikk på kartet for å sette hjørnepunkter. Klikk på første punkt eller dobbeltklikk for å fullføre.
+        </div>
+      )}
       {isLocating && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[2000] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-lg rounded-lg shadow-custom-2xl flex flex-col items-center gap-md font-medium text-bark dark:text-sand border-2 border-moss">
           <div className="w-10 h-10 border-4 border-slate-border border-t-rust rounded-full animate-spin"></div>

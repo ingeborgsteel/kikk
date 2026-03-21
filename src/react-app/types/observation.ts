@@ -20,6 +20,7 @@ export interface Observation {
   };
   locationName?: string; // Optional human-readable location name
   uncertaintyRadius: number; // in meters
+  area?: [number, number][]; // Optional polygon vertices as [lat, lng] pairs
   species: Species[];
   startDate: string; // ISO date string for start time
   endDate: string; // ISO date string for end time

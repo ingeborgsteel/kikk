@@ -19,6 +19,7 @@ export async function generateExcelFromObservations(
     { header: "Latitude", key: "latitude", width: 12 },
     { header: "Longitude", key: "longitude", width: 12 },
     { header: "Usikkerhet (m)", key: "uncertainty", width: 15 },
+    { header: "Område", key: "area", width: 30 },
     { header: "Start", key: "startDate", width: 20 },
     { header: "Slutt", key: "endDate", width: 20 },
     { header: "Last Exported At", key: "lastExportedAt", width: 20 },
@@ -46,6 +47,9 @@ export async function generateExcelFromObservations(
       latitude: obs.location.lat,
       longitude: obs.location.lng,
       uncertainty: obs.uncertaintyRadius,
+      area: obs.area
+        ? obs.area.map(([lat, lng]) => `${lat.toFixed(5)},${lng.toFixed(5)}`).join("; ")
+        : "",
       startDate: new Date(obs.startDate).toLocaleString("no-NO"),
       endDate: new Date(obs.endDate).toLocaleString("no-NO"),
       comment: obs.comment || "",

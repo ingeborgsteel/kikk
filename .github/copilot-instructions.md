@@ -35,6 +35,7 @@ src/
 - `npm run dev` - Start development server (http://localhost:5173)
 - `npm run build` - Build for production (TypeScript + Vite)
 - `npm run lint` - Run ESLint
+- `npm run format` - Format code with Prettier
 - `npm run preview` - Preview production build locally
 - `npm run deploy` - Deploy to Cloudflare Workers
 - `npm run check` - Full check (TypeScript + build + dry-run deploy)
@@ -154,6 +155,74 @@ src/
 - Bottom navigation for mobile-friendly navigation
 - Form validation using React Hook Form
 - CSS custom properties for theming
+
+## State Management Rules
+
+- **Context API** is the primary state management approach. Each domain has its own context provider:
+  - `ObservationsContext` – CRUD for nature observations
+  - `LocationsContext` – CRUD for saved user locations
+  - `AuthContext` – Supabase authentication state
+  - `ThemeContext` – Light/dark mode toggle
+  - `MapPreferencesContext` – Selected map layer (standard/topo/aerial)
+- Every context must expose a **custom hook** (e.g., `useObservations()`) that throws an error when used outside its provider
+- Use **TanStack Query** for server-fetched data (API calls, caching, background refetches) – not Context
+- Use **Context** for client-side or local-storage-backed state that needs to be shared across components
+- Support **dual-mode operation**: contexts that persist data must work both with Supabase (when configured) and with localStorage (as fallback)
+- Persist user preferences (theme, map layer) in `localStorage`
+- Never store sensitive data (tokens, passwords) in localStorage or Context – rely on Supabase session handling
+
+## Issue Writing Guidelines
+
+- Use a clear, descriptive title that summarizes the change or problem
+- Include a **Problem/Motivation** section explaining why the change is needed
+- Include an **Acceptance Criteria** section with a checklist of concrete, testable outcomes
+- Label issues appropriately (e.g., `bug`, `enhancement`, `documentation`)
+- Reference related issues or PRs when applicable
+- For bugs: include steps to reproduce, expected behavior, and actual behavior
+- For features: describe the user story or use case
+- Keep issues focused on a single concern – split large tasks into sub-issues
+
+## Pull Request Guidelines
+
+- PR title should match or closely follow the issue title
+- Reference the related issue(s) in the PR description (e.g., "Closes #42")
+- Include a short summary of what changed and why
+- Keep PRs small and focused – one logical change per PR
+- Ensure all CI checks pass before requesting review:
+  1. `npm run lint` – no ESLint errors
+  2. `tsc -b` – no TypeScript errors
+  3. `npm run build` – successful production build
+- Run `npm run format` to ensure consistent formatting
+- Test locally with `npm run dev` before pushing
+- Add screenshots for any UI changes
+- Don't include unrelated changes or formatting-only diffs
+
+## Testing Guidelines
+
+- Manual testing is currently the primary testing method
+- Before submitting changes, verify:
+  1. **Desktop and mobile viewports** – check responsive layout
+  2. **Light and dark mode** – verify theming with `dark:` classes
+  3. **Map interactions** – click-to-select location, marker display, layer switching
+  4. **Form submissions** – observation form, location form, species search
+  5. **Data persistence** – localStorage read/write, page reload retention
+  6. **With and without Supabase** – ensure the app works in both modes
+  7. **Backward compatibility** – existing saved observations must still load correctly
+- When adding new features, document the manual test steps in the PR description
+- If automated tests are introduced in the future, use Vitest (aligns with Vite toolchain)
+
+## Code Review Guidelines
+
+- Verify TypeScript strictness: no `any` types, proper interfaces in `src/react-app/types/`
+- Check that new components follow existing patterns (functional components, hooks, single responsibility)
+- Ensure Tailwind classes use the project's custom design tokens (`forest`, `sand`, `bark`, etc.)
+- Confirm responsive design: mobile-first with appropriate breakpoints
+- Confirm dark mode support: `dark:` variants for all themed elements
+- Verify that unified components are used where applicable (Modal, Marker Icons, Map)
+- Check that new state is managed through the correct mechanism (Context vs. TanStack Query)
+- Look for potential regressions in localStorage data handling
+- Ensure API error states and loading states are handled gracefully
+- Confirm that Supabase-dependent features degrade gracefully when Supabase is not configured
 
 ## Dependencies Management
 

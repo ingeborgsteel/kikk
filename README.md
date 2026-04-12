@@ -176,4 +176,3 @@ The app provides Excel export functionality to help you share and analyze your o
 - [Cloudflare Workers Documentation](https://developers.cloudflare.com/workers/)
 - [Vite Documentation](https://vitejs.dev/guide/)
 - [React Documentation](https://reactjs.org/)
-- [Hono Documentation](https://hono.dev/)

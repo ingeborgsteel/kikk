@@ -27,6 +27,9 @@ function App() {
     lat: number;
     lng: number;
   } | null>(null);
+  const [selectedArea, setSelectedArea] = useState<[number, number][] | null>(
+    null,
+  );
   const [selectedZoom, setSelectedZoom] = useState<number>(13); // Default zoom level
   const [showLoginForm, setShowLoginForm] = useState(false);
   const [showMapClickDialog, setShowMapClickDialog] = useState(false);
@@ -46,6 +49,7 @@ function App() {
 
   const handleLocationSelect = (lat: number, lng: number, zoom: number) => {
     setSelectedLocation({ lat, lng });
+    setSelectedArea(null); // Clear any previously drawn area
     setSelectedZoom(zoom);
     setEditingObservationId(null);
     setPresetLocation(null); // Clear preset location name
@@ -59,10 +63,29 @@ function App() {
     }
   };
 
+  const handleAreaSelect = (
+    area: [number, number][],
+    center: { lat: number; lng: number },
+    zoom: number,
+  ) => {
+    setSelectedLocation(center);
+    setSelectedArea(area);
+    setSelectedZoom(zoom);
+    setEditingObservationId(null);
+    setPresetLocation(null);
+
+    if (kikkemodusActive) {
+      setShowAddForm(true);
+    } else {
+      setShowMapClickDialog(true);
+    }
+  };
+
   const handleAddObservation = (location: { lat: number; lng: number }) => {
     setSelectedLocation(location);
     setShowMapClickDialog(false);
     setShowAddForm(true);
+    // Note: selectedArea is preserved if set by handleAreaSelect
   };
 
   const handleAddLocation = (location: { lat: number; lng: number }) => {
@@ -74,6 +97,7 @@ function App() {
   const handleCloseMapClickDialog = () => {
     setShowMapClickDialog(false);
     setSelectedLocation(null);
+    setSelectedArea(null);
     setPresetLocation(null);
   };
 
@@ -131,6 +155,7 @@ function App() {
     setShowAddForm(false);
     setShowAddLocationForm(false);
     setSelectedLocation(null);
+    setSelectedArea(null);
     setPresetLocation(null);
     setEditingObservationId(null);
     setReturnToObservationAfterSave(false);
@@ -203,6 +228,7 @@ function App() {
               </header>
               <Map
                 onLocationSelect={handleLocationSelect}
+                onAreaSelect={handleAreaSelect}
                 observations={observations}
                 onObservationClick={handleObservationClick}
                 userLocations={locations}
@@ -216,6 +242,7 @@ function App() {
                   zoom={selectedZoom}
                   observation={editingObservation}
                   presetLocation={presetLocation}
+                  area={editingObservation?.area || selectedArea || undefined}
                   onClose={onClose}
                   onSaveAsLocation={handleSaveAsLocation}
                   onActivateKikkemodus={() => setKikkemodusActive(true)}
@@ -225,6 +252,7 @@ function App() {
                 <MapClickDialog
                   zoom={selectedZoom}
                   location={selectedLocation}
+                  area={selectedArea || undefined}
                   onAddObservation={handleAddObservation}
                   onAddLocation={handleAddLocation}
                   onClose={handleCloseMapClickDialog}

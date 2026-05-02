@@ -4,7 +4,7 @@ import { Label } from "./ui/label.tsx";
 import { Select } from "./ui/select.tsx";
 import { Input } from "./ui/input.tsx";
 import { Textarea } from "./ui/textarea.tsx";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Species } from "../types/observation.ts";
 import { getAgeOptionsForTaxonGroup } from "../lib/ageOptions.ts";
 
@@ -22,6 +22,11 @@ const SpeciesItem = ({
   key,
 }: SpeciesItemProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [countInput, setCountInput] = useState(String(species.count));
+
+  useEffect(() => {
+    setCountInput(String(species.count));
+  }, [species.count]);
 
   const ageOptions = useMemo(
     () => getAgeOptionsForTaxonGroup(species.species.TaxonGroup || ""),
@@ -41,7 +46,8 @@ const SpeciesItem = ({
       >
         <div className="flex-1 min-w-0">
           <div className="font-medium text-bark dark:text-sand truncate">
-            {species.species.PrefferedPopularname}
+            {species.species.PrefferedPopularname ??
+              species.species.ValidScientificName}
           </div>
         </div>
         <div className="flex items-center gap-sm ml-sm shrink-0">
@@ -100,10 +106,20 @@ const SpeciesItem = ({
                 id={`count-${key}`}
                 type="number"
                 min="1"
-                value={species.count}
-                onChange={(e) =>
-                  updateSpecies("count", parseInt(e.target.value) || 1)
-                }
+                value={countInput}
+                onChange={(e) => {
+                  const nextValue = e.target.value;
+                  setCountInput(nextValue);
+
+                  if (nextValue === "") {
+                    return;
+                  }
+
+                  const parsedValue = Number.parseInt(nextValue, 10);
+                  if (!Number.isNaN(parsedValue) && parsedValue >= 1) {
+                    updateSpecies("count", parsedValue);
+                  }
+                }}
                 className="mt-1"
               />
             </div>

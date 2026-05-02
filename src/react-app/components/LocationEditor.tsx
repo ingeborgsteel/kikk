@@ -83,6 +83,7 @@ export const LocationEditor = ({
     // Add tiles
     tileLayerRef.current = L.tileLayer(url, {
       maxZoom: 19,
+      maxNativeZoom: 18,
       attribution,
     }).addTo(map.current);
 

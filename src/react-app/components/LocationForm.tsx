@@ -25,7 +25,7 @@ interface LocationFormData {
   name: string;
   lat: string;
   lng: string;
-  uncertaintyRadius: string;
+  uncertaintyRadius: number;
   description: string;
 }
 
@@ -48,8 +48,7 @@ export function LocationForm({
         name: editingLocation?.name || "",
         lat: initialLocation.lat.toString(),
         lng: initialLocation.lng.toString(),
-        uncertaintyRadius:
-          editingLocation?.uncertaintyRadius.toString() || "10",
+        uncertaintyRadius: editingLocation?.uncertaintyRadius || 100,
         description: editingLocation?.description || "",
       },
     });
@@ -85,9 +84,8 @@ export function LocationForm({
   const onSubmit = (data: LocationFormData) => {
     const lat = parseFloat(data.lat);
     const lng = parseFloat(data.lng);
-    const uncertaintyRadius = parseInt(data.uncertaintyRadius);
 
-    if (isNaN(lat) || isNaN(lng) || isNaN(uncertaintyRadius)) {
+    if (isNaN(lat) || isNaN(lng)) {
       alert("Vennligst fyll inn gyldige verdier for koordinater og usikkerhet");
       return;
     }
@@ -98,7 +96,7 @@ export function LocationForm({
         ...editingLocation,
         name: data.name,
         location: { lat, lng },
-        uncertaintyRadius,
+        uncertaintyRadius: data.uncertaintyRadius,
         description: data.description,
       });
       onClose();

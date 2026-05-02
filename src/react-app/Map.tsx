@@ -142,10 +142,11 @@ function Map({
     );
 
     // Add initial tile layer (standard OpenStreetMap)
-    tileLayerRef.current = L.tileLayer(kartverketTopo, {
+    const { url, attribution } = getTileLayerConfig(currentLayer);
+    tileLayerRef.current = L.tileLayer(url, {
       maxZoom: 20,
       maxNativeZoom: currentLayer === "standard" ? 18 : undefined,
-      attribution: kartverketAttribution,
+      attribution,
     }).addTo(map.current);
 
     // Ensure the map container is properly sized

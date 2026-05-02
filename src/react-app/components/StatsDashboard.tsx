@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useObservations } from "../context/ObservationsContext";
 import { useLocations } from "../context/LocationsContext";
+import { useGeolocation } from "../context/GeolocationContext";
 import { Button } from "./ui/button";
 import { ThemeToggle } from "./ThemeToggle";
 import { Observation } from "../types/observation";
@@ -74,7 +75,6 @@ interface MonthStat {
   label: string;
   count: number;
 }
-
 
 function computeLocationStats(observations: Observation[]): LocationStat[] {
   const locationMap = new Map<
@@ -187,6 +187,7 @@ function SimpleBarChart({ data }: { data: MonthStat[] }) {
 export function StatsDashboard({ onBack }: StatsDashboardProps) {
   const { observations } = useObservations();
   const { locations } = useLocations();
+  const { requestCurrentPosition } = useGeolocation();
   const navigate = useNavigate();
 
   // State for "add observation" from stats
@@ -297,24 +298,17 @@ export function StatsDashboard({ onBack }: StatsDashboardProps) {
     setAddFormOpen(true);
   };
 
-  const handleAddFromSpecies = (species: TaxonRecord) => {
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setAddFormLocation({ lat: latitude, lng: longitude });
-          setPresetLocation(null);
-          setAddFormSpecies(species);
-          setAddFormOpen(true);
-        },
-        () => {
-          // Geolocation denied or unavailable — fall back to map
-          navigate("/");
-        },
-      );
-    } else {
+  const handleAddFromSpecies = async (species: TaxonRecord) => {
+    const position = await requestCurrentPosition();
+    if (!position) {
       navigate("/");
+      return;
     }
+
+    setAddFormLocation({ lat: position.lat, lng: position.lng });
+    setPresetLocation(null);
+    setAddFormSpecies(species);
+    setAddFormOpen(true);
   };
 
   const handleCloseForm = () => {
@@ -378,10 +372,7 @@ export function StatsDashboard({ onBack }: StatsDashboardProps) {
         {/* Summary cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-md">
           <div className="bg-white dark:bg-[#2c2c2c] rounded-lg border-2 border-moss/30 p-md text-center">
-            <Binoculars
-              size={24}
-              className="mx-auto text-moss mb-sm"
-            />
+            <Binoculars size={24} className="mx-auto text-moss mb-sm" />
             <div className="text-2xl font-bold text-bark dark:text-sand">
               {observations.length}
             </div>
@@ -390,10 +381,7 @@ export function StatsDashboard({ onBack }: StatsDashboardProps) {
             </div>
           </div>
           <div className="bg-white dark:bg-[#2c2c2c] rounded-lg border-2 border-moss/30 p-md text-center">
-            <TrendingUp
-              size={24}
-              className="mx-auto text-moss mb-sm"
-            />
+            <TrendingUp size={24} className="mx-auto text-moss mb-sm" />
             <div className="text-2xl font-bold text-bark dark:text-sand">
               {uniqueSpeciesCount}
             </div>
@@ -402,10 +390,7 @@ export function StatsDashboard({ onBack }: StatsDashboardProps) {
             </div>
           </div>
           <div className="bg-white dark:bg-[#2c2c2c] rounded-lg border-2 border-moss/30 p-md text-center">
-            <Calendar
-              size={24}
-              className="mx-auto text-moss mb-sm"
-            />
+            <Calendar size={24} className="mx-auto text-moss mb-sm" />
             <div className="text-2xl font-bold text-bark dark:text-sand">
               {totalIndividuals}
             </div>
@@ -414,10 +399,7 @@ export function StatsDashboard({ onBack }: StatsDashboardProps) {
             </div>
           </div>
           <div className="bg-white dark:bg-[#2c2c2c] rounded-lg border-2 border-moss/30 p-md text-center">
-            <MapPin
-              size={24}
-              className="mx-auto text-moss mb-sm"
-            />
+            <MapPin size={24} className="mx-auto text-moss mb-sm" />
             <div className="text-2xl font-bold text-bark dark:text-sand">
               {locationStats.length}
             </div>
@@ -498,7 +480,10 @@ export function StatsDashboard({ onBack }: StatsDashboardProps) {
             </p>
           ) : filteredAndSorted.length === 0 ? (
             <div className="text-center py-md">
-              <Search size={32} className="mx-auto text-bark/30 dark:text-sand/30 mb-sm" />
+              <Search
+                size={32}
+                className="mx-auto text-bark/30 dark:text-sand/30 mb-sm"
+              />
               <p className="text-sm text-bark/60 dark:text-sand/60">
                 Ingen arter samsvarer med søket
               </p>
@@ -509,7 +494,11 @@ export function StatsDashboard({ onBack }: StatsDashboardProps) {
                 Viser {filteredAndSorted.length} av {lifeList.length} arter
               </div>
               {filteredAndSorted.map((entry) => (
-                <LifeListItem key={entry.species.Id} entry={entry} onAdd={handleAddFromSpecies} />
+                <LifeListItem
+                  key={entry.species.Id}
+                  entry={entry}
+                  onAdd={handleAddFromSpecies}
+                />
               ))}
             </div>
           )}
@@ -616,16 +605,19 @@ function SortButton({
       }`}
     >
       {label}
-      {isActive && (
-        direction === "asc"
-          ? <ArrowUp size={14} />
-          : <ArrowDown size={14} />
-      )}
+      {isActive &&
+        (direction === "asc" ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
     </button>
   );
 }
 
-function LifeListItem({ entry, onAdd }: { entry: LifeListEntry; onAdd: (species: TaxonRecord) => void }) {
+function LifeListItem({
+  entry,
+  onAdd,
+}: {
+  entry: LifeListEntry;
+  onAdd: (species: TaxonRecord) => void;
+}) {
   const [isExpanded, setIsExpanded] = useState(false);
   const statusBadge = getStatusBadge(entry.species.Status);
 
@@ -732,9 +724,7 @@ function LifeListItem({ entry, onAdd }: { entry: LifeListEntry; onAdd: (species:
             )}
             {entry.species.Order && (
               <div>
-                <span className="text-bark/60 dark:text-sand/60">
-                  Orden:{" "}
-                </span>
+                <span className="text-bark/60 dark:text-sand/60">Orden: </span>
                 <span className="text-bark dark:text-sand italic">
                   {entry.species.Order}
                 </span>

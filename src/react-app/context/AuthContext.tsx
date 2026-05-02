@@ -7,10 +7,13 @@ import {
 } from "react";
 import { User, AuthError } from "@supabase/supabase-js";
 import { supabase, isSupabaseConfigured } from "../lib/supabase";
+import { useUserAccesses as useUserAccess } from "../queries/useUserAccesses";
+import { UserAccess } from "../types/user_access";
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  userAccess: UserAccess | undefined;
   signInWithEmail: (
     email: string,
     password: string,
@@ -23,6 +26,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(!isSupabaseConfigured());
+
+  const { data: userAccess } = useUserAccess(user?.id || "", {
+    enabled: !!user?.id,
+  });
 
   useEffect(() => {
     // Only initialize auth if Supabase is configured
@@ -64,7 +71,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithEmail, signOut }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        signInWithEmail,
+        signOut,
+        userAccess,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

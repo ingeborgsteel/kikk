@@ -9,6 +9,7 @@ import { ThemeProvider } from "./context/ThemeContext.tsx";
 import { AuthProvider } from "./context/AuthContext.tsx";
 import { LocationsProvider } from "./context/LocationsContext.tsx";
 import { MapPreferencesProvider } from "./context/MapPreferencesContext.tsx";
+import { GeolocationProvider } from "./context/GeolocationContext.tsx";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,15 +25,17 @@ createRoot(document.getElementById("root")!).render(
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <ThemeProvider>
-          <MapPreferencesProvider>
-            <LocationsProvider>
-              <ObservationsProvider>
-                <BrowserRouter>
-                  <App />
-                </BrowserRouter>
-              </ObservationsProvider>
-            </LocationsProvider>
-          </MapPreferencesProvider>
+          <GeolocationProvider>
+            <MapPreferencesProvider>
+              <LocationsProvider>
+                <ObservationsProvider>
+                  <BrowserRouter>
+                    <App />
+                  </BrowserRouter>
+                </ObservationsProvider>
+              </LocationsProvider>
+            </MapPreferencesProvider>
+          </GeolocationProvider>
         </ThemeProvider>
       </AuthProvider>
     </QueryClientProvider>

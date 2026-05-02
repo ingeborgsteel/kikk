@@ -86,9 +86,12 @@ const SpeciesItem = ({
                 onChange={(e) => updateSpecies("gender", e.target.value)}
                 className="mt-1"
               >
-                <option value="unknown">Ukjent</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
+                <option value="unknown">Hann</option>
+                <option value="male">Hunn</option>
+                <option value="female">Hunnfarget</option>
+                <option value="female">I par</option>
+                <option value="female">Arbeider</option>
+                <option value="female">Ukjent</option>
               </Select>
             </div>
             <div>

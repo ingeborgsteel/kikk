@@ -58,7 +58,6 @@ export function LocationForm({
   useEffect(() => {
     if (editingLocation) return; // Skip for editing
 
-    setLoadingName(true);
     reverseGeocode(currentLocation.lat, currentLocation.lng)
       .then((name) => {
         if (name) {
@@ -75,6 +74,9 @@ export function LocationForm({
 
   // Update coordinates when location changes in map
   const handleLocationChange = (lat: number, lng: number) => {
+    if (!editingLocation) {
+      setLoadingName(true);
+    }
     setCurrentLocation({ lat, lng });
     setValue("lat", lat.toString());
     setValue("lng", lng.toString());

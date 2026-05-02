@@ -6,7 +6,7 @@ import { Textarea } from "./ui/textarea";
 import { useObservations } from "../context/ObservationsContext";
 import { Observation, Species } from "../types/observation";
 import { useSpeciesSearch } from "../queries/useSpeciesSearch.ts";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import {
   getRecentSpecies,
   rankSpeciesResults,
@@ -47,11 +47,15 @@ const ObservationForm = ({
   const { addObservation, updateObservation, observations } = useObservations();
   const [searchTerm, setSearchTerm] = useState("");
   const [showResults, setShowResults] = useState(false);
-  const [loadingLocationName, setLoadingLocationName] = useState(false);
+  const [loadingLocationName, setLoadingLocationName] = useState(
+    !observation && !presetLocation,
+  );
   const [geocodingFailed, setGeocodingFailed] = useState(false);
   const [currentLocation, setCurrentLocation] = useState(location);
   const [successMessage, setSuccessMessage] = useState("");
-  const [successTimeout, setSuccessTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
+  const [successTimeout, setSuccessTimeout] = useState<ReturnType<
+    typeof setTimeout
+  > | null>(null);
 
   const { data: searchResults = [], isLoading } = useSpeciesSearch(searchTerm);
 
@@ -98,7 +102,6 @@ const ObservationForm = ({
     handleSubmit,
     setValue,
     getValues,
-    watch,
     reset,
     formState: { isDirty, isValid },
   } = useForm<Observation>({
@@ -120,7 +123,7 @@ const ObservationForm = ({
   });
 
   // Watch startDate to auto-update endDate
-  const startDate = watch("startDate");
+  const startDate = useWatch({ control, name: "startDate" });
 
   // Handle location change from map editor
   const handleLocationChange = useCallback(
@@ -195,13 +198,10 @@ const ObservationForm = ({
     // When a preset location is set, use its name
     if (presetLocation) {
       setValue("locationName", presetLocation.name, { shouldDirty: true });
-      setGeocodingFailed(false);
       return;
     }
     // Only fetch if this is a new observation, locationName is not yet set
     if (!observation && currentLocationName === "") {
-      setLoadingLocationName(true);
-      setGeocodingFailed(false);
       reverseGeocode(currentLocation.lat, currentLocation.lng)
         .then((name) => {
           if (name) {
@@ -254,7 +254,13 @@ const ObservationForm = ({
       }
       onClose();
     },
-    [onClose, updateObservation, addObservation, presetLocation, onActivateKikkemodus],
+    [
+      onClose,
+      updateObservation,
+      addObservation,
+      presetLocation,
+      onActivateKikkemodus,
+    ],
   );
 
   const saveAndAddAnother = useCallback(
@@ -292,7 +298,15 @@ const ObservationForm = ({
       setSearchTerm("");
       setShowResults(false);
     },
-    [addObservation, presetLocation, reset, getValues, currentLocation, successTimeout, onActivateKikkemodus],
+    [
+      addObservation,
+      presetLocation,
+      reset,
+      getValues,
+      currentLocation,
+      successTimeout,
+      onActivateKikkemodus,
+    ],
   );
 
   return (
@@ -331,374 +345,369 @@ const ObservationForm = ({
         }
       >
         <div className="space-y-4">
-            <Controller
-              name={"species"}
-              control={control}
-              rules={{
-                validate: (value) =>
-                  (value && value.length > 0) || "Du må legge til minst én art",
-              }}
-              render={({ field: { value: species = [], onChange } }) => {
-                const addSpecies = (taxon: TaxonRecord) => {
-                  const newObservation: CreateSpecies = {
-                    species: taxon,
-                    gender: "unknown",
-                    count: 1,
+          <Controller
+            name={"species"}
+            control={control}
+            rules={{
+              validate: (value) =>
+                (value && value.length > 0) || "Du må legge til minst én art",
+            }}
+            render={({ field: { value: species = [], onChange } }) => {
+              const addSpecies = (taxon: TaxonRecord) => {
+                const newObservation: CreateSpecies = {
+                  species: taxon,
+                  gender: "unknown",
+                  count: 1,
+                };
+                onChange([newObservation, ...species]);
+                setSearchTerm("");
+                setShowResults(false);
+              };
+
+              const updateSpecies = (
+                index: number,
+                field: keyof Species,
+                value: string | number,
+              ) => {
+                const updated = [...species];
+                if (field === "count") {
+                  updated[index] = {
+                    ...updated[index],
+                    [field]:
+                      typeof value === "number" ? value : parseInt(value) || 1,
                   };
-                  onChange([newObservation, ...species]);
-                  setSearchTerm("");
-                  setShowResults(false);
-                };
+                } else if (field === "gender") {
+                  updated[index] = {
+                    ...updated[index],
+                    [field]: value as "male" | "female" | "unknown",
+                  };
+                } else if (
+                  field === "comment" ||
+                  field === "age" ||
+                  field === "method" ||
+                  field === "activity"
+                ) {
+                  updated[index] = {
+                    ...updated[index],
+                    [field]: value as string,
+                  };
+                }
+                onChange(updated);
+              };
 
-                const updateSpecies = (
-                  index: number,
-                  field: keyof Species,
-                  value: string | number,
-                ) => {
-                  const updated = [...species];
-                  if (field === "count") {
-                    updated[index] = {
-                      ...updated[index],
-                      [field]:
-                        typeof value === "number"
-                          ? value
-                          : parseInt(value) || 1,
-                    };
-                  } else if (field === "gender") {
-                    updated[index] = {
-                      ...updated[index],
-                      [field]: value as "male" | "female" | "unknown",
-                    };
-                  } else if (
-                    field === "comment" ||
-                    field === "age" ||
-                    field === "method" ||
-                    field === "activity"
-                  ) {
-                    updated[index] = {
-                      ...updated[index],
-                      [field]: value as string,
-                    };
-                  }
-                  onChange(updated);
-                };
+              const removeSpecies = (index: number) => {
+                onChange(species.filter((_, i) => i !== index));
+              };
 
-                const removeSpecies = (index: number) => {
-                  onChange(species.filter((_, i) => i !== index));
-                };
-
-                return (
-                  <>
-                    <div>
-                      <Label
-                        htmlFor="species-search"
-                        className="text-bark dark:text-sand"
-                      >
-                        Søk etter art
-                      </Label>
-                      {recentSpecies.length > 0 && (
-                        <div className="mt-2 mb-3">
-                          <div className="text-xs text-slate mb-2">
-                            Nylig observerte arter:
-                          </div>
-                          <div className="flex flex-wrap gap-2">
-                            {recentSpecies.map((species) => (
-                              <button
-                                key={species.Id}
-                                type="button"
-                                onClick={() => addSpecies(species)}
-                                className="px-3 py-1.5 bg-moss/10 hover:bg-moss/20 dark:bg-moss/20 dark:hover:bg-moss/30 text-bark dark:text-sand text-sm rounded-md border border-moss/30 dark:border-moss/40 transition-colors flex items-center gap-1.5"
-                                title={species.ValidScientificName}
-                              >
-                                <span className="font-medium">
-                                  {species.PrefferedPopularname}
-                                </span>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="relative mt-1">
-                        <Input
-                          id="species-search"
-                          type="text"
-                          placeholder="Skriv for å søke..."
-                          value={searchTerm}
-                          onChange={(e) => {
-                            setSearchTerm(e.target.value);
-                            if (e.target.value.length >= 2) {
-                              setShowResults(true);
-                            } else {
-                              setShowResults(false);
-                            }
-                          }}
-                          onFocus={() =>
-                            searchTerm.length >= 2 &&
-                            rankedResults.length > 0 &&
-                            setShowResults(true)
-                          }
-                        />
-                        {isLoading && (
-                          <div className="absolute right-3 top-3">
-                            <div className="w-4 h-4 border-2 border-slate-border border-t-rust rounded-full animate-spin"></div>
-                          </div>
-                        )}
-
-                        {/* Search Results Dropdown */}
-                        {showResults && rankedResults.length > 0 && (
-                          <div className="absolute z-10 w-full mt-1 bg-white dark:bg-bark border-2 border-slate-border dark:border-slate rounded-md shadow-custom-lg max-h-60 overflow-y-auto">
-                            {rankedResults.map((species) => (
-                              <button
-                                key={species.Id}
-                                type="button"
-                                onClick={() => addSpecies(species)}
-                                className="w-full text-left px-3 py-2 hover:bg-sand dark:hover:bg-forest transition-colors border-b border-slate-border dark:border-slate last:border-b-0"
-                              >
-                                <div className="font-medium text-bark dark:text-sand">
-                                  {species.PrefferedPopularname}
-                                </div>
-                                <div className="text-sm text-slate italic">
-                                  {species.ValidScientificName}
-                                </div>
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div>
-                      <Label className="text-bark dark:text-sand">
-                        Observerte arter
-                      </Label>
-                      {species.length === 0 && (
-                        <p className="text-sm text-slate mt-1">
-                          Ingen arter lagt til enda. Bruk søkefeltet over for å
-                          legge til arter du har observert.
-                        </p>
-                      )}
-                      <div className="mt-1 space-y-sm">
-                        {species.map((s, index) => (
-                          <SpeciesItem
-                            key={index}
-                            species={s}
-                            updateSpecies={(
-                              field: keyof Species,
-                              value: string | number,
-                            ) => updateSpecies(index, field, value)}
-                            removeSpecies={() => removeSpecies(index)}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                );
-              }}
-            />
-
-            <div>
-              <Controller
-                name={"locationName"}
-                control={control}
-                render={({ field: { value, onChange } }) => (
+              return (
+                <>
                   <div>
                     <Label
-                      htmlFor="locationName"
+                      htmlFor="species-search"
                       className="text-bark dark:text-sand"
                     >
-                      Lokalitet
+                      Søk etter art
                     </Label>
-                    <div className="relative">
-                      {presetLocation && (
-                        <MapPinned
-                          size={18}
-                          className="absolute left-3 top-1/2 -translate-y-1/2 text-violet-600 dark:text-violet-400"
-                        />
-                      )}
+                    {recentSpecies.length > 0 && (
+                      <div className="mt-2 mb-3">
+                        <div className="text-xs text-slate mb-2">
+                          Nylig observerte arter:
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {recentSpecies.map((species) => (
+                            <button
+                              key={species.Id}
+                              type="button"
+                              onClick={() => addSpecies(species)}
+                              className="px-3 py-1.5 bg-moss/10 hover:bg-moss/20 dark:bg-moss/20 dark:hover:bg-moss/30 text-bark dark:text-sand text-sm rounded-md border border-moss/30 dark:border-moss/40 transition-colors flex items-center gap-1.5"
+                              title={species.ValidScientificName}
+                            >
+                              <span className="font-medium">
+                                {species.PrefferedPopularname}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="relative mt-1">
                       <Input
-                        id="locationName"
+                        id="species-search"
                         type="text"
-                        placeholder="F.eks. Oslo, Nordmarka"
-                        value={value}
-                        onChange={(e) => onChange(e.target.value)}
-                        className={twMerge("mt-1", presetLocation && "pl-8")}
-                        readOnly={!!presetLocation}
-                        disabled={!!presetLocation}
+                        placeholder="Skriv for å søke..."
+                        value={searchTerm}
+                        onChange={(e) => {
+                          setSearchTerm(e.target.value);
+                          if (e.target.value.length >= 2) {
+                            setShowResults(true);
+                          } else {
+                            setShowResults(false);
+                          }
+                        }}
+                        onFocus={() =>
+                          searchTerm.length >= 2 &&
+                          rankedResults.length > 0 &&
+                          setShowResults(true)
+                        }
                       />
-                      {loadingLocationName && (
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      {isLoading && (
+                        <div className="absolute right-3 top-3">
                           <div className="w-4 h-4 border-2 border-slate-border border-t-rust rounded-full animate-spin"></div>
                         </div>
                       )}
-                    </div>
-                    <p className="text-xs text-slate mt-1">
-                      {geocodingFailed && !presetLocation
-                        ? "Kunne ikke hente stedsnavn automatisk. Vennligst fyll inn manuelt."
-                        : ""}
-                    </p>
-                  </div>
-                )}
-              />
-              <LocationEditor
-                isPresetLocation={!!presetLocation}
-                location={currentLocation}
-                onLocationChange={handleLocationChange}
-                zoom={zoom}
-              />
-              {!presetLocation && onSaveAsLocation && (
-                <button
-                  type="button"
-                  onClick={() => onSaveAsLocation(currentLocation)}
-                  className="mt-2 flex items-center gap-1.5 text-sm text-slate hover:text-bark dark:hover:text-sand transition-colors"
-                  aria-label="Lagre denne posisjonen som min lokalitet"
-                >
-                  <MapPin size={14} />
-                  Lagre som min lokalitet
-                </button>
-              )}
-            </div>
 
+                      {/* Search Results Dropdown */}
+                      {showResults && rankedResults.length > 0 && (
+                        <div className="absolute z-10 w-full mt-1 bg-white dark:bg-bark border-2 border-slate-border dark:border-slate rounded-md shadow-custom-lg max-h-60 overflow-y-auto">
+                          {rankedResults.map((species) => (
+                            <button
+                              key={species.Id}
+                              type="button"
+                              onClick={() => addSpecies(species)}
+                              className="w-full text-left px-3 py-2 hover:bg-sand dark:hover:bg-forest transition-colors border-b border-slate-border dark:border-slate last:border-b-0"
+                            >
+                              <div className="font-medium text-bark dark:text-sand">
+                                {species.PrefferedPopularname}
+                              </div>
+                              <div className="text-sm text-slate italic">
+                                {species.ValidScientificName}
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-bark dark:text-sand">
+                      Observerte arter
+                    </Label>
+                    {species.length === 0 && (
+                      <p className="text-sm text-slate mt-1">
+                        Ingen arter lagt til enda. Bruk søkefeltet over for å
+                        legge til arter du har observert.
+                      </p>
+                    )}
+                    <div className="mt-1 space-y-sm">
+                      {species.map((s, index) => (
+                        <SpeciesItem
+                          key={index}
+                          species={s}
+                          updateSpecies={(
+                            field: keyof Species,
+                            value: string | number,
+                          ) => updateSpecies(index, field, value)}
+                          removeSpecies={() => removeSpecies(index)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </>
+              );
+            }}
+          />
+
+          <div>
             <Controller
-              name={"uncertaintyRadius"}
+              name={"locationName"}
               control={control}
               render={({ field: { value, onChange } }) => (
                 <div>
                   <Label
-                    htmlFor="uncertainty"
+                    htmlFor="locationName"
                     className="text-bark dark:text-sand"
                   >
-                    Usikkerhetsradius (meter)
+                    Lokalitet
                   </Label>
-                  <Input
-                    id="uncertainty"
-                    type="number"
-                    min="0"
-                    value={value}
-                    onChange={(e) =>
-                      onChange(
-                        e.target.value === ""
-                          ? undefined
-                          : Number(e.target.value),
-                      )
-                    }
-                    className="mt-1"
-                  />
+                  <div className="relative">
+                    {presetLocation && (
+                      <MapPinned
+                        size={18}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-violet-600 dark:text-violet-400"
+                      />
+                    )}
+                    <Input
+                      id="locationName"
+                      type="text"
+                      placeholder="F.eks. Oslo, Nordmarka"
+                      value={value}
+                      onChange={(e) => onChange(e.target.value)}
+                      className={twMerge("mt-1", presetLocation && "pl-8")}
+                      readOnly={!!presetLocation}
+                      disabled={!!presetLocation}
+                    />
+                    {loadingLocationName && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <div className="w-4 h-4 border-2 border-slate-border border-t-rust rounded-full animate-spin"></div>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate mt-1">
+                    {geocodingFailed && !presetLocation
+                      ? "Kunne ikke hente stedsnavn automatisk. Vennligst fyll inn manuelt."
+                      : ""}
+                  </p>
+                </div>
+              )}
+            />
+            <LocationEditor
+              isPresetLocation={!!presetLocation}
+              location={currentLocation}
+              onLocationChange={handleLocationChange}
+              zoom={zoom}
+            />
+            {!presetLocation && onSaveAsLocation && (
+              <button
+                type="button"
+                onClick={() => onSaveAsLocation(currentLocation)}
+                className="mt-2 flex items-center gap-1.5 text-sm text-slate hover:text-bark dark:hover:text-sand transition-colors"
+                aria-label="Lagre denne posisjonen som min lokalitet"
+              >
+                <MapPin size={14} />
+                Lagre som min lokalitet
+              </button>
+            )}
+          </div>
+
+          <Controller
+            name={"uncertaintyRadius"}
+            control={control}
+            render={({ field: { value, onChange } }) => (
+              <div>
+                <Label
+                  htmlFor="uncertainty"
+                  className="text-bark dark:text-sand"
+                >
+                  Usikkerhetsradius (meter)
+                </Label>
+                <Input
+                  id="uncertainty"
+                  type="number"
+                  min="0"
+                  value={value}
+                  onChange={(e) =>
+                    onChange(
+                      e.target.value === ""
+                        ? undefined
+                        : Number(e.target.value),
+                    )
+                  }
+                  className="mt-1"
+                />
+              </div>
+            )}
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+            <Controller
+              name={"startDate"}
+              control={control}
+              render={({ field: { value, onChange } }) => (
+                <div>
+                  <Label
+                    htmlFor="startDate"
+                    className="text-bark dark:text-sand"
+                  >
+                    Startdato og tid
+                  </Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="startDate"
+                      type="date"
+                      value={value ? value.slice(0, 10) : ""}
+                      onChange={(e) => {
+                        const dateValue = e.target.value;
+                        const timePart = getTimePart(value);
+                        onChange(dateValue ? `${dateValue}T${timePart}` : "");
+                      }}
+                      className="mt-1 flex-1"
+                      required
+                    />
+                    <Input
+                      id="startTime"
+                      type="time"
+                      value={getTimePart(value)}
+                      onChange={(e) => {
+                        const timeValue = e.target.value;
+                        const datePart = getDatePart(value);
+                        onChange(
+                          timeValue
+                            ? `${datePart}T${timeValue}`
+                            : `${datePart}T00:00`,
+                        );
+                      }}
+                      className="mt-1 w-28"
+                      placeholder="00:00"
+                    />
+                  </div>
                 </div>
               )}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
-              <Controller
-                name={"startDate"}
-                control={control}
-                render={({ field: { value, onChange } }) => (
-                  <div>
-                    <Label
-                      htmlFor="startDate"
-                      className="text-bark dark:text-sand"
-                    >
-                      Startdato og tid
-                    </Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="startDate"
-                        type="date"
-                        value={value ? value.slice(0, 10) : ""}
-                        onChange={(e) => {
-                          const dateValue = e.target.value;
-                          const timePart = getTimePart(value);
-                          onChange(dateValue ? `${dateValue}T${timePart}` : "");
-                        }}
-                        className="mt-1 flex-1"
-                        required
-                      />
-                      <Input
-                        id="startTime"
-                        type="time"
-                        value={getTimePart(value)}
-                        onChange={(e) => {
-                          const timeValue = e.target.value;
-                          const datePart = getDatePart(value);
-                          onChange(
-                            timeValue
-                              ? `${datePart}T${timeValue}`
-                              : `${datePart}T00:00`,
-                          );
-                        }}
-                        className="mt-1 w-28"
-                        placeholder="00:00"
-                      />
-                    </div>
-                  </div>
-                )}
-              />
-
-              <Controller
-                name={"endDate"}
-                control={control}
-                render={({ field: { value, onChange } }) => (
-                  <div>
-                    <Label
-                      htmlFor="endDate"
-                      className="text-bark dark:text-sand"
-                    >
-                      Sluttdato og tid
-                    </Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="endDate"
-                        type="date"
-                        value={value ? value.slice(0, 10) : ""}
-                        onChange={(e) => {
-                          const dateValue = e.target.value;
-                          const timePart = getTimePart(value);
-                          onChange(dateValue ? `${dateValue}T${timePart}` : "");
-                        }}
-                        className="mt-1 flex-1"
-                        required
-                      />
-                      <Input
-                        id="endTime"
-                        type="time"
-                        value={getTimePart(value)}
-                        onChange={(e) => {
-                          const timeValue = e.target.value;
-                          const datePart = getDatePart(value);
-                          onChange(
-                            timeValue
-                              ? `${datePart}T${timeValue}`
-                              : `${datePart}T00:00`,
-                          );
-                        }}
-                        className="mt-1 w-28"
-                        placeholder="00:00"
-                      />
-                    </div>
-                  </div>
-                )}
-              />
-            </div>
-
             <Controller
-              name={"comment"}
+              name={"endDate"}
               control={control}
               render={({ field: { value, onChange } }) => (
                 <div>
-                  <Label htmlFor="comment" className="text-bark dark:text-sand">
-                    Kommentar
+                  <Label htmlFor="endDate" className="text-bark dark:text-sand">
+                    Sluttdato og tid
                   </Label>
-                  <Textarea
-                    id="comment"
-                    placeholder="Legg til notater om lokaliteten..."
-                    value={value}
-                    onChange={(e) => onChange(e.target.value)}
-                    className="mt-1"
-                    rows={3}
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      id="endDate"
+                      type="date"
+                      value={value ? value.slice(0, 10) : ""}
+                      onChange={(e) => {
+                        const dateValue = e.target.value;
+                        const timePart = getTimePart(value);
+                        onChange(dateValue ? `${dateValue}T${timePart}` : "");
+                      }}
+                      className="mt-1 flex-1"
+                      required
+                    />
+                    <Input
+                      id="endTime"
+                      type="time"
+                      value={getTimePart(value)}
+                      onChange={(e) => {
+                        const timeValue = e.target.value;
+                        const datePart = getDatePart(value);
+                        onChange(
+                          timeValue
+                            ? `${datePart}T${timeValue}`
+                            : `${datePart}T00:00`,
+                        );
+                      }}
+                      className="mt-1 w-28"
+                      placeholder="00:00"
+                    />
+                  </div>
                 </div>
               )}
             />
           </div>
+
+          <Controller
+            name={"comment"}
+            control={control}
+            render={({ field: { value, onChange } }) => (
+              <div>
+                <Label htmlFor="comment" className="text-bark dark:text-sand">
+                  Kommentar
+                </Label>
+                <Textarea
+                  id="comment"
+                  placeholder="Legg til notater om lokaliteten..."
+                  value={value}
+                  onChange={(e) => onChange(e.target.value)}
+                  className="mt-1"
+                  rows={3}
+                />
+              </div>
+            )}
+          />
+        </div>
       </Modal>
     </form>
   );

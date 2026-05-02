@@ -81,7 +81,7 @@ export function getLifeList(observations: Observation[]): LifeListEntry[] {
       const existing = speciesMap.get(speciesId);
 
       if (existing) {
-        existing.totalCount += speciesObs.count;
+        existing.totalCount += speciesObs.count ?? 0;
         existing.observationCount += 1;
         if (obsDate < existing.firstSeen) {
           existing.firstSeen = obsDate;
@@ -94,7 +94,7 @@ export function getLifeList(observations: Observation[]): LifeListEntry[] {
       } else {
         speciesMap.set(speciesId, {
           species: speciesObs.species,
-          totalCount: speciesObs.count,
+          totalCount: speciesObs.count ?? 0,
           observationCount: 1,
           firstSeen: obsDate,
           lastSeen: obsDate,
@@ -106,7 +106,9 @@ export function getLifeList(observations: Observation[]): LifeListEntry[] {
   }
 
   return Array.from(speciesMap.values()).sort((a, b) =>
-    (a.species.PrefferedPopularname || a.species.ValidScientificName).localeCompare(
+    (
+      a.species.PrefferedPopularname || a.species.ValidScientificName
+    ).localeCompare(
       b.species.PrefferedPopularname || b.species.ValidScientificName,
       "no",
     ),
@@ -205,10 +207,6 @@ export async function reverseGeocode(
 
     const data = await response.json();
 
-    // Build a location name from available data
-    // Priority: village/town/city, municipality, county
-    const parts: string[] = [];
-
     if (data.address) {
       const addr = data.address;
       // Add locality (village, town, city, etc.)
@@ -222,18 +220,11 @@ export async function reverseGeocode(
         addr.town ||
         addr.city ||
         addr.suburb;
-      if (locality) parts.push(locality);
-
-      // Add municipality if different from locality
-      if (addr.municipality && addr.municipality !== locality) {
-        parts.push(addr.municipality);
-      }
+      if (locality) return locality;
     }
 
     // If we have parts, join them; otherwise use display_name
-    if (parts.length > 0) {
-      return parts.join(", ");
-    } else if (data.display_name) {
+    if (data.display_name) {
       // Fallback to first part of display_name (usually the most specific)
       return data.display_name.split(",")[0];
     }

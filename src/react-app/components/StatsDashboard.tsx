@@ -154,7 +154,7 @@ function countTotalIndividuals(observations: Observation[]): number {
   let total = 0;
   for (const obs of observations) {
     for (const s of obs.species) {
-      total += s.count;
+      total += s.count ?? 0;
     }
   }
   return total;

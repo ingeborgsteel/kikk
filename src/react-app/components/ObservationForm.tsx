@@ -229,12 +229,6 @@ const ObservationForm = ({
     return () => document.removeEventListener("keydown", handleEscape);
   }, [onClose]);
 
-  useEffect(() => {
-    if (isOpen) {
-      setVisibleRecentSpeciesCount(10);
-    }
-  }, [isOpen]);
-
   // Cleanup success message timeout on unmount
   useEffect(() => {
     return () => {

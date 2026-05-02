@@ -4,7 +4,7 @@ import { Label } from "./ui/label.tsx";
 import { Select } from "./ui/select.tsx";
 import { Input } from "./ui/input.tsx";
 import { Textarea } from "./ui/textarea.tsx";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Species } from "../types/observation.ts";
 import { getAgeOptionsForTaxonGroup } from "../lib/ageOptions.ts";
 
@@ -23,10 +23,6 @@ const SpeciesItem = ({
 }: SpeciesItemProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [countInput, setCountInput] = useState(String(species.count));
-
-  useEffect(() => {
-    setCountInput(String(species.count));
-  }, [species.count]);
 
   const ageOptions = useMemo(
     () => getAgeOptionsForTaxonGroup(species.species.TaxonGroup || ""),

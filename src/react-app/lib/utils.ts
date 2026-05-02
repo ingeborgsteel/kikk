@@ -81,7 +81,7 @@ export function getLifeList(observations: Observation[]): LifeListEntry[] {
       const existing = speciesMap.get(speciesId);
 
       if (existing) {
-        existing.totalCount += speciesObs.count;
+        existing.totalCount += speciesObs.count ?? 0;
         existing.observationCount += 1;
         if (obsDate < existing.firstSeen) {
           existing.firstSeen = obsDate;
@@ -94,7 +94,7 @@ export function getLifeList(observations: Observation[]): LifeListEntry[] {
       } else {
         speciesMap.set(speciesId, {
           species: speciesObs.species,
-          totalCount: speciesObs.count,
+          totalCount: speciesObs.count ?? 0,
           observationCount: 1,
           firstSeen: obsDate,
           lastSeen: obsDate,

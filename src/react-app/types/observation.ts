@@ -5,7 +5,7 @@ export interface Species {
   createdAt: string;
   species: TaxonRecord;
   gender: "male" | "female" | "unknown";
-  count: number;
+  count?: number;
   age?: string; // Age of the observed species
   method?: string; // Observation method
   activity?: string; // Activity observed

@@ -106,7 +106,7 @@ export function LocationForm({
         userId: user?.id || null,
         name: data.name,
         location: { lat, lng },
-        uncertaintyRadius,
+        uncertaintyRadius: data.uncertaintyRadius,
         description: data.description,
       };
       const savedLocation = addLocation(newLocation);

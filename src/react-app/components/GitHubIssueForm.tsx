@@ -44,7 +44,9 @@ export function GitHubIssueForm({ onClose, showForm }: GitHubIssueFormProps) {
 
     try {
       const githubToken =
-        userAccess?.githubToken ?? import.meta.env.VITE_GITHUB_TOKEN;
+        userAccess?.github_token ?? import.meta.env.VITE_GITHUB_TOKEN;
+
+      console.log(githubToken);
 
       if (!githubToken) {
         setMessage("GitHub-token mangler. Kontakt administrator.");
@@ -132,7 +134,6 @@ export function GitHubIssueForm({ onClose, showForm }: GitHubIssueFormProps) {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={6}
-              required
             />
           </div>
           {message && (

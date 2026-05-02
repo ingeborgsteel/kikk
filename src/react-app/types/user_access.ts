@@ -1,6 +1,6 @@
 export interface UserAccess {
   id: string;
-  userId: string;
-  githubToken: string;
-  createdAt: string;
+  user_id: string;
+  github_token: string;
+  created_at: string;
 }

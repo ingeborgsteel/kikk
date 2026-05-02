@@ -143,7 +143,8 @@ function Map({
 
     // Add initial tile layer (standard OpenStreetMap)
     tileLayerRef.current = L.tileLayer(kartverketTopo, {
-      maxZoom: 19,
+      maxZoom: 20,
+      maxNativeZoom: currentLayer === "standard" ? 18 : undefined,
       attribution: kartverketAttribution,
     }).addTo(map.current);
 
@@ -376,7 +377,8 @@ function Map({
 
     // Add new layer
     tileLayerRef.current = L.tileLayer(url, {
-      maxZoom: 19,
+      maxZoom: 20,
+      maxNativeZoom: currentLayer === "standard" ? 18 : undefined,
       attribution,
     }).addTo(map.current);
   }, [currentLayer]);

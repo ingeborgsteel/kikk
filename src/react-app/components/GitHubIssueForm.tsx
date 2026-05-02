@@ -4,6 +4,7 @@ import { Octokit } from "@octokit/core";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
+import { useAuth } from "../context/AuthContext";
 
 const GITHUB_OWNER = "ingeborgsteel";
 const GITHUB_REPO = "kikk";
@@ -18,6 +19,8 @@ export function GitHubIssueForm({ onClose, showForm }: GitHubIssueFormProps) {
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+
+  const { userAccess } = useAuth();
 
   useEffect(() => {
     if (!showForm) return;
@@ -40,7 +43,10 @@ export function GitHubIssueForm({ onClose, showForm }: GitHubIssueFormProps) {
     setMessage("");
 
     try {
-      const githubToken = import.meta.env.VITE_GITHUB_TOKEN;
+      const githubToken =
+        userAccess?.github_token ?? import.meta.env.VITE_GITHUB_TOKEN;
+
+      console.log(githubToken);
 
       if (!githubToken) {
         setMessage("GitHub-token mangler. Kontakt administrator.");
@@ -128,7 +134,6 @@ export function GitHubIssueForm({ onClose, showForm }: GitHubIssueFormProps) {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={6}
-              required
             />
           </div>
           {message && (

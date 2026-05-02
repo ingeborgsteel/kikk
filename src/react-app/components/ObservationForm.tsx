@@ -44,6 +44,33 @@ const ObservationForm = ({
   onSaveAsLocation,
   onActivateKikkemodus,
 }: ObservationFormProps) => {
+  const formatLocalDatePart = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  const formatLocalTimePart = (date: Date): string => {
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    return `${hours}:${minutes}`;
+  };
+
+  const toLocalDateTimeInputValue = (dateTimeStr?: string): string => {
+    if (!dateTimeStr) {
+      const now = new Date();
+      return `${formatLocalDatePart(now)}T${formatLocalTimePart(now)}`;
+    }
+
+    const parsed = new Date(dateTimeStr);
+    if (Number.isNaN(parsed.getTime())) {
+      return dateTimeStr.slice(0, 16);
+    }
+
+    return `${formatLocalDatePart(parsed)}T${formatLocalTimePart(parsed)}`;
+  };
+
   const { addObservation, updateObservation, observations } = useObservations();
   const [searchTerm, setSearchTerm] = useState("");
   const [showResults, setShowResults] = useState(false);
@@ -82,19 +109,25 @@ const ObservationForm = ({
     [searchResults, searchTerm, previouslyObservedIds],
   );
 
-  const defaultStartDate = new Date().toISOString().slice(0, 16);
+  const defaultStartDate = toLocalDateTimeInputValue();
 
   // Helper functions for date/time handling
   const getTimePart = (dateTimeStr: string | undefined): string => {
-    return dateTimeStr && dateTimeStr.length > 10
-      ? dateTimeStr.slice(11, 16)
-      : "00:00";
+    if (!dateTimeStr) {
+      return "00:00";
+    }
+
+    const localValue = toLocalDateTimeInputValue(dateTimeStr);
+    return localValue.length > 10 ? localValue.slice(11, 16) : "00:00";
   };
 
   const getDatePart = (dateTimeStr: string | undefined): string => {
-    return dateTimeStr
-      ? dateTimeStr.slice(0, 10)
-      : new Date().toISOString().slice(0, 10);
+    if (!dateTimeStr) {
+      const now = new Date();
+      return formatLocalDatePart(now);
+    }
+
+    return toLocalDateTimeInputValue(dateTimeStr).slice(0, 10);
   };
 
   const {
@@ -285,7 +318,7 @@ const ObservationForm = ({
       setSuccessTimeout(setTimeout(() => setSuccessMessage(""), 3000));
 
       // Reset form for a new observation, keeping location
-      const newStartDate = new Date().toISOString().slice(0, 16);
+      const newStartDate = toLocalDateTimeInputValue();
       reset({
         startDate: newStartDate,
         endDate: newStartDate,
@@ -615,7 +648,7 @@ const ObservationForm = ({
                     <Input
                       id="startDate"
                       type="date"
-                      value={value ? value.slice(0, 10) : ""}
+                      value={getDatePart(value)}
                       onChange={(e) => {
                         const dateValue = e.target.value;
                         const timePart = getTimePart(value);
@@ -657,7 +690,7 @@ const ObservationForm = ({
                     <Input
                       id="endDate"
                       type="date"
-                      value={value ? value.slice(0, 10) : ""}
+                      value={getDatePart(value)}
                       onChange={(e) => {
                         const dateValue = e.target.value;
                         const timePart = getTimePart(value);

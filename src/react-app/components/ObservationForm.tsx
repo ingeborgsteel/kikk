@@ -160,9 +160,7 @@ const ObservationForm = ({
       ...observation,
       ...(!observation && presetSpecies
         ? {
-            species: [
-              { species: presetSpecies, gender: "unknown" as const, count: 1 },
-            ],
+            species: [{ species: presetSpecies, gender: "unknown" as const }],
           }
         : {}),
     },
@@ -409,7 +407,6 @@ const ObservationForm = ({
                 const newObservation: CreateSpecies = {
                   species: taxon,
                   gender: "unknown",
-                  count: 1,
                 };
                 onChange([newObservation, ...species]);
                 setSearchTerm("");

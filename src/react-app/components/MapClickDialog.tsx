@@ -64,7 +64,7 @@ export function MapClickDialog({
           <div className="text-left">
             <div className="font-semibold">Lagre som min lokalitet</div>
             <div className="text-xs opacity-90">
-              Opprett en forhåndsinnstilt lokalitet
+              Opprett en standardlokalitet
             </div>
           </div>
         </Button>

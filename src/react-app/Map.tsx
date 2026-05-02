@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { Navigation } from "lucide-react";
 import { Observation } from "./types/observation";
 import { UserLocation } from "./types/location";
 
@@ -20,6 +21,7 @@ import {
   createUserLocationIcon,
 } from "./lib/markerIcons.ts";
 import { useMapPreferences } from "./context/MapPreferencesContext.tsx";
+import { useGeolocation } from "./context/GeolocationContext.tsx";
 
 const DefaultIcon = L.icon({
   iconUrl: icon,
@@ -80,14 +82,47 @@ function Map({
   const observationMarkersRef = useRef<L.Marker[]>([]);
   const userLocationsMarkersRef = useRef<L.Marker[]>([]);
   const userLocationMarkerRef = useRef<L.CircleMarker | null>(null);
-  const [isLocating, setIsLocating] = useState(false);
-  const [locationError, setLocationError] = useState<string | null>(null);
-  const [userLocation, setUserLocation] = useState<{
-    lat: number;
-    lng: number;
-  } | null>(null);
+  const [showCenteredMessage, setShowCenteredMessage] = useState(false);
+  const hasAutoLocatedRef = useRef(false);
   const { currentLayer, setCurrentLayer } = useMapPreferences();
   const tileLayerRef = useRef<L.TileLayer | null>(null);
+  const {
+    currentPosition,
+    followMode,
+    setFollowMode,
+    isLocating,
+    locationError,
+    clearLocationError,
+    requestCurrentPosition,
+    startTracking,
+    stopTracking,
+  } = useGeolocation();
+
+  const renderUserLocationMarker = useCallback((lat: number, lng: number) => {
+    if (!map.current) return;
+
+    if (!userLocationMarkerRef.current) {
+      userLocationMarkerRef.current = L.circleMarker([lat, lng], {
+        radius: 8,
+        fillColor: "#4285F4",
+        color: "#ffffff",
+        weight: 2,
+        opacity: 1,
+        fillOpacity: 1,
+      }).addTo(map.current);
+      return;
+    }
+
+    userLocationMarkerRef.current.setLatLng([lat, lng]);
+  }, []);
+
+  const recenterMapTo = useCallback(
+    (lat: number, lng: number, zoom: number) => {
+      if (!map.current) return;
+      map.current.setView([lat, lng], zoom);
+    },
+    [],
+  );
 
   // Update the ref whenever onLocationSelect changes
   useEffect(() => {
@@ -145,75 +180,15 @@ function Map({
       }
     });
 
-    // Try to get user's current location
-    if ("geolocation" in navigator) {
-      setIsLocating(true);
-      setLocationError(null);
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setUserLocation({ lat: latitude, lng: longitude });
+    const handleDragStart = () => {
+      setFollowMode(false);
+    };
 
-          // Add blue dot for user location
-          if (mapInstance) {
-            // Remove existing user location marker if any
-            if (userLocationMarkerRef.current) {
-              userLocationMarkerRef.current.remove();
-            }
-
-            // Create blue dot with white border
-            userLocationMarkerRef.current = L.circleMarker(
-              [latitude, longitude],
-              {
-                radius: 8,
-                fillColor: "#4285F4",
-                color: "#ffffff",
-                weight: 2,
-                opacity: 1,
-                fillOpacity: 1,
-              },
-            ).addTo(mapInstance);
-
-            mapInstance.setView([latitude, longitude], 13);
-          }
-          setIsLocating(false);
-
-          // Auto-dismiss success message after 4 seconds
-          setTimeout(() => {
-            setUserLocation(null);
-          }, 4000);
-        },
-        (error) => {
-          let errorMessage = "Kunne ikke finne din posisjon";
-          switch (error.code) {
-            case error.PERMISSION_DENIED:
-              errorMessage =
-                "Plasseringstillatelse nektet. Vennligst aktiver posisjonstilgang i nettleserinnstillingene dine.";
-              break;
-            case error.POSITION_UNAVAILABLE:
-              errorMessage = "Posisjonsinformasjon er ikke tilgjengelig.";
-              break;
-            case error.TIMEOUT:
-              errorMessage =
-                "Posisjonsforespørsel tidsavbrutt. Vennligst prøv igjen.";
-              break;
-          }
-          console.log("Geolocation error:", error.message);
-          setLocationError(errorMessage);
-          setIsLocating(false);
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0,
-        },
-      );
-    } else {
-      setLocationError("Geolokalisering støttes ikke av nettleseren din.");
-    }
+    mapInstance.on("dragstart", handleDragStart);
 
     // Cleanup
     return () => {
+      mapInstance.off("dragstart", handleDragStart);
       if (map.current) {
         map.current.remove();
         map.current = null;
@@ -229,7 +204,80 @@ function Map({
       observationMarkersRef.current = [];
       userLocationsMarkersRef.current = [];
     };
-  }, []);
+  }, [setFollowMode]);
+
+  useEffect(() => {
+    if (!showCenteredMessage) return;
+
+    const timeout = setTimeout(() => {
+      setShowCenteredMessage(false);
+    }, 4000);
+
+    return () => clearTimeout(timeout);
+  }, [showCenteredMessage]);
+
+  useEffect(() => {
+    if (!currentPosition) return;
+
+    renderUserLocationMarker(currentPosition.lat, currentPosition.lng);
+    if (followMode && map.current) {
+      recenterMapTo(
+        currentPosition.lat,
+        currentPosition.lng,
+        map.current.getZoom(),
+      );
+    }
+  }, [currentPosition, followMode, recenterMapTo, renderUserLocationMarker]);
+
+  useEffect(() => {
+    if (hasAutoLocatedRef.current) return;
+    hasAutoLocatedRef.current = true;
+
+    setFollowMode(true);
+
+    const run = async () => {
+      const position = await requestCurrentPosition();
+      if (!position) return;
+
+      renderUserLocationMarker(position.lat, position.lng);
+      recenterMapTo(position.lat, position.lng, 13);
+      setShowCenteredMessage(true);
+    };
+
+    void run();
+  }, [
+    recenterMapTo,
+    renderUserLocationMarker,
+    requestCurrentPosition,
+    setFollowMode,
+  ]);
+
+  useEffect(() => {
+    if (!followMode) {
+      stopTracking();
+      return;
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        stopTracking();
+        return;
+      }
+      startTracking();
+    };
+
+    if (document.hidden) {
+      stopTracking();
+    } else {
+      startTracking();
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      stopTracking();
+    };
+  }, [followMode, startTracking, stopTracking]);
 
   // Effect to handle observation markers
   useEffect(() => {
@@ -371,6 +419,19 @@ function Map({
           Flyfoto
         </button>
       </div>
+      <button
+        onClick={() => setFollowMode(!followMode)}
+        className={`absolute left-1/2 -translate-x-1/2 bottom-[calc(0.7rem)] md:bottom-md z-[1100] px-3 py-2 rounded-full shadow-custom-lg font-semibold text-sm transition-all flex items-center gap-2 border-2 ${
+          followMode
+            ? "bg-moss text-sand border-sand"
+            : "bg-sand dark:bg-bark text-bark dark:text-sand border-moss hover:bg-moss dark:hover:bg-moss"
+        }`}
+        title="Følger posisjonen din"
+        aria-label="Veksle følg meg"
+      >
+        <Navigation size={16} />
+        <span>Følg meg</span>
+      </button>
       {isLocating && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[2000] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-lg rounded-lg shadow-custom-2xl flex flex-col items-center gap-md font-medium text-bark dark:text-sand border-2 border-moss">
           <div className="w-10 h-10 border-4 border-slate-border border-t-rust rounded-full animate-spin"></div>
@@ -393,9 +454,15 @@ function Map({
             <line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
           <span>{locationError}</span>
+          <button
+            onClick={clearLocationError}
+            className="ml-2 text-rust underline underline-offset-2"
+          >
+            Lukk
+          </button>
         </div>
       )}
-      {userLocation && !selectedLocation && (
+      {showCenteredMessage && currentPosition && !selectedLocation && (
         <div className="absolute top-md left-1/2 -translate-x-1/2 z-[1000] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-sm md:p-md px-lg md:px-xl rounded-lg shadow-custom-xl flex items-center gap-sm text-sm md:text-base font-semibold text-moss dark:text-moss animate-[slideDown_0.3s_ease] max-w-[90%] border-2 border-moss">
           <svg
             width="16"

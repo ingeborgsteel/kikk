@@ -11,6 +11,8 @@ type MapLayer = "standard" | "topo" | "aerial";
 interface MapPreferencesContextType {
   currentLayer: MapLayer;
   setCurrentLayer: (layer: MapLayer) => void;
+  showUncertaintyOverlay: boolean;
+  setShowUncertaintyOverlay: (show: boolean) => void;
 }
 
 const MapPreferencesContext = createContext<
@@ -18,6 +20,7 @@ const MapPreferencesContext = createContext<
 >(undefined);
 
 const MAP_LAYER_STORAGE_KEY = "kikk-map-layer";
+const MAP_UNCERTAINTY_OVERLAY_STORAGE_KEY = "kikk-map-show-uncertainty";
 
 /**
  * Provider for map preferences (selected layer, etc.)
@@ -29,10 +32,21 @@ export function MapPreferencesProvider({ children }: { children: ReactNode }) {
     const stored = localStorage.getItem(MAP_LAYER_STORAGE_KEY);
     return (stored as MapLayer) || "standard";
   });
+  const [showUncertaintyOverlay, setShowUncertaintyOverlayState] = useState(
+    () => {
+      const stored = localStorage.getItem(MAP_UNCERTAINTY_OVERLAY_STORAGE_KEY);
+      return stored === "true";
+    },
+  );
 
   const setCurrentLayer = (layer: MapLayer) => {
     setCurrentLayerState(layer);
     localStorage.setItem(MAP_LAYER_STORAGE_KEY, layer);
+  };
+
+  const setShowUncertaintyOverlay = (show: boolean) => {
+    setShowUncertaintyOverlayState(show);
+    localStorage.setItem(MAP_UNCERTAINTY_OVERLAY_STORAGE_KEY, String(show));
   };
 
   useEffect(() => {
@@ -41,6 +55,10 @@ export function MapPreferencesProvider({ children }: { children: ReactNode }) {
       if (e.key === MAP_LAYER_STORAGE_KEY && e.newValue) {
         setCurrentLayerState(e.newValue as MapLayer);
       }
+
+      if (e.key === MAP_UNCERTAINTY_OVERLAY_STORAGE_KEY && e.newValue) {
+        setShowUncertaintyOverlayState(e.newValue === "true");
+      }
     };
 
     window.addEventListener("storage", handleStorageChange);
@@ -48,7 +66,14 @@ export function MapPreferencesProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <MapPreferencesContext.Provider value={{ currentLayer, setCurrentLayer }}>
+    <MapPreferencesContext.Provider
+      value={{
+        currentLayer,
+        setCurrentLayer,
+        showUncertaintyOverlay,
+        setShowUncertaintyOverlay,
+      }}
+    >
       {children}
     </MapPreferencesContext.Provider>
   );

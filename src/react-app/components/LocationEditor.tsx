@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
-import "leaflet/dist/leaflet.css";
 
 // Fix for default marker icons in Leaflet with bundlers
 import icon from "leaflet/dist/images/marker-icon.png";
@@ -151,7 +150,7 @@ export const LocationEditor = ({
         className={`w-full ${hidden ? "h-[60px]" : "h-[300px]"} rounded-md overflow-hidden border-2 border-moss relative`}
       >
         <Button
-          className={"absolute top-2 right-2 z-[1000]"}
+          className={"absolute top-2 right-2 z-[600]"}
           variant={"secondary"}
           onClick={(e) => {
             e.preventDefault();
@@ -162,7 +161,7 @@ export const LocationEditor = ({
         </Button>
         <div ref={mapContainer} className="w-full h-full" />
         {!hidden && (
-          <div className="absolute bottom-2 right-2 z-[1000] bg-sand dark:bg-bark px-2 py-1 rounded text-xs text-bark dark:text-sand shadow-md border border-moss/30">
+          <div className="absolute bottom-2 right-2 z-[100] bg-sand dark:bg-bark px-2 py-1 rounded text-xs text-bark dark:text-sand shadow-md border border-moss/30">
             {isPresetLocation
               ? "Låst til forhåndsinnstilt lokalitet"
               : "Dra markøren eller klikk for å justere posisjon"}

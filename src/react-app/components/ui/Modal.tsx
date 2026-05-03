@@ -87,15 +87,15 @@ export function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
       onClick={handleBackdropClick}
     >
       <div
         className={`w-full ${maxWidth} bg-sand dark:bg-bark rounded-lg shadow-custom-2xl max-h-[90vh] overflow-y-auto border-2 border-moss`}
       >
         {/* Header with consistent styling */}
-        <div className="sticky top-0 bg-forest text-sand p-lg flex justify-between items-center z-[2000] border-b-2 border-moss">
-          <h2 className="text-2xl font-bold flex items-center gap-sm">
+        <div className="sticky top-0 bg-forest text-sand p-lg flex justify-between items-center z-[1100] border-b-2 border-moss">
+          <h2 className="text-2xl text-sand font-bold flex items-center gap-sm">
             {icon}
             {title}
           </h2>
@@ -112,7 +112,11 @@ export function Modal({
 
         {/* Content */}
         <div className="p-lg">{children}</div>
-        {footer}
+        {footer ? (
+          <div className="space-y-sm sticky bottom-0 bg-sand dark:bg-bark border-t-2 border-moss p-md z-[1100]">
+            {footer}
+          </div>
+        ) : null}
       </div>
     </div>
   );

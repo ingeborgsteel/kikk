@@ -60,6 +60,11 @@
     color: #f2efea;
   }
 
+  .leaflet-container .leaflet-top,
+  .leaflet-container .leaflet-control {
+    z-index: 400 !important;
+  }
+
   @media (prefers-color-scheme: dark) {
     :root {
       color: #f2efea;

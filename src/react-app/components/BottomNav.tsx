@@ -22,7 +22,7 @@ export function BottomNav({ currentView, onLoginClick }: BottomNavProps) {
   };
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-rust z-[1000] safe-area-bottom">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-rust z-[500] safe-area-bottom">
       <div className="flex justify-around items-center h-16">
         <button
           onClick={() => navigate("/")}

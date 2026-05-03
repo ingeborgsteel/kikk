@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import L from "leaflet";
-import "leaflet/dist/leaflet.css";
 import { Navigation } from "lucide-react";
 import { Observation } from "./types/observation";
 import { UserLocation } from "./types/location";
@@ -387,7 +386,7 @@ function Map({
   return (
     <div className="w-full h-[calc(100vh-80px)] relative flex-1 overflow-hidden bg-forest">
       {/* Layer Control */}
-      <div className="absolute top-md right-md z-[1000] flex flex-col gap-2">
+      <div className="absolute top-md right-md z-[500] flex flex-col gap-2">
         <button
           onClick={() => setCurrentLayer("standard")}
           className={`px-3 py-2 rounded-lg shadow-custom-lg font-medium text-sm transition-all ${
@@ -424,7 +423,7 @@ function Map({
       </div>
       <button
         onClick={() => setFollowMode(!followMode)}
-        className={`absolute left-1/2 -translate-x-1/2 bottom-[calc(0.7rem)] md:bottom-md z-[1100] px-3 py-2 rounded-full shadow-custom-lg font-semibold text-sm transition-all flex items-center gap-2 border-2 ${
+        className={`absolute left-1/2 -translate-x-1/2 bottom-[calc(4rem)] md:bottom-md z-[500] px-3 py-2 rounded-full shadow-custom-lg font-semibold text-sm transition-all flex items-center gap-2 border-2 ${
           followMode
             ? "bg-moss text-sand border-sand"
             : "bg-sand dark:bg-bark text-bark dark:text-sand border-moss hover:bg-moss dark:hover:bg-moss"
@@ -436,13 +435,13 @@ function Map({
         <span>Følg meg</span>
       </button>
       {isLocating && (
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[2000] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-lg rounded-lg shadow-custom-2xl flex flex-col items-center gap-md font-medium text-bark dark:text-sand border-2 border-moss">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[500] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-lg rounded-lg shadow-custom-2xl flex flex-col items-center gap-md font-medium text-bark dark:text-sand border-2 border-moss">
           <div className="w-10 h-10 border-4 border-slate-border border-t-rust rounded-full animate-spin"></div>
           <span>Finner din posisjon...</span>
         </div>
       )}
       {locationError && (
-        <div className="absolute top-md left-1/2 -translate-x-1/2 z-[1000] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-md md:p-xl rounded-lg shadow-custom-xl flex items-start gap-sm text-sm md:text-base font-medium text-rust dark:text-rust animate-[slideDown_0.3s_ease] max-w-[90%] border-2 border-rust leading-relaxed">
+        <div className="absolute top-md left-1/2 -translate-x-1/2 z-[500] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-md md:p-xl rounded-lg shadow-custom-xl flex items-start gap-sm text-sm md:text-base font-medium text-rust dark:text-rust animate-[slideDown_0.3s_ease] max-w-[90%] border-2 border-rust leading-relaxed">
           <svg
             width="20"
             height="20"
@@ -466,7 +465,7 @@ function Map({
         </div>
       )}
       {showCenteredMessage && currentPosition && !selectedLocation && (
-        <div className="absolute top-md left-1/2 -translate-x-1/2 z-[1000] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-sm md:p-md px-lg md:px-xl rounded-lg shadow-custom-xl flex items-center gap-sm text-sm md:text-base font-semibold text-moss dark:text-moss animate-[slideDown_0.3s_ease] max-w-[90%] border-2 border-moss">
+        <div className="absolute top-md left-1/2 -translate-x-1/2 z-[500] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-sm md:p-md px-lg md:px-xl rounded-lg shadow-custom-xl flex items-center gap-sm text-sm md:text-base font-semibold text-moss dark:text-moss animate-[slideDown_0.3s_ease] max-w-[90%] border-2 border-moss">
           <svg
             width="16"
             height="16"
@@ -482,7 +481,7 @@ function Map({
         </div>
       )}
       {selectedLocation && (
-        <div className="absolute top-md left-1/2 -translate-x-1/2 z-[1000] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-sm md:p-md px-lg md:px-xl rounded-lg shadow-custom-xl flex items-center gap-sm text-sm md:text-base font-semibold text-bark dark:text-sand animate-[slideDown_0.3s_ease] max-w-[90%] border-2 border-moss">
+        <div className="absolute top-md left-1/2 -translate-x-1/2 z-[500] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-sm md:p-md px-lg md:px-xl rounded-lg shadow-custom-xl flex items-center gap-sm text-sm md:text-base font-semibold text-bark dark:text-sand animate-[slideDown_0.3s_ease] max-w-[90%] border-2 border-moss">
           <svg
             width="16"
             height="16"

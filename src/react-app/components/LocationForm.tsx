@@ -57,6 +57,7 @@ export function LocationForm({
   useEffect(() => {
     if (editingLocation) return; // Skip for editing
 
+    setLoadingName(true);
     reverseGeocode(currentLocation.lat, currentLocation.lng)
       .then((name) => {
         if (name) {
@@ -73,9 +74,6 @@ export function LocationForm({
 
   // Update coordinates when location changes in map
   const handleLocationChange = (lat: number, lng: number) => {
-    if (!editingLocation) {
-      setLoadingName(true);
-    }
     setCurrentLocation({ lat, lng });
     setValue("lat", lat.toString());
     setValue("lng", lng.toString());
@@ -126,7 +124,7 @@ export function LocationForm({
         isOpen={isOpen}
         title={editingLocation ? "Rediger lokalitet" : "Legg til lokalitet"}
         footer={
-          <div className="flex gap-md justify-end pt-md sticky bottom-0 bg-sand dark:bg-bark border-t-2 border-moss p-md z-10">
+          <div className="flex gap-md justify-end">
             <Button type="button" variant="secondary" onClick={onClose}>
               Avbryt
             </Button>

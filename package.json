@@ -12,6 +12,10 @@
     "publish": true
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/material": "^9.0.0",
+    "@mui/x-date-pickers": "^9.0.4",
     "@octokit/core": "^7.0.6",
     "@supabase/supabase-js": "^2.95.3",
     "@tanstack/react-query": "^5.90.20",

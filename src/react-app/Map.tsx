@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import L from "leaflet";
-import { Navigation } from "lucide-react";
 import { Observation } from "./types/observation";
 import { UserLocation } from "./types/location";
 
@@ -421,19 +420,6 @@ function Map({
           Flyfoto
         </button>
       </div>
-      <button
-        onClick={() => setFollowMode(!followMode)}
-        className={`absolute left-1/2 -translate-x-1/2 bottom-[calc(4rem)] md:bottom-md z-[500] px-3 py-2 rounded-full shadow-custom-lg font-semibold text-sm transition-all flex items-center gap-2 border-2 ${
-          followMode
-            ? "bg-moss text-sand border-sand"
-            : "bg-sand dark:bg-bark text-bark dark:text-sand border-moss hover:bg-moss dark:hover:bg-moss"
-        }`}
-        title="Følger posisjonen din"
-        aria-label="Veksle følg meg"
-      >
-        <Navigation size={16} />
-        <span>Følg meg</span>
-      </button>
       {isLocating && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[500] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-lg rounded-lg shadow-custom-2xl flex flex-col items-center gap-md font-medium text-bark dark:text-sand border-2 border-moss">
           <div className="w-10 h-10 border-4 border-slate-border border-t-rust rounded-full animate-spin"></div>

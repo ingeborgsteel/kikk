@@ -191,19 +191,6 @@ const ObservationForm = ({
     [currentLocation, setValue, presetLocation],
   );
 
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        e.stopPropagation();
-        onClose();
-      }
-    };
-
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, [onClose]);
-
   // Cleanup success message timeout on unmount
   useEffect(() => {
     return () => {
@@ -336,7 +323,16 @@ const ObservationForm = ({
     <form onSubmit={handleSubmit(save)}>
       <Modal
         isOpen={isOpen}
-        onClose={onClose}
+        onClose={() => {
+          if (
+            !isDirty ||
+            confirm(
+              "Er du sikker på at du vil lukke? Alle endringer vil gå tapt.",
+            )
+          ) {
+            onClose();
+          }
+        }}
         title={observation ? "Rediger kikk" : "Opprett kikk"}
         footer={
           <>

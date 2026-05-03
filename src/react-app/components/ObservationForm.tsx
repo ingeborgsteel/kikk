@@ -140,6 +140,10 @@ const ObservationForm = ({
         : {}),
     },
   });
+  const uncertaintyRadius = useWatch({
+    control,
+    name: "uncertaintyRadius",
+  });
 
   // Watch startDate to auto-update endDate
   const startDate = useWatch({ control, name: "startDate" });
@@ -593,6 +597,7 @@ const ObservationForm = ({
             <LocationEditor
               isPresetLocation={!!presetLocation}
               location={currentLocation}
+              uncertaintyRadius={uncertaintyRadius}
               onLocationChange={handleLocationChange}
               zoom={zoom}
             />

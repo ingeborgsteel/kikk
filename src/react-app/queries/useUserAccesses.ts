@@ -6,7 +6,7 @@ export const useUserAccesses = (
   userId: string,
   options: { enabled: boolean },
 ) => {
-  return useQuery<UserAccess>({
+  return useQuery<UserAccess | undefined>({
     queryKey: ["user", userId, "access"],
     queryFn: () => fetchUserAccesses(userId),
     ...options,

@@ -22,6 +22,9 @@ import { UserLocation } from "./types/location.ts";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+import { useMapPreferences } from "./context/MapPreferencesContext.tsx";
+import { useGeolocation } from "./context/GeolocationContext.tsx";
+import { CircleDashed, Navigation } from "lucide-react";
 
 function App() {
   const navigate = useNavigate();
@@ -47,6 +50,9 @@ function App() {
     useState(false);
   const { observations } = useObservations();
   const { locations } = useLocations();
+  const { followMode, setFollowMode } = useGeolocation();
+  const { showUncertaintyOverlay, setShowUncertaintyOverlay } =
+    useMapPreferences();
 
   dayjs.extend(utc);
   dayjs.extend(timezone);
@@ -264,7 +270,46 @@ function App() {
         onClose={() => setShowGitHubIssueForm(false)}
         showForm={showGitHubIssueForm}
       />
-      <GitHubSuggestionButton onClick={() => setShowGitHubIssueForm(true)} />
+      <div className="fixed bottom-20 md:bottom-6 right-6 z-[500] flex flex-col gap-3 items-end">
+        {getCurrentView() === "map" && (
+          <>
+            <div className="relative group">
+              <span className="hidden md:block absolute right-full mr-3 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-md bg-sand/95 dark:bg-bark/95 px-3 py-1.5 text-sm font-medium text-bark dark:text-sand shadow-custom-lg border border-moss/30 opacity-0 translate-x-1 pointer-events-none transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0">
+                Følg meg
+              </span>
+              <Button
+                onClick={() => setFollowMode(!followMode)}
+                size="icon"
+                variant={followMode ? "secondary" : "outline"}
+                className="h-10 w-10 box-border shadow-custom-xl hover:shadow-custom-2xl hover:translate-y-0 active:translate-y-0"
+                aria-label="Veksle følg meg"
+                title="Følg meg"
+              >
+                <Navigation size={20} />
+              </Button>
+            </div>
+            <div className="relative group">
+              <span className="hidden md:block absolute right-full mr-3 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-md bg-sand/95 dark:bg-bark/95 px-3 py-1.5 text-sm font-medium text-bark dark:text-sand shadow-custom-lg border border-moss/30 opacity-0 translate-x-1 pointer-events-none transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0">
+                Usikkerhet
+              </span>
+              <Button
+                onClick={() => setShowUncertaintyOverlay(!showUncertaintyOverlay)}
+                size="icon"
+                variant={showUncertaintyOverlay ? "secondary" : "outline"}
+                className="h-10 w-10 box-border shadow-custom-xl hover:shadow-custom-2xl hover:translate-y-0 active:translate-y-0"
+                aria-label="Veksle usikkerhetsradius"
+                title="Usikkerhet"
+              >
+                <CircleDashed size={20} />
+              </Button>
+            </div>
+          </>
+        )}
+        <GitHubSuggestionButton
+          onClick={() => setShowGitHubIssueForm(true)}
+          floating={false}
+        />
+      </div>
       <BottomNav
         currentView={getCurrentView()}
         onLoginClick={() => setShowLoginForm(true)}

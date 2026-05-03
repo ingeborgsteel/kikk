@@ -53,6 +53,7 @@ const getTileLayerConfig = (
 
 // Delay for map resize after initialization to ensure container dimensions are available
 const MAP_RESIZE_DELAY_MS = 100;
+const UNCERTAINTY_ZOOM_THRESHOLD = 9;
 
 interface MapProps {
   onLocationSelect?: (lat: number, lng: number, zoom: number) => void;
@@ -78,11 +79,15 @@ function Map({
   } | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
   const observationMarkersRef = useRef<L.Marker[]>([]);
+  const observationCirclesRef = useRef<L.Circle[]>([]);
   const userLocationsMarkersRef = useRef<L.Marker[]>([]);
+  const userLocationCirclesRef = useRef<L.Circle[]>([]);
   const userLocationMarkerRef = useRef<L.CircleMarker | null>(null);
   const [showCenteredMessage, setShowCenteredMessage] = useState(false);
+  const [currentZoom, setCurrentZoom] = useState(12);
   const hasAutoLocatedRef = useRef(false);
-  const { currentLayer, setCurrentLayer } = useMapPreferences();
+  const { currentLayer, setCurrentLayer, showUncertaintyOverlay } =
+    useMapPreferences();
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   const {
     currentPosition,
@@ -157,6 +162,7 @@ function Map({
 
     // Add click handler to select location
     const mapInstance = map.current;
+    setCurrentZoom(mapInstance.getZoom());
     mapInstance.on("click", (e: L.LeafletMouseEvent) => {
       const { lat, lng } = e.latlng;
       setSelectedLocation({ lat, lng });
@@ -184,11 +190,17 @@ function Map({
       setFollowMode(false);
     };
 
+    const handleZoomEnd = () => {
+      setCurrentZoom(mapInstance.getZoom());
+    };
+
     mapInstance.on("dragstart", handleDragStart);
+    mapInstance.on("zoomend", handleZoomEnd);
 
     // Cleanup
     return () => {
       mapInstance.off("dragstart", handleDragStart);
+      mapInstance.off("zoomend", handleZoomEnd);
       if (map.current) {
         map.current.remove();
         map.current = null;
@@ -202,9 +214,71 @@ function Map({
         userLocationMarkerRef.current = null;
       }
       observationMarkersRef.current = [];
+      observationCirclesRef.current = [];
       userLocationsMarkersRef.current = [];
+      userLocationCirclesRef.current = [];
     };
   }, [setFollowMode]);
+
+  useEffect(() => {
+    if (!map.current) return;
+
+    observationCirclesRef.current.forEach((circle) => circle.remove());
+    observationCirclesRef.current = [];
+
+    if (!showUncertaintyOverlay || currentZoom < UNCERTAINTY_ZOOM_THRESHOLD) {
+      return;
+    }
+
+    observations.forEach((observation) => {
+      if (!map.current) return;
+
+      const circle = L.circle(
+        [observation.location.lat, observation.location.lng],
+        {
+          radius: observation.uncertaintyRadius,
+          color: "#1a3d32",
+          fillColor: "#2F5D50",
+          fillOpacity: 0.5,
+          opacity: 0.7,
+          weight: 1,
+          interactive: false,
+        },
+      ).addTo(map.current);
+
+      observationCirclesRef.current.push(circle);
+    });
+  }, [currentZoom, observations, showUncertaintyOverlay]);
+
+  useEffect(() => {
+    if (!map.current) return;
+
+    userLocationCirclesRef.current.forEach((circle) => circle.remove());
+    userLocationCirclesRef.current = [];
+
+    if (!showUncertaintyOverlay || currentZoom < UNCERTAINTY_ZOOM_THRESHOLD) {
+      return;
+    }
+
+    userLocations.forEach((userLocation) => {
+      if (!map.current) return;
+
+      const circle = L.circle(
+        [userLocation.location.lat, userLocation.location.lng],
+        {
+          radius: userLocation.uncertaintyRadius,
+          color: "#5B21B6",
+          fillColor: "#7C3AED",
+          fillOpacity: 0.5,
+          opacity: 0.7,
+          weight: 1,
+          interactive: false,
+        },
+      ).addTo(map.current);
+
+      userLocationCirclesRef.current.push(circle);
+    });
+  }, [currentZoom, showUncertaintyOverlay, userLocations]);
 
   useEffect(() => {
     if (!showCenteredMessage) return;
@@ -467,7 +541,7 @@ function Map({
         </div>
       )}
       {selectedLocation && (
-        <div className="absolute top-md left-1/2 -translate-x-1/2 z-[500] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-sm md:p-md px-lg md:px-xl rounded-lg shadow-custom-xl flex items-center gap-sm text-sm md:text-base font-semibold text-bark dark:text-sand animate-[slideDown_0.3s_ease] max-w-[90%] border-2 border-moss">
+        <div className="absolute top-md left-1/2 -translate-x-1/2 z-[500] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-sm rounded-lg shadow-custom-xl flex items-center gap-sm text-sm md:text-base font-semibold text-bark dark:text-sand animate-[slideDown_0.3s_ease] max-w-[90%] border-2 border-moss">
           <svg
             width="16"
             height="16"

@@ -2,8 +2,6 @@ import { BarChart3, Binoculars, Map, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { isSupabaseConfigured } from "../lib/supabase";
-import { Navigation } from "lucide-react";
-import { useGeolocation } from "../context/GeolocationContext";
 
 interface BottomNavProps {
   currentView: "map" | "observations" | "stats" | "profile";
@@ -15,8 +13,6 @@ export function BottomNav({ currentView, onLoginClick }: BottomNavProps) {
   const { user } = useAuth();
   const supabaseConfigured = isSupabaseConfigured();
 
-  const { followMode, setFollowMode } = useGeolocation();
-
   const handleProfileOrLogin = () => {
     if (user) {
       navigate("/profile");
@@ -27,21 +23,6 @@ export function BottomNav({ currentView, onLoginClick }: BottomNavProps) {
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-rust z-[500] safe-area-bottom">
-      {currentView === "map" && (
-        <button
-          onClick={() => setFollowMode(!followMode)}
-          className={`absolute left-1/2 -translate-x-1/2 bottom-[calc(4rem)] md:bottom-md z-[500] px-3 py-2 mb-3 rounded-full shadow-custom-lg font-semibold text-sm transition-all flex items-center gap-2 border-2 ${
-            followMode
-              ? "bg-moss text-sand border-sand"
-              : "bg-sand dark:bg-bark text-bark dark:text-sand border-moss hover:bg-moss dark:hover:bg-moss"
-          }`}
-          title="Følger posisjonen din"
-          aria-label="Veksle følg meg"
-        >
-          <Navigation size={16} />
-          <span>Følg meg</span>
-        </button>
-      )}
       <div className="flex justify-around items-center h-16">
         <button
           onClick={() => navigate("/")}

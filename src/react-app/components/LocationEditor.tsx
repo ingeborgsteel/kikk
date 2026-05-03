@@ -49,6 +49,7 @@ const getTileLayerConfig = (
 
 interface LocationEditorProps {
   location: { lat: number; lng: number };
+  uncertaintyRadius?: number | null;
   isPresetLocation?: boolean;
   onLocationChange: (lat: number, lng: number) => void;
   zoom?: number;
@@ -56,15 +57,16 @@ interface LocationEditorProps {
 
 export const LocationEditor = ({
   location,
+  uncertaintyRadius,
   isPresetLocation = false,
   onLocationChange,
   zoom = 13,
 }: LocationEditorProps) => {
   const [hidden, setHidden] = useState(false);
-
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
+  const circleRef = useRef<L.Circle | null>(null);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   const { currentLayer } = useMapPreferences();
 
@@ -91,6 +93,18 @@ export const LocationEditor = ({
       icon: isPresetLocation ? UserLocationicon : EditableIcon,
       draggable: true,
     }).addTo(map.current);
+
+    if (typeof uncertaintyRadius === "number" && uncertaintyRadius > 0) {
+      circleRef.current = L.circle([location.lat, location.lng], {
+        radius: uncertaintyRadius,
+        color: isPresetLocation ? "#5B21B6" : "#8B4513",
+        fillColor: isPresetLocation ? "#7C3AED" : "#C76D4B",
+        fillOpacity: 0.16,
+        opacity: 0.8,
+        weight: 1,
+        interactive: false,
+      }).addTo(map.current);
+    }
 
     if (!isPresetLocation) {
       markerRef.current.on("dragend", () => {
@@ -126,11 +140,14 @@ export const LocationEditor = ({
       if (markerRef.current) {
         markerRef.current = null;
       }
+      if (circleRef.current) {
+        circleRef.current.remove();
+        circleRef.current = null;
+      }
       if (tileLayerRef.current) {
         tileLayerRef.current = null;
       }
     };
-    // Empty deps: only initialize once on mount. location/onLocationChange handled by separate effect
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -138,15 +155,50 @@ export const LocationEditor = ({
   useEffect(() => {
     if (markerRef.current && map.current) {
       markerRef.current.setLatLng([location.lat, location.lng]);
+      if (circleRef.current) {
+        circleRef.current.setLatLng([location.lat, location.lng]);
+      }
       map.current.setView([location.lat, location.lng], map.current.getZoom());
     }
   }, [location.lat, location.lng]);
+
+  useEffect(() => {
+    if (!map.current) return;
+
+    if (typeof uncertaintyRadius !== "number" || uncertaintyRadius <= 0) {
+      if (circleRef.current) {
+        circleRef.current.remove();
+        circleRef.current = null;
+      }
+      return;
+    }
+
+    if (!circleRef.current) {
+      circleRef.current = L.circle([location.lat, location.lng], {
+        radius: uncertaintyRadius,
+        color: isPresetLocation ? "#5B21B6" : "#8B4513",
+        fillColor: isPresetLocation ? "#7C3AED" : "#C76D4B",
+        fillOpacity: 0.16,
+        opacity: 0.8,
+        weight: 1,
+        interactive: false,
+      }).addTo(map.current);
+      return;
+    }
+
+    circleRef.current.setRadius(uncertaintyRadius);
+  }, [isPresetLocation, location.lat, location.lng, uncertaintyRadius]);
 
   return (
     <div>
       <p className="text-sm text-slate mt-1 mb-2">
         Lat: {location.lat.toFixed(4)}, Lng: {location.lng.toFixed(4)}
       </p>
+      {typeof uncertaintyRadius === "number" && uncertaintyRadius > 0 && (
+        <p className="text-sm text-slate mt-1 mb-2">
+          Usikkerhetsradius: approx. {uncertaintyRadius} m
+        </p>
+      )}
       <div
         className={`w-full ${hidden ? "h-[60px]" : "h-[300px]"} rounded-md overflow-hidden border-2 border-moss relative`}
       >

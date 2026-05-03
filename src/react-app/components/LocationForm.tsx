@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { Button } from "./ui/button";
 import { useLocations } from "../context/LocationsContext";
 import { useAuth } from "../context/AuthContext";
@@ -52,6 +52,10 @@ export function LocationForm({
         description: editingLocation?.description || "",
       },
     });
+  const uncertaintyRadius = useWatch({
+    control,
+    name: "uncertaintyRadius",
+  });
 
   // Fetch suggested name from reverse geocoding (only for new locations)
   useEffect(() => {
@@ -158,6 +162,7 @@ export function LocationForm({
             </div>
             <LocationEditor
               location={currentLocation}
+              uncertaintyRadius={uncertaintyRadius}
               onLocationChange={handleLocationChange}
               zoom={zoom}
             />

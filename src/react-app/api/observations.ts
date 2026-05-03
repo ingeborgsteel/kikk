@@ -26,7 +26,10 @@ export type CreateObservation = Omit<
   "id" | "createdAt" | "updatedAt" | "species"
 > & { species: CreateSpecies[] };
 
-export type CreateSpecies = Omit<Species, "id" | "createdAt" | "count">;
+export type CreateSpecies = Omit<
+  Species,
+  "id" | "createdAt" | "count" | "gender"
+>;
 
 export async function createObservation(
   observation: CreateObservation,

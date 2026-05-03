@@ -135,7 +135,7 @@ const ObservationForm = ({
         100,
       ...(!observation && presetSpecies
         ? {
-            species: [{ species: presetSpecies, gender: "unknown" as const }],
+            species: [{ species: presetSpecies }],
           }
         : {}),
     },
@@ -252,8 +252,6 @@ const ObservationForm = ({
     (data: Observation) => {
       const startDate = toStorageDateTimeValue(data.startDate);
       const endDate = toStorageDateTimeValue(data.endDate);
-      const startDate = toStorageDateTimeValue(data.startDate);
-      const endDate = toStorageDateTimeValue(data.endDate);
 
       if (data.id) {
         updateObservation({
@@ -289,8 +287,6 @@ const ObservationForm = ({
 
   const saveAndAddAnother = useCallback(
     (data: Observation) => {
-      const startDate = toStorageDateTimeValue(data.startDate);
-      const endDate = toStorageDateTimeValue(data.endDate);
       const startDate = toStorageDateTimeValue(data.startDate);
       const endDate = toStorageDateTimeValue(data.endDate);
 
@@ -387,7 +383,6 @@ const ObservationForm = ({
               const addSpecies = (taxon: TaxonRecord) => {
                 const newObservation: CreateSpecies = {
                   species: taxon,
-                  gender: "unknown",
                 };
                 onChange([newObservation, ...species]);
                 setSearchTerm("");
@@ -417,7 +412,7 @@ const ObservationForm = ({
                 } else if (field === "gender") {
                   updated[index] = {
                     ...updated[index],
-                    [field]: value as "male" | "female" | "unknown",
+                    [field]: value as string,
                   };
                 } else if (
                   field === "comment" ||

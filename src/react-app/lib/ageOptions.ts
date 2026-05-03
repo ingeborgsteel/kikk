@@ -17,96 +17,96 @@ export interface AgeOption {
 }
 
 /** Shared "unknown" option included in every group */
-const UNKNOWN: AgeOption = { value: "", label: "Ikke angitt" };
+const UNKNOWN: AgeOption = { value: "", label: "" };
 
 const BIRD_OPTIONS: AgeOption[] = [
   UNKNOWN,
-  { value: "egg", label: "Egg" },
-  { value: "pullus", label: "Pullus (dununge)" },
-  { value: "juvenile", label: "Juvenil" },
-  { value: "immature", label: "Immatur" },
-  { value: "subadult", label: "Subadult" },
-  { value: "adult", label: "Voksen" },
+  { value: "Egg", label: "Egg" },
+  { value: "Pullus (dununge)", label: "Pullus (dununge)" },
+  { value: "Juvenil", label: "Juvenil" },
+  { value: "Immatur", label: "Immatur" },
+  { value: "Subadult", label: "Subadult" },
+  { value: "Voksen", label: "Voksen" },
 ];
 
 const MAMMAL_OPTIONS: AgeOption[] = [
   UNKNOWN,
-  { value: "juvenile", label: "Juvenil" },
-  { value: "subadult", label: "Subadult" },
-  { value: "adult", label: "Voksen" },
+  { value: "Juvenil", label: "Juvenil" },
+  { value: "Subadult", label: "Subadult" },
+  { value: "Voksen", label: "Voksen" },
 ];
 
 const AMPHIBIAN_OPTIONS: AgeOption[] = [
   UNKNOWN,
-  { value: "egg", label: "Egg/rogn" },
-  { value: "larva", label: "Larve (rumpetroll)" },
-  { value: "juvenile", label: "Juvenil" },
-  { value: "adult", label: "Voksen" },
+  { value: "Egg", label: "Egg/rogn" },
+  { value: "Larve", label: "Larve (rumpetroll)" },
+  { value: "Juvenil", label: "Juvenil" },
+  { value: "Voksen", label: "Voksen" },
 ];
 
 const REPTILE_OPTIONS: AgeOption[] = [
   UNKNOWN,
-  { value: "egg", label: "Egg" },
-  { value: "juvenile", label: "Juvenil" },
-  { value: "subadult", label: "Subadult" },
-  { value: "adult", label: "Voksen" },
+  { value: "Egg", label: "Egg" },
+  { value: "Juvenil", label: "Juvenil" },
+  { value: "Subadult", label: "Subadult" },
+  { value: "Voksen", label: "Voksen" },
 ];
 
 const FISH_OPTIONS: AgeOption[] = [
   UNKNOWN,
-  { value: "egg", label: "Egg/rogn" },
-  { value: "larva", label: "Yngel" },
-  { value: "juvenile", label: "Juvenil" },
-  { value: "adult", label: "Voksen" },
+  { value: "Egg", label: "Egg/rogn" },
+  { value: "Yngel", label: "Yngel" },
+  { value: "Juvenil", label: "Juvenil" },
+  { value: "Voksen", label: "Voksen" },
 ];
 
 const INSECT_OPTIONS: AgeOption[] = [
   UNKNOWN,
-  { value: "egg", label: "Egg" },
-  { value: "larva", label: "Larve" },
-  { value: "pupa", label: "Puppe" },
-  { value: "imago", label: "Imago (voksen)" },
+  { value: "Egg", label: "Egg" },
+  { value: "Larve", label: "Larve" },
+  { value: "Puppe", label: "Puppe" },
+  { value: "Imago", label: "Imago (voksen)" },
 ];
 
 const ARACHNID_OPTIONS: AgeOption[] = [
   UNKNOWN,
-  { value: "egg", label: "Egg" },
-  { value: "nymph", label: "Nymfe" },
-  { value: "adult", label: "Voksen" },
+  { value: "Egg", label: "Egg" },
+  { value: "Nymfe", label: "Nymfe" },
+  { value: "Voksen", label: "Voksen" },
 ];
 
 const PLANT_OPTIONS: AgeOption[] = [
   UNKNOWN,
-  { value: "seed", label: "Frø" },
-  { value: "seedling", label: "Spire" },
-  { value: "vegetative", label: "Vegetativ" },
-  { value: "flowering", label: "Blomstrende" },
-  { value: "fruiting", label: "Fruktbærende" },
+  { value: "Frø", label: "Frø" },
+  { value: "Spire", label: "Spire" },
+  { value: "Vegetativ", label: "Vegetativ" },
+  { value: "Blomstrende", label: "Blomstrende" },
+  { value: "Fruktbærende", label: "Fruktbærende" },
 ];
 
 const MOSS_OPTIONS: AgeOption[] = [
   UNKNOWN,
-  { value: "vegetative", label: "Vegetativ" },
-  { value: "sporophyte", label: "Med sporofytt" },
+  { value: "Vegetativ", label: "Vegetativ" },
+  { value: "Sporofytt", label: "Med sporofytt" },
 ];
 
 const FUNGI_OPTIONS: AgeOption[] = [
   UNKNOWN,
-  { value: "mycelium", label: "Mycel" },
-  { value: "fruiting_body", label: "Fruktlegeme" },
+  { value: "Mycel", label: "Mycel" },
+  { value: "Fruktlegeme", label: "Fruktlegeme" },
 ];
 
 const LICHEN_OPTIONS: AgeOption[] = [
   UNKNOWN,
-  { value: "vegetative", label: "Vegetativ" },
-  { value: "fertile", label: "Fertil (med apothecier)" },
+  { value: "Vegetativ", label: "Vegetativ" },
+  { value: "Fertil (med apothecier)", label: "Fertil (med apothecier)" },
 ];
 
 /** Default options for taxon groups without specific mappings */
 const DEFAULT_OPTIONS: AgeOption[] = [
   UNKNOWN,
-  { value: "juvenile", label: "Juvenil" },
-  { value: "adult", label: "Voksen" },
+  { value: "Juvenil", label: "Juvenil" },
+  { value: "Voksen", label: "Voksen" },
 ];
 
 /**

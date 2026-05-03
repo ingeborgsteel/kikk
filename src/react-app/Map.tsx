@@ -420,7 +420,7 @@ function Map({
       </div>
       <button
         onClick={() => setFollowMode(!followMode)}
-        className={`absolute left-1/2 -translate-x-1/2 bottom-[calc(0.7rem)] md:bottom-md z-[500] px-3 py-2 rounded-full shadow-custom-lg font-semibold text-sm transition-all flex items-center gap-2 border-2 ${
+        className={`absolute left-1/2 -translate-x-1/2 bottom-[calc(4rem)] md:bottom-md z-[500] px-3 py-2 rounded-full shadow-custom-lg font-semibold text-sm transition-all flex items-center gap-2 border-2 ${
           followMode
             ? "bg-moss text-sand border-sand"
             : "bg-sand dark:bg-bark text-bark dark:text-sand border-moss hover:bg-moss dark:hover:bg-moss"

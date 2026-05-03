@@ -1,122 +1,111 @@
-/**
- * Age/life stage options per taxon group.
- *
- * Options are based on standard field terminology used in Norwegian biodiversity
- * monitoring and reporting, aligned with Artsdatabanken conventions and the
- * Darwin Core standard "lifeStage" vocabulary.
- *
- * References:
- * - Artsdatabanken field guide terminology (https://artsdatabanken.no)
- * - Darwin Core lifeStage (https://dwc.tdwg.org/terms/#dwc:lifeStage)
- * - NBIC (Norwegian Biodiversity Information Centre) reporting standards
- */
-
 export interface AgeOption {
   value: string;
   label: string;
 }
 
 /** Shared "unknown" option included in every group */
-const UNKNOWN: AgeOption = { value: "", label: "Ikke angitt" };
+const UNKNOWN: AgeOption = { value: "", label: "" };
 
 const BIRD_OPTIONS: AgeOption[] = [
   UNKNOWN,
-  { value: "egg", label: "Egg" },
-  { value: "pullus", label: "Pullus (dununge)" },
-  { value: "juvenile", label: "Juvenil" },
-  { value: "immature", label: "Immatur" },
-  { value: "subadult", label: "Subadult" },
-  { value: "adult", label: "Voksen" },
+  { value: "Egg", label: "Egg" },
+  { value: "Pulli", label: "Pulli" },
+  { value: "Voksen", label: "Voksen" },
+  { value: "1K", label: "1K" },
+  { value: "1K+", label: "1K+" },
+  { value: "2K", label: "2K" },
+  { value: "2K+", label: "2K+" },
+  { value: "2K-", label: "2K-" },
+  { value: "3K", label: "3K" },
+  { value: "3K+", label: "3K+" },
+  { value: "3K-", label: "3K-" },
+  { value: "4K", label: "4K" },
+  { value: "4K+", label: "4K+" },
+  { value: "4K-", label: "4K-" },
+  { value: "5K", label: "5K" },
+  { value: "5K+", label: "5K+" },
+  { value: "5K-", label: "5K-" },
+  { value: "6K", label: "6K" },
+  { value: "6K+", label: "6K+" },
+  { value: "6K-", label: "6K-" },
+  { value: "7K", label: "7K" },
+  { value: "7K+", label: "7K+" },
+  { value: "7K-", label: "7K-" },
 ];
 
 const MAMMAL_OPTIONS: AgeOption[] = [
   UNKNOWN,
-  { value: "juvenile", label: "Juvenil" },
-  { value: "subadult", label: "Subadult" },
-  { value: "adult", label: "Voksen" },
-];
-
-const AMPHIBIAN_OPTIONS: AgeOption[] = [
-  UNKNOWN,
-  { value: "egg", label: "Egg/rogn" },
-  { value: "larva", label: "Larve (rumpetroll)" },
-  { value: "juvenile", label: "Juvenil" },
-  { value: "adult", label: "Voksen" },
+  { value: "Årsunge", label: "Årsunge" },
+  { value: "Fjorårsunge", label: "Fjorårsunge" },
+  { value: "Voksen", label: "Voksen" },
 ];
 
 const REPTILE_OPTIONS: AgeOption[] = [
   UNKNOWN,
-  { value: "egg", label: "Egg" },
-  { value: "juvenile", label: "Juvenil" },
-  { value: "subadult", label: "Subadult" },
-  { value: "adult", label: "Voksen" },
+  { value: "Egg", label: "Egg" },
+  { value: "Larve", label: "Larve" },
+  { value: "Årsunge", label: "Årsunge" },
+  { value: "Voksen", label: "Voksen" },
 ];
 
 const FISH_OPTIONS: AgeOption[] = [
   UNKNOWN,
-  { value: "egg", label: "Egg/rogn" },
-  { value: "larva", label: "Yngel" },
-  { value: "juvenile", label: "Juvenil" },
-  { value: "adult", label: "Voksen" },
+  { value: "Egg", label: "Egg" },
+  { value: "Årsunge", label: "Årsunge" },
+  { value: "Fjorårsunge", label: "Fjorårsunge" },
+  { value: "Voksen", label: "Voksen" },
 ];
 
 const INSECT_OPTIONS: AgeOption[] = [
   UNKNOWN,
-  { value: "egg", label: "Egg" },
-  { value: "larva", label: "Larve" },
-  { value: "pupa", label: "Puppe" },
-  { value: "imago", label: "Imago (voksen)" },
-];
-
-const ARACHNID_OPTIONS: AgeOption[] = [
-  UNKNOWN,
-  { value: "egg", label: "Egg" },
-  { value: "nymph", label: "Nymfe" },
-  { value: "adult", label: "Voksen" },
+  { value: "Egg", label: "Egg" },
+  { value: "Larve/nymfe", label: "Larve/nymfe" },
+  { value: "Puppe", label: "Puppe" },
+  { value: "Ung", label: "Ung" },
+  { value: "Voksen", label: "Voksen" },
+  { value: "Imago/Voksen", label: "Imago/Voksen" },
 ];
 
 const PLANT_OPTIONS: AgeOption[] = [
   UNKNOWN,
-  { value: "seed", label: "Frø" },
-  { value: "seedling", label: "Spire" },
-  { value: "vegetative", label: "Vegetativ" },
-  { value: "flowering", label: "Blomstrende" },
-  { value: "fruiting", label: "Fruktbærende" },
+  { value: "Hvilestadium", label: "Hvilestadium" },
+  { value: "Knoppskyting", label: "Knoppskyting" },
+  { value: "Fullt utviklede blad", label: "Fullt utviklede blad" },
+  { value: "Blomsterknopper", label: "Blomsterknopper" },
+  { value: "Blomstring", label: "Blomstring" },
+  { value: "Avblomstret", label: "Avblomstret" },
+  { value: "I frukt", label: "I frukt" },
+  { value: "Frukt-/frøspredning", label: "Frukt-/frøspredning" },
+  { value: "Gulnende løv/blad", label: "Gulnende løv/blad" },
+  { value: "Bladfelling, visner", label: "Bladfelling, visner" },
+  { value: "Vinterstander", label: "Vinterstander" },
 ];
 
 const MOSS_OPTIONS: AgeOption[] = [
   UNKNOWN,
-  { value: "vegetative", label: "Vegetativ" },
-  { value: "sporophyte", label: "Med sporofytt" },
+  { value: "Med kapsel", label: "Med kapsel" },
+  { value: "Uten kapsel", label: "Uten kapsel" },
+  { value: "Med grokorn", label: "Med grokorn" },
 ];
 
 const FUNGI_OPTIONS: AgeOption[] = [
   UNKNOWN,
-  { value: "mycelium", label: "Mycel" },
-  { value: "fruiting_body", label: "Fruktlegeme" },
+  { value: "Anamorf (imperfekt)", label: "Anamorf (imperfekt)" },
+  { value: "Teleomorf (perfekt)", label: "Teleomorf (perfekt)" },
 ];
 
 const LICHEN_OPTIONS: AgeOption[] = [
   UNKNOWN,
-  { value: "vegetative", label: "Vegetativ" },
-  { value: "fertile", label: "Fertil (med apothecier)" },
+  { value: "Med apothecier", label: "Med apothecier" },
+  { value: "Med perithecier", label: "Med perithecier" },
+  { value: "Med soral", label: "Med soral" },
+  { value: "Med isidier", label: "Med isidier" },
+  { value: "Med schistisidier", label: "Med schistisidier" },
 ];
 
-/** Default options for taxon groups without specific mappings */
-const DEFAULT_OPTIONS: AgeOption[] = [
-  UNKNOWN,
-  { value: "juvenile", label: "Juvenil" },
-  { value: "adult", label: "Voksen" },
-];
+/** Default options for taxon groups without a verified category mapping */
+const DEFAULT_OPTIONS: AgeOption[] = [UNKNOWN, ...MAMMAL_OPTIONS];
 
-/**
- * Map from Artsdatabanken TaxonGroup values (Norwegian) to age/life stage options.
- *
- * The keys are lowercase versions of the TaxonGroup strings returned by the
- * Artsdatabanken API. Common groups include: "Fugler", "Pattedyr", "Amfibier",
- * "Reptiler", "Fisker", "Insekter", "Sommerfugler", "Biller", "Veps",
- * "Karplanter", "Moser", "Sopp", "Lav", etc.
- */
 const TAXON_GROUP_AGE_MAP: Record<string, AgeOption[]> = {
   // Birds
   fugler: BIRD_OPTIONS,
@@ -124,10 +113,7 @@ const TAXON_GROUP_AGE_MAP: Record<string, AgeOption[]> = {
   // Mammals
   pattedyr: MAMMAL_OPTIONS,
 
-  // Amphibians
-  amfibier: AMPHIBIAN_OPTIONS,
-
-  // Reptiles
+  amfibier: REPTILE_OPTIONS,
   reptiler: REPTILE_OPTIONS,
 
   // Fish
@@ -148,8 +134,8 @@ const TAXON_GROUP_AGE_MAP: Record<string, AgeOption[]> = {
   vårfluer: INSECT_OPTIONS,
   øyenstikkere: INSECT_OPTIONS,
   nebbmunner: INSECT_OPTIONS,
-  edderkopper: ARACHNID_OPTIONS,
-  midd: ARACHNID_OPTIONS,
+  edderkopper: INSECT_OPTIONS,
+  midd: INSECT_OPTIONS,
 
   // Vascular plants
   karplanter: PLANT_OPTIONS,

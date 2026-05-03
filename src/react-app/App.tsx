@@ -19,6 +19,9 @@ import { GitHubSuggestionButton } from "./components/GitHubSuggestionButton.tsx"
 import { GitHubIssueForm } from "./components/GitHubIssueForm.tsx";
 import { StatsDashboard } from "./components/StatsDashboard.tsx";
 import { UserLocation } from "./types/location.ts";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
 
 function App() {
   const navigate = useNavigate();
@@ -40,9 +43,14 @@ function App() {
   );
   const [kikkemodusActive, setKikkemodusActive] = useState(false);
   const [showGitHubIssueForm, setShowGitHubIssueForm] = useState(false);
-  const [returnToObservationAfterSave, setReturnToObservationAfterSave] = useState(false);
+  const [returnToObservationAfterSave, setReturnToObservationAfterSave] =
+    useState(false);
   const { observations } = useObservations();
   const { locations } = useLocations();
+
+  dayjs.extend(utc);
+  dayjs.extend(timezone);
+  dayjs.tz.setDefault("Europe/Oslo");
 
   const handleLocationSelect = (lat: number, lng: number, zoom: number) => {
     setSelectedLocation({ lat, lng });
@@ -236,7 +244,11 @@ function App() {
                   isOpen={showAddLocationForm}
                   initialLocation={selectedLocation}
                   onClose={handleLocationFormClose}
-                  onSaved={returnToObservationAfterSave ? handleLocationSaved : undefined}
+                  onSaved={
+                    returnToObservationAfterSave
+                      ? handleLocationSaved
+                      : undefined
+                  }
                   zoom={selectedZoom}
                 />
               )}

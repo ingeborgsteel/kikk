@@ -127,17 +127,23 @@ function ObservationItem({
       {/* Collapsible content */}
       {isExpanded && (
         <div className="px-lg pb-lg space-y-sm">
-          <h3 className="font-semibold text-bark">Arter Observert:</h3>
+          <h3 className="font-semibold text-bark">Arter observert:</h3>
           {observation.species.map((speciesObs, idx) => (
             <div key={idx} className="pl-md border-l-2 border-moss">
               <div className="font-medium text-bark">
-                {speciesObs.species.PrefferedPopularname}
-              </div>
-              <div className="text-sm text-slate italic">
-                {speciesObs.species.ValidScientificName}
+                {speciesObs.species.PrefferedPopularname ??
+                  speciesObs.species.ValidScientificName}
               </div>
               <div className="text-sm text-slate">
-                Count: {speciesObs.count} • Gender: {speciesObs.gender}
+                {[
+                  speciesObs.count,
+                  speciesObs.gender,
+                  speciesObs.age,
+                  speciesObs.method,
+                  speciesObs.comment,
+                ]
+                  .filter(Boolean)
+                  .join(" • ")}
               </div>
               {speciesObs.comment && (
                 <div className="text-sm text-bark mt-1 italic">

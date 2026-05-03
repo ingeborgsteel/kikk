@@ -145,7 +145,7 @@ npx wrangler tail
 1. **Add an Observation**: Click anywhere on the map to select a location
 2. **Enter Details**:
    - Search for and select species from the Artsdatabanken database
-   - Specify gender (male/female/unknown) and count
+   - Specify gender and count
    - Add location uncertainty radius in meters
    - Set observation date and time
    - Add field notes and per-species comments

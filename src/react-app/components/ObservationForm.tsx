@@ -24,7 +24,6 @@ import dayjs from "dayjs";
 import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
 import { MobileDateTimePicker } from "@mui/x-date-pickers/MobileDateTimePicker";
 
-const DATE_TIME_INPUT_FORMAT = "YYYY-MM-DDTHH:mm";
 const DATE_TIME_STORAGE_FORMAT = "YYYY-MM-DDTHH:mm:ssZ";
 
 interface ObservationFormProps {
@@ -50,31 +49,16 @@ const ObservationForm = ({
   onSaveAsLocation,
   onActivateKikkemodus,
 }: ObservationFormProps) => {
-  const toLocalDateTimeValue = (value?: string): string => {
-    if (!value) {
-      return dayjs().format(DATE_TIME_INPUT_FORMAT);
-    }
-
-    const isoWallClockMatch = value.match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/);
-    if (isoWallClockMatch) {
-      return isoWallClockMatch[0];
-    }
-
+  const parseDate = (value?: string): string => {
     const parsed = dayjs(value);
     if (!parsed.isValid()) {
-      return dayjs().format(DATE_TIME_INPUT_FORMAT);
+      return dayjs().toISOString();
     }
-
-    return parsed.format(DATE_TIME_INPUT_FORMAT);
+    return parsed.toISOString();
   };
 
   const toStorageDateTimeValue = (value?: string): string => {
-    if (!value) {
-      return dayjs().format(DATE_TIME_STORAGE_FORMAT);
-    }
-
-    const localWallClock = toLocalDateTimeValue(value);
-    const parsed = dayjs(localWallClock);
+    const parsed = dayjs(value);
 
     if (!parsed.isValid()) {
       return dayjs().format(DATE_TIME_STORAGE_FORMAT);
@@ -141,8 +125,8 @@ const ObservationForm = ({
   } = useForm<Observation>({
     defaultValues: {
       ...observation,
-      startDate: toLocalDateTimeValue(observation?.startDate),
-      endDate: toLocalDateTimeValue(observation?.endDate),
+      startDate: parseDate(observation?.startDate),
+      endDate: parseDate(observation?.endDate),
       locationName: observation?.locationName || presetLocation?.name || "",
       location: currentLocation,
       uncertaintyRadius:
@@ -151,7 +135,7 @@ const ObservationForm = ({
         100,
       ...(!observation && presetSpecies
         ? {
-            species: [{ species: presetSpecies, gender: "unknown" as const }],
+            species: [{ species: presetSpecies }],
           }
         : {}),
     },
@@ -323,7 +307,7 @@ const ObservationForm = ({
       setSuccessTimeout(setTimeout(() => setSuccessMessage(""), 3000));
 
       // Reset form for a new observation, keeping location
-      const newStartDate = dayjs().format(DATE_TIME_INPUT_FORMAT);
+      const newStartDate = dayjs().toISOString();
       reset({
         startDate: newStartDate,
         endDate: newStartDate,
@@ -395,7 +379,6 @@ const ObservationForm = ({
               const addSpecies = (taxon: TaxonRecord) => {
                 const newObservation: CreateSpecies = {
                   species: taxon,
-                  gender: "unknown",
                 };
                 onChange([newObservation, ...species]);
                 setSearchTerm("");
@@ -425,7 +408,7 @@ const ObservationForm = ({
                 } else if (field === "gender") {
                   updated[index] = {
                     ...updated[index],
-                    [field]: value as "male" | "female" | "unknown",
+                    [field]: value as string,
                   };
                 } else if (
                   field === "comment" ||
@@ -696,11 +679,7 @@ const ObservationForm = ({
                       ampm={false}
                       value={value ? dayjs(value) : null}
                       onChange={(newValue) =>
-                        onChange(
-                          newValue
-                            ? newValue.format(DATE_TIME_INPUT_FORMAT)
-                            : null,
-                        )
+                        onChange(newValue ? newValue.toISOString() : null)
                       }
                     />
                   </DemoContainer>
@@ -736,11 +715,7 @@ const ObservationForm = ({
                       ampm={false}
                       value={value ? dayjs(value) : null}
                       onChange={(newValue) =>
-                        onChange(
-                          newValue
-                            ? newValue.format(DATE_TIME_INPUT_FORMAT)
-                            : null,
-                        )
+                        onChange(newValue ? newValue.toISOString() : null)
                       }
                     />
                   </DemoContainer>

@@ -29,9 +29,22 @@ const SpeciesItem = ({
     [species.species.TaxonGroup],
   );
 
+  const genderOptions = [
+    { value: "", label: "" },
+    { value: "Hann", label: "Hann" },
+    { value: "Hunn", label: "Hunn" },
+    { value: "Hunnfarget", label: "Hunnfarget" },
+    { value: "I par", label: "I par" },
+    { value: "Arbeider", label: "Arbeider" },
+  ];
+
   // Check if the current age value exists in the options (backward compatibility)
   const currentAgeInOptions = ageOptions.some(
     (opt) => opt.value === (species.age || ""),
+  );
+
+  const currentGenderInOptions = genderOptions.some(
+    (opt) => opt.value === (species.gender || ""),
   );
 
   return (
@@ -86,12 +99,16 @@ const SpeciesItem = ({
                 onChange={(e) => updateSpecies("gender", e.target.value)}
                 className="mt-1"
               >
-                <option value="unknown">Hann</option>
-                <option value="male">Hunn</option>
-                <option value="female">Hunnfarget</option>
-                <option value="female">I par</option>
-                <option value="female">Arbeider</option>
-                <option value="female">Ukjent</option>
+                {!currentGenderInOptions && species.gender && (
+                  <option value={species.gender}>
+                    {species.gender} (egendefinert)
+                  </option>
+                )}
+                {genderOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
               </Select>
             </div>
             <div>

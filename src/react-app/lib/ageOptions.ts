@@ -104,7 +104,7 @@ const LICHEN_OPTIONS: AgeOption[] = [
 ];
 
 /** Default options for taxon groups without a verified category mapping */
-const DEFAULT_OPTIONS: AgeOption[] = [UNKNOWN];
+const DEFAULT_OPTIONS: AgeOption[] = [UNKNOWN, ...MAMMAL_OPTIONS];
 
 const TAXON_GROUP_AGE_MAP: Record<string, AgeOption[]> = {
   // Birds

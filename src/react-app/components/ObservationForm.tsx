@@ -281,7 +281,6 @@ const ObservationForm = ({
       presetLocation,
       onActivateKikkemodus,
       toStorageDateTimeValue,
-      toStorageDateTimeValue,
     ],
   );
 
@@ -330,7 +329,6 @@ const ObservationForm = ({
       successTimeout,
       onActivateKikkemodus,
       toStorageDateTimeValue,
-      toStorageDateTimeValue,
     ],
   );
 
@@ -342,32 +340,30 @@ const ObservationForm = ({
         title={observation ? "Rediger kikk" : "Opprett kikk"}
         footer={
           <>
-            <>
-              {successMessage && (
-                <div className="flex items-center gap-2 text-sm text-forest dark:text-moss bg-moss/10 dark:bg-moss/20 px-3 py-2 rounded-md">
-                  <Check size={16} />
-                  {successMessage}
-                </div>
-              )}
-              <div className="flex gap-md justify-end">
-                <Button type="button" variant="outline" onClick={onClose}>
-                  Avbryt
-                </Button>
-                {!observation && (
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    disabled={!isDirty || !isValid}
-                    onClick={handleSubmit(saveAndAddAnother)}
-                  >
-                    Lagre og legg til ny
-                  </Button>
-                )}
-                <Button type="submit" disabled={!isDirty || !isValid}>
-                  Lagre
-                </Button>
+            {successMessage && (
+              <div className="flex items-center gap-2 text-sm text-forest dark:text-moss bg-moss/10 dark:bg-moss/20 px-3 py-2 rounded-md">
+                <Check size={16} />
+                {successMessage}
               </div>
-            </>
+            )}
+            <div className="flex gap-md justify-end">
+              <Button type="button" variant="outline" onClick={onClose}>
+                Avbryt
+              </Button>
+              {!observation && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={!isDirty || !isValid}
+                  onClick={handleSubmit(saveAndAddAnother)}
+                >
+                  Lagre og legg til ny
+                </Button>
+              )}
+              <Button type="submit" disabled={!isDirty || !isValid}>
+                Lagre
+              </Button>
+            </div>
           </>
         }
       >

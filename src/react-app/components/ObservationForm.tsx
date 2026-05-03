@@ -252,6 +252,8 @@ const ObservationForm = ({
     (data: Observation) => {
       const startDate = toStorageDateTimeValue(data.startDate);
       const endDate = toStorageDateTimeValue(data.endDate);
+      const startDate = toStorageDateTimeValue(data.startDate);
+      const endDate = toStorageDateTimeValue(data.endDate);
 
       if (data.id) {
         updateObservation({
@@ -281,11 +283,14 @@ const ObservationForm = ({
       presetLocation,
       onActivateKikkemodus,
       toStorageDateTimeValue,
+      toStorageDateTimeValue,
     ],
   );
 
   const saveAndAddAnother = useCallback(
     (data: Observation) => {
+      const startDate = toStorageDateTimeValue(data.startDate);
+      const endDate = toStorageDateTimeValue(data.endDate);
       const startDate = toStorageDateTimeValue(data.startDate);
       const endDate = toStorageDateTimeValue(data.endDate);
 
@@ -329,6 +334,7 @@ const ObservationForm = ({
       successTimeout,
       onActivateKikkemodus,
       toStorageDateTimeValue,
+      toStorageDateTimeValue,
     ],
   );
 
@@ -340,30 +346,32 @@ const ObservationForm = ({
         title={observation ? "Rediger kikk" : "Opprett kikk"}
         footer={
           <>
-            {successMessage && (
-              <div className="flex items-center gap-2 text-sm text-forest dark:text-moss bg-moss/10 dark:bg-moss/20 px-3 py-2 rounded-md">
-                <Check size={16} />
-                {successMessage}
-              </div>
-            )}
-            <div className="flex gap-md justify-end">
-              <Button type="button" variant="outline" onClick={onClose}>
-                Avbryt
-              </Button>
-              {!observation && (
-                <Button
-                  type="button"
-                  variant="secondary"
-                  disabled={!isDirty || !isValid}
-                  onClick={handleSubmit(saveAndAddAnother)}
-                >
-                  Lagre og legg til ny
-                </Button>
+            <>
+              {successMessage && (
+                <div className="flex items-center gap-2 text-sm text-forest dark:text-moss bg-moss/10 dark:bg-moss/20 px-3 py-2 rounded-md">
+                  <Check size={16} />
+                  {successMessage}
+                </div>
               )}
-              <Button type="submit" disabled={!isDirty || !isValid}>
-                Lagre
-              </Button>
-            </div>
+              <div className="flex gap-md justify-end">
+                <Button type="button" variant="outline" onClick={onClose}>
+                  Avbryt
+                </Button>
+                {!observation && (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={!isDirty || !isValid}
+                    onClick={handleSubmit(saveAndAddAnother)}
+                  >
+                    Lagre og legg til ny
+                  </Button>
+                )}
+                <Button type="submit" disabled={!isDirty || !isValid}>
+                  Lagre
+                </Button>
+              </div>
+            </>
           </>
         }
       >

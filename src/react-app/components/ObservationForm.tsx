@@ -24,6 +24,9 @@ import dayjs from "dayjs";
 import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
 import { MobileDateTimePicker } from "@mui/x-date-pickers/MobileDateTimePicker";
 
+const DATE_TIME_INPUT_FORMAT = "YYYY-MM-DDTHH:mm";
+const DATE_TIME_STORAGE_FORMAT = "YYYY-MM-DDTHH:mm:ssZ";
+
 interface ObservationFormProps {
   observation?: Observation;
   onClose: () => void;
@@ -47,6 +50,39 @@ const ObservationForm = ({
   onSaveAsLocation,
   onActivateKikkemodus,
 }: ObservationFormProps) => {
+  const toLocalDateTimeValue = (value?: string): string => {
+    if (!value) {
+      return dayjs().format(DATE_TIME_INPUT_FORMAT);
+    }
+
+    const isoWallClockMatch = value.match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/);
+    if (isoWallClockMatch) {
+      return isoWallClockMatch[0];
+    }
+
+    const parsed = dayjs(value);
+    if (!parsed.isValid()) {
+      return dayjs().format(DATE_TIME_INPUT_FORMAT);
+    }
+
+    return parsed.format(DATE_TIME_INPUT_FORMAT);
+  };
+
+  const toStorageDateTimeValue = (value?: string): string => {
+    if (!value) {
+      return dayjs().format(DATE_TIME_STORAGE_FORMAT);
+    }
+
+    const localWallClock = toLocalDateTimeValue(value);
+    const parsed = dayjs(localWallClock);
+
+    if (!parsed.isValid()) {
+      return dayjs().format(DATE_TIME_STORAGE_FORMAT);
+    }
+
+    return parsed.format(DATE_TIME_STORAGE_FORMAT);
+  };
+
   const { addObservation, updateObservation, observations } = useObservations();
   const [searchTerm, setSearchTerm] = useState("");
   const [showResults, setShowResults] = useState(false);
@@ -85,8 +121,6 @@ const ObservationForm = ({
     [searchResults, searchTerm, previouslyObservedIds],
   );
 
-  const defaultStartDate = new Date().toISOString().slice(0, 16);
-
   const {
     control,
     handleSubmit,
@@ -96,20 +130,12 @@ const ObservationForm = ({
     formState: { isDirty, isValid },
   } = useForm<Observation>({
     defaultValues: {
-      startDate:
-        observation?.startDate ||
-        new Date()
-          .toLocaleString("no-NO", { timeZone: "Europe/Oslo" })
-          .slice(0, 16),
-      endDate:
-        observation?.endDate ||
-        new Date()
-          .toLocaleString("no-NO", { timeZone: "Europe/Oslo" })
-          .slice(0, 16),
+      ...observation,
+      startDate: toLocalDateTimeValue(observation?.startDate),
+      endDate: toLocalDateTimeValue(observation?.endDate),
       locationName: observation?.locationName || presetLocation?.name || "",
       location: currentLocation,
       uncertaintyRadius: observation?.uncertaintyRadius || 10,
-      ...observation,
       ...(!observation && presetSpecies
         ? {
             species: [
@@ -229,7 +255,8 @@ const ObservationForm = ({
 
   const save = useCallback(
     (data: Observation) => {
-      const { startDate, endDate } = data;
+      const startDate = toStorageDateTimeValue(data.startDate);
+      const endDate = toStorageDateTimeValue(data.endDate);
 
       if (data.id) {
         updateObservation({
@@ -258,12 +285,14 @@ const ObservationForm = ({
       addObservation,
       presetLocation,
       onActivateKikkemodus,
+      toStorageDateTimeValue,
     ],
   );
 
   const saveAndAddAnother = useCallback(
     (data: Observation) => {
-      const { startDate, endDate } = data;
+      const startDate = toStorageDateTimeValue(data.startDate);
+      const endDate = toStorageDateTimeValue(data.endDate);
 
       addObservation({
         ...data,
@@ -283,7 +312,7 @@ const ObservationForm = ({
       setSuccessTimeout(setTimeout(() => setSuccessMessage(""), 3000));
 
       // Reset form for a new observation, keeping location
-      const newStartDate = new Date().toISOString().slice(0, 16);
+      const newStartDate = dayjs().format(DATE_TIME_INPUT_FORMAT);
       reset({
         startDate: newStartDate,
         endDate: newStartDate,
@@ -304,6 +333,7 @@ const ObservationForm = ({
       currentLocation,
       successTimeout,
       onActivateKikkemodus,
+      toStorageDateTimeValue,
     ],
   );
 
@@ -616,7 +646,7 @@ const ObservationForm = ({
                           fullWidth: true,
                           sx: {
                             "& .MuiOutlinedInput-root": {
-                              borderRadius: 5,
+                              borderRadius: 10,
                               background: "white",
                               "& fieldset": { border: "none" },
                               "&:hover fieldset": { border: "none" },
@@ -629,7 +659,11 @@ const ObservationForm = ({
                       ampm={false}
                       value={value ? dayjs(value) : null}
                       onChange={(newValue) =>
-                        onChange(newValue ? newValue.toISOString() : null)
+                        onChange(
+                          newValue
+                            ? newValue.format(DATE_TIME_INPUT_FORMAT)
+                            : null,
+                        )
                       }
                     />
                   </DemoContainer>
@@ -665,7 +699,11 @@ const ObservationForm = ({
                       ampm={false}
                       value={value ? dayjs(value) : null}
                       onChange={(newValue) =>
-                        onChange(newValue ? newValue.toISOString() : null)
+                        onChange(
+                          newValue
+                            ? newValue.format(DATE_TIME_INPUT_FORMAT)
+                            : null,
+                        )
                       }
                     />
                   </DemoContainer>

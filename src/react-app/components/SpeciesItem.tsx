@@ -22,6 +22,7 @@ const SpeciesItem = ({
   key,
 }: SpeciesItemProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [countInput, setCountInput] = useState(String(species.count));
 
   const ageOptions = useMemo(
     () => getAgeOptionsForTaxonGroup(species.species.TaxonGroup || ""),
@@ -41,7 +42,8 @@ const SpeciesItem = ({
       >
         <div className="flex-1 min-w-0">
           <div className="font-medium text-bark dark:text-sand truncate">
-            {species.species.PrefferedPopularname}
+            {species.species.PrefferedPopularname ??
+              species.species.ValidScientificName}
           </div>
         </div>
         <div className="flex items-center gap-sm ml-sm shrink-0">
@@ -84,9 +86,12 @@ const SpeciesItem = ({
                 onChange={(e) => updateSpecies("gender", e.target.value)}
                 className="mt-1"
               >
-                <option value="unknown">Ukjent</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
+                <option value="unknown">Hann</option>
+                <option value="male">Hunn</option>
+                <option value="female">Hunnfarget</option>
+                <option value="female">I par</option>
+                <option value="female">Arbeider</option>
+                <option value="female">Ukjent</option>
               </Select>
             </div>
             <div>
@@ -100,10 +105,20 @@ const SpeciesItem = ({
                 id={`count-${key}`}
                 type="number"
                 min="1"
-                value={species.count}
-                onChange={(e) =>
-                  updateSpecies("count", parseInt(e.target.value) || 1)
-                }
+                value={countInput}
+                onChange={(e) => {
+                  const nextValue = e.target.value;
+                  setCountInput(nextValue);
+
+                  if (nextValue === "") {
+                    return;
+                  }
+
+                  const parsedValue = Number.parseInt(nextValue, 10);
+                  if (!Number.isNaN(parsedValue) && parsedValue >= 1) {
+                    updateSpecies("count", parsedValue);
+                  }
+                }}
                 className="mt-1"
               />
             </div>

@@ -82,6 +82,7 @@ export const LocationEditor = ({
     // Add tiles
     tileLayerRef.current = L.tileLayer(url, {
       maxZoom: 19,
+      maxNativeZoom: 18,
       attribution,
     }).addTo(map.current);
 
@@ -163,7 +164,7 @@ export const LocationEditor = ({
         {!hidden && (
           <div className="absolute bottom-2 right-2 z-[100] bg-sand dark:bg-bark px-2 py-1 rounded text-xs text-bark dark:text-sand shadow-md border border-moss/30">
             {isPresetLocation
-              ? "Låst til forhåndsinnstilt lokalitet"
+              ? "Låst til standardlokalitet"
               : "Dra markøren eller klikk for å justere posisjon"}
           </div>
         )}

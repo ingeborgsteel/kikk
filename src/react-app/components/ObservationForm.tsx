@@ -95,14 +95,24 @@ const ObservationForm = ({
   const [successTimeout, setSuccessTimeout] = useState<ReturnType<
     typeof setTimeout
   > | null>(null);
+  const [visibleRecentSpeciesCount, setVisibleRecentSpeciesCount] =
+    useState(10);
 
   const { data: searchResults = [], isLoading } = useSpeciesSearch(searchTerm);
 
-  // Get the 5 most recent unique species from all observations
+  // Get up to 30 most recent unique species from all observations
   const recentSpecies = useMemo(
-    () => getRecentSpecies(observations, 5),
+    () => getRecentSpecies(observations, 30),
     [observations],
   );
+
+  const visibleRecentSpecies = useMemo(
+    () => recentSpecies.slice(0, visibleRecentSpeciesCount),
+    [recentSpecies, visibleRecentSpeciesCount],
+  );
+
+  const canShowMoreRecentSpecies =
+    visibleRecentSpeciesCount < Math.min(recentSpecies.length, 30);
 
   // Build set of previously observed species IDs for ranking boost
   const previouslyObservedIds = useMemo(() => {
@@ -135,12 +145,13 @@ const ObservationForm = ({
       endDate: toLocalDateTimeValue(observation?.endDate),
       locationName: observation?.locationName || presetLocation?.name || "",
       location: currentLocation,
-      uncertaintyRadius: observation?.uncertaintyRadius || 10,
+      uncertaintyRadius:
+        observation?.uncertaintyRadius ||
+        presetLocation?.uncertaintyRadius ||
+        100,
       ...(!observation && presetSpecies
         ? {
-            species: [
-              { species: presetSpecies, gender: "unknown" as const, count: 1 },
-            ],
+            species: [{ species: presetSpecies, gender: "unknown" as const }],
           }
         : {}),
     },
@@ -385,7 +396,6 @@ const ObservationForm = ({
                 const newObservation: CreateSpecies = {
                   species: taxon,
                   gender: "unknown",
-                  count: 1,
                 };
                 onChange([newObservation, ...species]);
                 setSearchTerm("");
@@ -399,10 +409,18 @@ const ObservationForm = ({
               ) => {
                 const updated = [...species];
                 if (field === "count") {
+                  const parsedValue =
+                    typeof value === "number"
+                      ? value
+                      : Number.parseInt(value, 10);
+
+                  if (Number.isNaN(parsedValue) || parsedValue < 1) {
+                    return;
+                  }
+
                   updated[index] = {
                     ...updated[index],
-                    [field]:
-                      typeof value === "number" ? value : parseInt(value) || 1,
+                    [field]: parsedValue,
                   };
                 } else if (field === "gender") {
                   updated[index] = {
@@ -441,21 +459,35 @@ const ObservationForm = ({
                         <div className="text-xs text-slate mb-2">
                           Nylig observerte arter:
                         </div>
-                        <div className="flex flex-wrap gap-2">
-                          {recentSpecies.map((species) => (
+                        <div className="flex flex-wrap gap-1.5">
+                          {visibleRecentSpecies.map((species) => (
                             <button
                               key={species.Id}
                               type="button"
                               onClick={() => addSpecies(species)}
-                              className="px-3 py-1.5 bg-moss/10 hover:bg-moss/20 dark:bg-moss/20 dark:hover:bg-moss/30 text-bark dark:text-sand text-sm rounded-md border border-moss/30 dark:border-moss/40 transition-colors flex items-center gap-1.5"
+                              className="px-2 py-1 bg-moss/10 hover:bg-moss/20 dark:bg-moss/20 dark:hover:bg-moss/30 text-bark dark:text-sand text-xs rounded-md border border-moss/30 dark:border-moss/40 transition-colors flex items-center gap-1"
                               title={species.ValidScientificName}
                             >
                               <span className="font-medium">
-                                {species.PrefferedPopularname}
+                                {species.PrefferedPopularname ??
+                                  species.ValidScientificName}
                               </span>
                             </button>
                           ))}
                         </div>
+                        {canShowMoreRecentSpecies && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setVisibleRecentSpeciesCount((prev) =>
+                                Math.min(prev + 10, 30),
+                              )
+                            }
+                            className="mt-2 text-xs text-slate hover:text-bark dark:hover:text-sand transition-colors"
+                          >
+                            Vis flere...
+                          </button>
+                        )}
                       </div>
                     )}
 
@@ -601,6 +633,13 @@ const ObservationForm = ({
           <Controller
             name={"uncertaintyRadius"}
             control={control}
+            rules={{
+              required: "Usikkerhetsradius er påkrevd",
+              min: {
+                value: 0,
+                message: "Usikkerhetsradius kan ikke være negativ",
+              },
+            }}
             render={({ field: { value, onChange } }) => (
               <div>
                 <Label
@@ -616,9 +655,7 @@ const ObservationForm = ({
                   value={value}
                   onChange={(e) =>
                     onChange(
-                      e.target.value === ""
-                        ? undefined
-                        : Number(e.target.value),
+                      e.target.value === "" ? null : Number(e.target.value),
                     )
                   }
                   className="mt-1"

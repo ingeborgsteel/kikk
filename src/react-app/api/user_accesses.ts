@@ -1,14 +1,19 @@
 import { supabase } from "../lib/supabase.ts";
 import { UserAccess } from "../types/user_access.ts";
 
-export async function fetchUserAccesses(userId: string): Promise<UserAccess> {
+export async function fetchUserAccesses(
+  userId: string,
+): Promise<UserAccess | null> {
   const { data, error } = await supabase
     .from("user_accesses")
     .select("*")
-    .eq("user_id", userId)
-    .single();
+    .eq("user_id", userId);
+
+  if (!data || data.length === 0) {
+    return null;
+  }
 
   if (error) throw error;
 
-  return data as UserAccess;
+  return data[0] as UserAccess;
 }

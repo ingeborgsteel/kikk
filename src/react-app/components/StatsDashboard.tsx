@@ -416,17 +416,13 @@ export function StatsDashboard({ onBack }: StatsDashboardProps) {
           {/* Search and sort controls */}
           {lifeList.length > 0 && (
             <div className="mb-md flex flex-col sm:flex-row gap-sm">
-              <div className="relative flex-1">
-                <Search
-                  size={20}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-bark/40 dark:text-sand/40"
-                />
+              <div className="flex-1">
                 <input
                   type="text"
                   placeholder="Søk etter art, familie eller orden..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 p-2 rounded border-2 border-moss/30 bg-white dark:bg-bark text-bark dark:text-sand placeholder:text-bark/40 dark:placeholder:text-sand/40"
+                  className="w-full p-2 rounded border-2 border-moss/30 bg-white dark:bg-bark text-bark dark:text-sand placeholder:text-bark/40 dark:placeholder:text-sand/40"
                 />
               </div>
               <div className="flex gap-2 flex-wrap">

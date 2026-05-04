@@ -141,7 +141,7 @@ function MyObservations({ onBack }: MyObservationsProps) {
             </p>
           </div>
         ) : (
-          <div className="space-y-md">
+          <div className="flex flex-col space-y-md">
             {filteredObservations.map((observation) => (
               <ObservationItem
                 key={observation.id}

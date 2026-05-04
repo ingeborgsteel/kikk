@@ -33,7 +33,7 @@ function ObservationItem({
 
   return (
     <div
-      className={`bg-white rounded-lg shadow-custom border-2 relative transition-all ${
+      className={`bg-white rounded-lg shadow-custom border-2 transition-all ${
         !isExported ? "border-moss border-opacity-60" : "border-slate-border"
       }`}
     >

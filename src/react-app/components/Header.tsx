@@ -16,7 +16,7 @@ const Header = ({
   navButtons,
 }: HeaderProps) => {
   return (
-    <header className="bg-forest text-sand p-md relative">
+    <header className="bg-forest text-sand p-md sticky top-0 z-100">
       <div className="max-w-4xl mx-auto ml-16">
         <h1 className="text-sand m-0 text-[clamp(2rem,6vw,3rem)] tracking-wider">
           {title}

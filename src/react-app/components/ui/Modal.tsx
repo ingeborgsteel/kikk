@@ -94,7 +94,7 @@ export function Modal({
         className={`w-full ${maxWidth} bg-sand dark:bg-bark rounded-lg shadow-custom-2xl max-h-[90vh] overflow-y-auto border-2 border-moss`}
       >
         {/* Header with consistent styling */}
-        <div className="sticky top-0 bg-forest p-lg flex justify-between items-center z-[2000] border-b-2 border-moss">
+        <div className="sticky top-0 bg-forest p-md flex justify-between items-center z-[2000] border-b-2 border-moss">
           <h2 className="text-2xl font-bold flex items-center gap-sm text-sand">
             {icon}
             {title}

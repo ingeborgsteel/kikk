@@ -1,23 +1,33 @@
+import { JSX } from "react";
 import { AuthButton } from "./AuthButton";
 import { ThemeToggle } from "./ThemeToggle";
 
 interface HeaderProps {
-  setShowLoginForm?: (show: boolean) => void;
+  title: string;
+  openProfilePage?: () => void;
+  leftButton?: JSX.Element;
+  navButtons?: JSX.Element;
 }
 
-const Header = ({ setShowLoginForm }: HeaderProps) => {
+const Header = ({
+  title,
+  openProfilePage,
+  leftButton = <ThemeToggle />,
+  navButtons,
+}: HeaderProps) => {
   return (
-    <header className="bg-forest text-sand p-lg md:p-xl relative">
+    <header className="bg-forest text-sand p-md relative">
       <div className="max-w-4xl mx-auto ml-16">
         <h1 className="text-sand m-0 text-[clamp(2rem,6vw,3rem)] tracking-wider">
-          kikket på
+          {title}
         </h1>
       </div>
       <div className="absolute left-lg top-1/2 -translate-y-1/2">
-        <ThemeToggle />
+        {leftButton}
       </div>
-      <div className="absolute right-lg top-1/2 -translate-y-1/2 md:hidden flex items-center gap-2">
-        {setShowLoginForm && <AuthButton setShowLoginForm={setShowLoginForm} />}
+      <div className="absolute right-lg top-1/2 -translate-y-1/2 hidden md:flex items-center gap-2">
+        {navButtons}
+        <AuthButton openProfilePage={openProfilePage} />
       </div>
     </header>
   );

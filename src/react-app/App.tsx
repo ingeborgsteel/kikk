@@ -13,7 +13,6 @@ import { BottomNav } from "./components/BottomNav";
 import { UserProfile } from "./components/UserProfile.tsx";
 import { MapClickDialog } from "./components/MapClickDialog.tsx";
 import { LocationForm } from "./components/LocationForm.tsx";
-import { AuthButton } from "./components/AuthButton.tsx";
 import { KikkemodusToggle } from "./components/KikkemodusToggle.tsx";
 import { GitHubSuggestionButton } from "./components/GitHubSuggestionButton.tsx";
 import { GitHubIssueForm } from "./components/GitHubIssueForm.tsx";
@@ -25,6 +24,8 @@ import timezone from "dayjs/plugin/timezone";
 import { useMapPreferences } from "./context/MapPreferencesContext.tsx";
 import { useGeolocation } from "./context/GeolocationContext.tsx";
 import { CircleDashed, Navigation } from "lucide-react";
+import Header from "./components/Header.tsx";
+import { useAuth } from "./context/AuthContext.tsx";
 
 function App() {
   const navigate = useNavigate();
@@ -34,7 +35,6 @@ function App() {
     lng: number;
   } | null>(null);
   const [selectedZoom, setSelectedZoom] = useState<number>(13); // Default zoom level
-  const [showLoginForm, setShowLoginForm] = useState(false);
   const [showMapClickDialog, setShowMapClickDialog] = useState(false);
   const [showAddLocationForm, setShowAddLocationForm] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -53,6 +53,7 @@ function App() {
   const { followMode, setFollowMode } = useGeolocation();
   const { showUncertaintyOverlay, setShowUncertaintyOverlay } =
     useMapPreferences();
+  const { showLoginForm, setShowLoginForm } = useAuth();
 
   dayjs.extend(utc);
   dayjs.extend(timezone);
@@ -186,35 +187,32 @@ function App() {
           path="/"
           element={
             <div className="w-full min-h-screen p-0 flex flex-col bg-sand dark:bg-bark pb-16 md:pb-0">
-              <header className="text-center p-lg md:p-xl bg-forest relative overflow-visible">
-                <h1 className="text-sand m-0 text-[clamp(2rem,6vw,3rem)] tracking-wider">
-                  kikk
-                </h1>
-                <div className="absolute left-lg top-1/2 -translate-y-1/2">
+              <Header
+                title={"kikk"}
+                openProfilePage={() => navigate("/profile")}
+                leftButton={
                   <KikkemodusToggle
                     kikkemodusActive={kikkemodusActive}
                     onToggle={() => setKikkemodusActive(!kikkemodusActive)}
                   />
-                </div>
-                <div className="absolute right-lg top-1/2 -translate-y-1/2 hidden md:flex items-center gap-2">
-                  <Button
-                    onClick={() => navigate("/observations")}
-                    variant="secondary"
-                  >
-                    Kikket på ({observations.length})
-                  </Button>
-                  <Button
-                    onClick={() => navigate("/stats")}
-                    variant="secondary"
-                  >
-                    Statistikk
-                  </Button>
-                  <AuthButton
-                    setShowLoginForm={setShowLoginForm}
-                    openProfilePage={() => navigate("/profile")}
-                  />
-                </div>
-              </header>
+                }
+                navButtons={
+                  <>
+                    <Button
+                      onClick={() => navigate("/observations")}
+                      variant="secondary"
+                    >
+                      Kikket på ({observations.length})
+                    </Button>
+                    <Button
+                      onClick={() => navigate("/stats")}
+                      variant="secondary"
+                    >
+                      Statistikk
+                    </Button>
+                  </>
+                }
+              />
               <Map
                 onLocationSelect={handleLocationSelect}
                 observations={observations}
@@ -293,7 +291,9 @@ function App() {
                 Usikkerhet
               </span>
               <Button
-                onClick={() => setShowUncertaintyOverlay(!showUncertaintyOverlay)}
+                onClick={() =>
+                  setShowUncertaintyOverlay(!showUncertaintyOverlay)
+                }
                 size="icon"
                 variant={showUncertaintyOverlay ? "secondary" : "outline"}
                 className="h-10 w-10 box-border shadow-custom-xl hover:shadow-custom-2xl hover:translate-y-0 active:translate-y-0"

@@ -4,12 +4,10 @@ import { useObservations } from "../context/ObservationsContext";
 import { useLocations } from "../context/LocationsContext";
 import { Button } from "./ui/button";
 import ObservationForm from "./ObservationForm.tsx";
-import { ThemeToggle } from "./ThemeToggle";
-import { AuthButton } from "./AuthButton";
 import ExportDialog from "./ExportDialog";
 import ObservationItem from "./ObservationItem";
 import { getUnexportedCount } from "../queries/useExports";
-import { Header } from "./Header.tsx";
+import Header from "./Header.tsx";
 
 interface MyObservationsProps {
   onBack: () => void;
@@ -81,7 +79,7 @@ function MyObservations({ onBack, setShowLoginForm }: MyObservationsProps) {
 
   return (
     <div className="w-full min-h-screen bg-sand dark:bg-bark pb-16 md:pb-0">
-      <Header setShowLoginForm={setShowLoginForm} />
+      <Header title={"kikket på"} />
       <div className="max-w-4xl mx-auto p-lg md:p-xl">
         <div className="mb-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-md">
           <div className="hidden md:block">

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { useLocations } from "../context/LocationsContext";
-import { useAuth } from "../context/AuthContext";
 import { Download, Edit2, History, MapPin, Plus, Trash2 } from "lucide-react";
 import { UserLocation } from "../types/location";
 import { useDownloadExport, useExportLogs } from "../queries/useExports";
@@ -15,7 +14,6 @@ interface UserProfileProps {
 
 export function UserProfile({ onBack }: UserProfileProps) {
   const { locations, deleteLocation } = useLocations();
-  const { user, signOut } = useAuth();
   const [showLocationForm, setShowLocationForm] = useState(false);
   const [editingLocation, setEditingLocation] = useState<UserLocation | null>(
     null,
@@ -29,11 +27,6 @@ export function UserProfile({ onBack }: UserProfileProps) {
   const { data: exportLogs = [], isLoading: isLoadingLogs } = useExportLogs();
   const { mutate: downloadExport, isPending: isDownloading } =
     useDownloadExport();
-
-  const handleSignOut = async () => {
-    await signOut();
-    onBack();
-  };
 
   const handleDownloadPrevious = (filePath: string, fileName: string) => {
     downloadExport(

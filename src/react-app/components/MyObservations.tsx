@@ -11,10 +11,9 @@ import Header from "./Header.tsx";
 
 interface MyObservationsProps {
   onBack: () => void;
-  setShowLoginForm: (show: boolean) => void;
 }
 
-function MyObservations({ onBack, setShowLoginForm }: MyObservationsProps) {
+function MyObservations({ onBack }: MyObservationsProps) {
   const { observations, deleteObservation } = useObservations();
   const { locations } = useLocations();
   const [editingId, setEditingId] = useState<string | null>(null);

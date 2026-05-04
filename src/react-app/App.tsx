@@ -176,12 +176,7 @@ function App() {
         />
         <Route
           path="/observations"
-          element={
-            <MyObservations
-              onBack={() => navigate("/")}
-              setShowLoginForm={setShowLoginForm}
-            />
-          }
+          element={<MyObservations onBack={() => navigate("/")} />}
         />
         <Route
           path="/"

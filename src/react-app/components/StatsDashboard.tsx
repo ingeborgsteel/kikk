@@ -17,12 +17,12 @@ import { useObservations } from "../context/ObservationsContext";
 import { useLocations } from "../context/LocationsContext";
 import { useGeolocation } from "../context/GeolocationContext";
 import { Button } from "./ui/button";
-import { ThemeToggle } from "./ThemeToggle";
 import { Observation } from "../types/observation";
 import { UserLocation } from "../types/location";
 import { TaxonRecord } from "../types/artsdatabanken";
 import { getLifeList, LifeListEntry } from "../lib/utils";
 import ObservationForm from "./ObservationForm.tsx";
+import Header from "./Header.tsx";
 
 type SortField = "name" | "count" | "firstSeen" | "lastSeen" | "observations";
 type SortDirection = "asc" | "desc";
@@ -321,16 +321,7 @@ export function StatsDashboard({ onBack }: StatsDashboardProps) {
   if (observations.length === 0) {
     return (
       <div className="w-full min-h-screen bg-sand dark:bg-bark pb-16 md:pb-0">
-        <header className="bg-forest text-sand p-lg md:p-xl relative">
-          <div className="max-w-4xl mx-auto ml-16">
-            <h1 className="text-sand m-0 text-[clamp(2rem,6vw,3rem)] tracking-wider">
-              statistikk
-            </h1>
-          </div>
-          <div className="absolute left-lg top-1/2 -translate-y-1/2">
-            <ThemeToggle />
-          </div>
-        </header>
+        <Header title={"statistikk"} />
         <div className="max-w-4xl mx-auto p-lg md:p-xl">
           <div className="hidden md:block mb-lg">
             <Button onClick={onBack} variant="outline">
@@ -351,16 +342,7 @@ export function StatsDashboard({ onBack }: StatsDashboardProps) {
 
   return (
     <div className="w-full min-h-screen bg-sand dark:bg-bark pb-16 md:pb-0">
-      <header className="bg-forest text-sand p-lg md:p-xl relative">
-        <div className="max-w-4xl mx-auto ml-16">
-          <h1 className="text-sand m-0 text-[clamp(2rem,6vw,3rem)] tracking-wider">
-            statistikk
-          </h1>
-        </div>
-        <div className="absolute left-lg top-1/2 -translate-y-1/2">
-          <ThemeToggle />
-        </div>
-      </header>
+      <Header title={"statistikk"} />
 
       <div className="max-w-4xl mx-auto p-lg md:p-xl space-y-lg">
         <div className="hidden md:block">
@@ -434,17 +416,13 @@ export function StatsDashboard({ onBack }: StatsDashboardProps) {
           {/* Search and sort controls */}
           {lifeList.length > 0 && (
             <div className="mb-md flex flex-col sm:flex-row gap-sm">
-              <div className="relative flex-1">
-                <Search
-                  size={20}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-bark/40 dark:text-sand/40"
-                />
+              <div className="flex-1">
                 <input
                   type="text"
                   placeholder="Søk etter art, familie eller orden..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 p-2 rounded border-2 border-moss/30 bg-white dark:bg-bark text-bark dark:text-sand placeholder:text-bark/40 dark:placeholder:text-sand/40"
+                  className="w-full p-2 rounded border-2 border-moss/30 bg-white dark:bg-bark text-bark dark:text-sand placeholder:text-bark/40 dark:placeholder:text-sand/40"
                 />
               </div>
               <div className="flex gap-2 flex-wrap">

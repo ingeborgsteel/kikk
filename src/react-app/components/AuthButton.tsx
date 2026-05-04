@@ -4,13 +4,11 @@ import { Button } from "./ui/button";
 import { isSupabaseConfigured } from "../lib/supabase";
 
 export function AuthButton({
-  setShowLoginForm,
   openProfilePage,
 }: {
-  setShowLoginForm: (show: boolean) => void;
   openProfilePage?: () => void;
 }) {
-  const { user, signOut } = useAuth();
+  const { user, signOut, setShowLoginForm } = useAuth();
 
   // Don't render if Supabase is not configured
   if (!isSupabaseConfigured()) {

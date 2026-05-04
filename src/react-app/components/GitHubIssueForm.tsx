@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { X, MessageSquare } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 import { Octokit } from "@octokit/core";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { useAuth } from "../context/AuthContext";
+import { Modal } from "./ui/Modal";
 
 const GITHUB_OWNER = "ingeborgsteel";
 const GITHUB_REPO = "kikk";
@@ -88,25 +89,34 @@ export function GitHubIssueForm({ onClose, showForm }: GitHubIssueFormProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-[500] flex items-center justify-center bg-black/50">
-      <div className="bg-sand dark:bg-bark w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg shadow-custom-2xl border-2 border-moss">
-        <div className="sticky top-0 bg-forest text-sand p-lg border-b-2 border-moss flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <MessageSquare size={24} />
-            <h2 className="text-xl font-bold text-sand">
-              Forslag til forbedring
-            </h2>
+    <form onSubmit={handleSubmit}>
+      <Modal
+        title="Forslag til forbedring"
+        icon={<MessageSquare size={24} />}
+        isOpen={showForm}
+        onClose={onClose}
+        footer={
+          <div className="flex gap-md justify-end">
+            <Button
+              type="button"
+              onClick={() => {
+                onClose();
+                setTitle("");
+                setDescription("");
+                setMessage("");
+              }}
+              variant="outline"
+              size="sm"
+            >
+              Avbryt
+            </Button>
+            <Button type="submit" disabled={loading} size="sm">
+              {loading ? "Oppretter..." : "Opprett issue"}
+            </Button>
           </div>
-          <Button
-            variant={"accent"}
-            size={"icon"}
-            onClick={onClose}
-            aria-label="Close"
-          >
-            <X size={24} />
-          </Button>
-        </div>
-        <form onSubmit={handleSubmit} className="p-lg space-y-lg">
+        }
+      >
+        <div className="space-y-lg">
           <div>
             <label
               htmlFor="issue-title"
@@ -145,26 +155,8 @@ export function GitHubIssueForm({ onClose, showForm }: GitHubIssueFormProps) {
               {message}
             </div>
           )}
-          <div className="flex gap-md justify-end pt-md">
-            <Button
-              type="button"
-              onClick={() => {
-                onClose();
-                setTitle("");
-                setDescription("");
-                setMessage("");
-              }}
-              variant="outline"
-              size="sm"
-            >
-              Avbryt
-            </Button>
-            <Button type="submit" disabled={loading} size="sm">
-              {loading ? "Oppretter..." : "Opprett issue"}
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
+        </div>
+      </Modal>
+    </form>
   );
 }

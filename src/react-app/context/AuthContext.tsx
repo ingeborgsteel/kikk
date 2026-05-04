@@ -19,6 +19,8 @@ interface AuthContextType {
     password: string,
   ) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
+  showLoginForm: boolean;
+  setShowLoginForm: (val: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -26,6 +28,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(!isSupabaseConfigured());
+  const [showLoginForm, setShowLoginForm] = useState(false);
 
   const { data: userAccess } = useUserAccess(user?.id || "", {
     enabled: !!user?.id,
@@ -78,6 +81,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signInWithEmail,
         signOut,
         userAccess,
+        showLoginForm,
+        setShowLoginForm,
       }}
     >
       {children}

@@ -1,21 +1,12 @@
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { useLocations } from "../context/LocationsContext";
-import { useAuth } from "../context/AuthContext";
-import {
-  Download,
-  Edit2,
-  History,
-  LogOut,
-  MapPin,
-  Plus,
-  Trash2,
-} from "lucide-react";
+import { Download, Edit2, History, MapPin, Plus, Trash2 } from "lucide-react";
 import { UserLocation } from "../types/location";
-import { ThemeToggle } from "./ThemeToggle";
 import { useDownloadExport, useExportLogs } from "../queries/useExports";
 import { isSupabaseConfigured } from "../lib/supabase";
 import { LocationForm } from "./LocationForm.tsx";
+import Header from "./Header.tsx";
 
 interface UserProfileProps {
   onBack: () => void;
@@ -23,7 +14,6 @@ interface UserProfileProps {
 
 export function UserProfile({ onBack }: UserProfileProps) {
   const { locations, deleteLocation } = useLocations();
-  const { user, signOut } = useAuth();
   const [showLocationForm, setShowLocationForm] = useState(false);
   const [editingLocation, setEditingLocation] = useState<UserLocation | null>(
     null,
@@ -37,11 +27,6 @@ export function UserProfile({ onBack }: UserProfileProps) {
   const { data: exportLogs = [], isLoading: isLoadingLogs } = useExportLogs();
   const { mutate: downloadExport, isPending: isDownloading } =
     useDownloadExport();
-
-  const handleSignOut = async () => {
-    await signOut();
-    onBack();
-  };
 
   const handleDownloadPrevious = (filePath: string, fileName: string) => {
     downloadExport(
@@ -84,28 +69,7 @@ export function UserProfile({ onBack }: UserProfileProps) {
 
   return (
     <div className="w-full min-h-screen bg-sand dark:bg-bark pb-16 md:pb-0">
-      <header className="bg-forest text-sand p-lg md:p-xl relative">
-        <div className="max-w-4xl mx-auto ml-16">
-          <h1 className="text-sand m-0 text-[clamp(2rem,6vw,3rem)] tracking-wider">
-            profil
-          </h1>
-        </div>
-        <div className="absolute left-lg top-1/2 -translate-y-1/2">
-          <ThemeToggle />
-        </div>
-        <div className="absolute right-lg top-1/2 -translate-y-1/2 flex items-center gap-2">
-          {supabaseConfigured && user && (
-            <Button
-              onClick={handleSignOut}
-              variant="secondary"
-              className="flex items-center gap-2"
-            >
-              <LogOut size={16} />
-              <span className="hidden md:inline">Logg ut</span>
-            </Button>
-          )}
-        </div>
-      </header>
+      <Header title={"profil"} />
 
       <div className="max-w-4xl mx-auto p-lg md:p-xl">
         <div className="mb-lg">

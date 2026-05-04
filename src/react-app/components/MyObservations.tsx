@@ -4,18 +4,16 @@ import { useObservations } from "../context/ObservationsContext";
 import { useLocations } from "../context/LocationsContext";
 import { Button } from "./ui/button";
 import ObservationForm from "./ObservationForm.tsx";
-import { ThemeToggle } from "./ThemeToggle";
-import { AuthButton } from "./AuthButton";
 import ExportDialog from "./ExportDialog";
 import ObservationItem from "./ObservationItem";
 import { getUnexportedCount } from "../queries/useExports";
+import Header from "./Header.tsx";
 
 interface MyObservationsProps {
   onBack: () => void;
-  setShowLoginForm: (show: boolean) => void;
 }
 
-function MyObservations({ onBack, setShowLoginForm }: MyObservationsProps) {
+function MyObservations({ onBack }: MyObservationsProps) {
   const { observations, deleteObservation } = useObservations();
   const { locations } = useLocations();
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -80,20 +78,7 @@ function MyObservations({ onBack, setShowLoginForm }: MyObservationsProps) {
 
   return (
     <div className="w-full min-h-screen bg-sand dark:bg-bark pb-16 md:pb-0">
-      <header className="bg-forest text-sand p-lg md:p-xl relative">
-        <div className="max-w-4xl mx-auto ml-16">
-          <h1 className="text-sand m-0 text-[clamp(2rem,6vw,3rem)] tracking-wider">
-            kikket på
-          </h1>
-        </div>
-        <div className="absolute left-lg top-1/2 -translate-y-1/2">
-          <ThemeToggle />
-        </div>
-        <div className="absolute right-lg top-1/2 -translate-y-1/2 md:hidden flex items-center gap-2">
-          <AuthButton setShowLoginForm={setShowLoginForm} />
-        </div>
-      </header>
-
+      <Header title={"kikket på"} />
       <div className="max-w-4xl mx-auto p-lg md:p-xl">
         <div className="mb-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-md">
           <div className="hidden md:block">
@@ -156,7 +141,7 @@ function MyObservations({ onBack, setShowLoginForm }: MyObservationsProps) {
             </p>
           </div>
         ) : (
-          <div className="space-y-md">
+          <div className="flex flex-col space-y-md">
             {filteredObservations.map((observation) => (
               <ObservationItem
                 key={observation.id}

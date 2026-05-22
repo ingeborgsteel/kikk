@@ -106,8 +106,10 @@ export function GeolocationProvider({ children }: { children: ReactNode }) {
   const [isTracking, setIsTracking] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const watchIdRef = useRef<number | null>(null);
+  const currentPositionRef = useRef<StoredPosition | null>(currentPosition);
 
   const updatePosition = useCallback((position: StoredPosition) => {
+    currentPositionRef.current = position;
     setCurrentPosition(position);
     localStorage.setItem(LAST_POSITION_STORAGE_KEY, JSON.stringify(position));
   }, []);
@@ -191,9 +193,16 @@ export function GeolocationProvider({ children }: { children: ReactNode }) {
       (position) => {
         const nextPosition = toPosition(position);
         updatePosition(nextPosition);
+        setLocationError(null);
         setIsTracking(true);
       },
       (error) => {
+        if (
+          error.code === error.POSITION_UNAVAILABLE &&
+          currentPositionRef.current !== null
+        ) {
+          return;
+        }
         const normalizedError = normalizeGeolocationError(error);
         setLocationError(normalizedError);
         if (error.code === error.PERMISSION_DENIED) {
@@ -208,6 +217,14 @@ export function GeolocationProvider({ children }: { children: ReactNode }) {
 
     setIsTracking(true);
   }, [setFollowMode, stopTracking, updatePosition]);
+
+  useEffect(() => {
+    if (!locationError) return;
+    const isPermissionError = locationError.startsWith("Plasseringstillatelse");
+    if (isPermissionError) return;
+    const timer = setTimeout(() => setLocationError(null), 4000);
+    return () => clearTimeout(timer);
+  }, [locationError]);
 
   useEffect(() => {
     const handleStorageChange = (event: StorageEvent) => {

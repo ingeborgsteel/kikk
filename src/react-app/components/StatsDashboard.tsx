@@ -142,10 +142,10 @@ function computeMonthlyStats(observations: Observation[]): MonthStat[] {
 }
 
 function countUniqueSpecies(observations: Observation[]): number {
-  const seen = new Set<number>();
+  const seen = new Set<string>();
   for (const obs of observations) {
     for (const s of obs.species) {
-      seen.add(s.species.TaxonId);
+      seen.add(s.species.PrefferedPopularname);
     }
   }
   return seen.size;
@@ -247,9 +247,13 @@ export function StatsDashboard({ onBack }: StatsDashboardProps) {
       switch (sortField) {
         case "name":
           cmp = (
-            a.species.PrefferedPopularname || a.species.ValidScientificName
+            a.species.PrefferedPopularname ||
+            a.species.ValidScientificName ||
+            ""
           ).localeCompare(
-            b.species.PrefferedPopularname || b.species.ValidScientificName,
+            b.species.PrefferedPopularname ||
+              b.species.ValidScientificName ||
+              "",
             "no",
           );
           break;

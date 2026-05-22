@@ -1,7 +1,14 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import L from "leaflet";
 import { Observation } from "./types/observation";
 import { UserLocation } from "./types/location";
+import { useObservations } from "./context/ObservationsContext";
 
 // Fix for default marker icons in Leaflet with bundlers
 import icon from "leaflet/dist/images/marker-icon.png";
@@ -54,6 +61,74 @@ const getTileLayerConfig = (
 // Delay for map resize after initialization to ensure container dimensions are available
 const MAP_RESIZE_DELAY_MS = 100;
 const UNCERTAINTY_ZOOM_THRESHOLD = 9;
+const DEFAULT_ZOOM = 15;
+
+function useOnlineStatus() {
+  return useSyncExternalStore(
+    (cb) => {
+      window.addEventListener("online", cb);
+      window.addEventListener("offline", cb);
+      return () => {
+        window.removeEventListener("online", cb);
+        window.removeEventListener("offline", cb);
+      };
+    },
+    () => navigator.onLine,
+    () => true,
+  );
+}
+
+function lonToTileX(lon: number, zoom: number) {
+  return Math.floor(((lon + 180) / 360) * Math.pow(2, zoom));
+}
+
+function latToTileY(lat: number, zoom: number) {
+  const rad = (lat * Math.PI) / 180;
+  return Math.floor(
+    ((1 - Math.log(Math.tan(rad) + 1 / Math.cos(rad)) / Math.PI) / 2) *
+      Math.pow(2, zoom),
+  );
+}
+
+async function downloadVisibleTiles(
+  map: L.Map,
+  tileUrlTemplate: string,
+  onProgress: (done: number, total: number) => void,
+) {
+  const bounds = map.getBounds();
+  const minZoom = Math.max(map.getZoom() - 2, 1);
+  const maxZoom = Math.min(map.getZoom() + 3, 17);
+  const urls: string[] = [];
+
+  for (let z = minZoom; z <= maxZoom; z++) {
+    const x0 = lonToTileX(bounds.getWest(), z);
+    const x1 = lonToTileX(bounds.getEast(), z);
+    const y0 = latToTileY(bounds.getNorth(), z);
+    const y1 = latToTileY(bounds.getSouth(), z);
+    for (let x = x0; x <= x1; x++) {
+      for (let y = y0; y <= y1; y++) {
+        const url = tileUrlTemplate
+          .replace("{z}", String(z))
+          .replace("{x}", String(x))
+          .replace("{y}", String(y))
+          .replace("{-y}", String(y));
+        urls.push(url);
+      }
+    }
+  }
+
+  const BATCH = 8;
+  let done = 0;
+  for (let i = 0; i < urls.length; i += BATCH) {
+    await Promise.all(
+      urls
+        .slice(i, i + BATCH)
+        .map((url) => fetch(url, { mode: "no-cors" }).catch(() => null)),
+    );
+    done = Math.min(i + BATCH, urls.length);
+    onProgress(done, urls.length);
+  }
+}
 
 interface MapProps {
   onLocationSelect?: (lat: number, lng: number, zoom: number) => void;
@@ -77,6 +152,12 @@ function Map({
     lat: number;
     lng: number;
   } | null>(null);
+  const isOnline = useOnlineStatus();
+  const { pendingSyncCount } = useObservations();
+  const [downloadProgress, setDownloadProgress] = useState<{
+    done: number;
+    total: number;
+  } | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
   const observationMarkersRef = useRef<L.Marker[]>([]);
   const observationCirclesRef = useRef<L.Circle[]>([]);
@@ -84,11 +165,21 @@ function Map({
   const userLocationCirclesRef = useRef<L.Circle[]>([]);
   const userLocationMarkerRef = useRef<L.CircleMarker | null>(null);
   const [showCenteredMessage, setShowCenteredMessage] = useState(false);
-  const [currentZoom, setCurrentZoom] = useState(12);
+  const [currentZoom, setCurrentZoom] = useState(DEFAULT_ZOOM);
   const hasAutoLocatedRef = useRef(false);
   const { currentLayer, setCurrentLayer, showUncertaintyOverlay } =
     useMapPreferences();
   const tileLayerRef = useRef<L.TileLayer | null>(null);
+
+  const downloadCurrentLayer = useCallback(async () => {
+    if (!map.current) return;
+    const { url } = getTileLayerConfig(currentLayer);
+    setDownloadProgress({ done: 0, total: 1 });
+    await downloadVisibleTiles(map.current, url, (done, total) => {
+      setDownloadProgress({ done, total });
+    });
+    setTimeout(() => setDownloadProgress(null), 2000);
+  }, [currentLayer]);
   const {
     currentPosition,
     followMode,
@@ -137,7 +228,7 @@ function Map({
 
     // Initialize map with default center (Oslo, Norway)
     const defaultCenter: [number, number] = [59.9139, 10.7522];
-    const defaultZoom = 12;
+    const defaultZoom = DEFAULT_ZOOM;
 
     map.current = L.map(mapContainer.current).setView(
       defaultCenter,
@@ -151,6 +242,10 @@ function Map({
       maxNativeZoom: currentLayer === "standard" ? 18 : undefined,
       attribution,
     }).addTo(map.current);
+
+    L.control
+      .scale({ imperial: false, position: "bottomright" })
+      .addTo(map.current);
 
     // Ensure the map container is properly sized
     // This is necessary when the container size is not immediately available
@@ -314,7 +409,7 @@ function Map({
       if (!position) return;
 
       renderUserLocationMarker(position.lat, position.lng);
-      recenterMapTo(position.lat, position.lng, 13);
+      recenterMapTo(position.lat, position.lng, DEFAULT_ZOOM);
       setShowCenteredMessage(true);
     };
 
@@ -458,6 +553,31 @@ function Map({
 
   return (
     <div className="w-full h-[calc(100vh-80px)] relative flex-1 overflow-hidden bg-forest">
+      {!isOnline && (
+        <div className="absolute top-0 left-0 right-0 z-[600] bg-bark text-sand text-xs font-semibold text-center py-1 px-2 flex items-center justify-center gap-1">
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            className="shrink-0"
+          >
+            <line x1="1" y1="1" x2="23" y2="23" />
+            <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55" />
+            <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39" />
+            <path d="M10.71 5.05A16 16 0 0 1 22.56 9" />
+            <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88" />
+            <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
+            <line x1="12" y1="20" x2="12.01" y2="20" />
+          </svg>
+          Offline
+          {pendingSyncCount > 0
+            ? ` · ${pendingSyncCount} obs. venter synkronisering`
+            : ""}
+        </div>
+      )}
       {/* Layer Control */}
       <div className="absolute top-md right-md z-[500] flex flex-col gap-2">
         <button
@@ -501,7 +621,9 @@ function Map({
         </div>
       )}
       {locationError && (
-        <div className="absolute top-md left-1/2 -translate-x-1/2 z-[500] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-md md:p-xl rounded-lg shadow-custom-xl flex items-start gap-sm text-sm md:text-base font-medium text-rust dark:text-rust animate-[slideDown_0.3s_ease] max-w-[90%] border-2 border-rust leading-relaxed">
+        <div
+          className={`absolute ${isOnline ? "top-md" : "top-[calc(1rem+26px)]"} left-1/2 -translate-x-1/2 z-[500] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-md md:p-xl rounded-lg shadow-custom-xl flex items-start gap-sm text-sm md:text-base font-medium text-rust dark:text-rust animate-[slideDown_0.3s_ease] max-w-[90%] border-2 border-rust leading-relaxed`}
+        >
           <svg
             width="20"
             height="20"
@@ -525,7 +647,9 @@ function Map({
         </div>
       )}
       {showCenteredMessage && currentPosition && !selectedLocation && (
-        <div className="absolute top-md left-1/2 -translate-x-1/2 z-[500] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-sm md:p-md px-lg md:px-xl rounded-lg shadow-custom-xl flex items-center gap-sm text-sm md:text-base font-semibold text-moss dark:text-moss animate-[slideDown_0.3s_ease] max-w-[90%] border-2 border-moss">
+        <div
+          className={`absolute ${isOnline ? "top-md" : "top-[calc(1rem+26px)]"} left-1/2 -translate-x-1/2 z-[500] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-sm md:p-md px-lg md:px-xl rounded-lg shadow-custom-xl flex items-center gap-sm text-sm md:text-base font-semibold text-moss dark:text-moss animate-[slideDown_0.3s_ease] max-w-[90%] border-2 border-moss`}
+        >
           <svg
             width="16"
             height="16"
@@ -541,7 +665,9 @@ function Map({
         </div>
       )}
       {selectedLocation && (
-        <div className="absolute top-md left-1/2 -translate-x-1/2 z-[500] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-sm rounded-lg shadow-custom-xl flex items-center gap-sm text-sm md:text-base font-semibold text-bark dark:text-sand animate-[slideDown_0.3s_ease] max-w-[90%] border-2 border-moss">
+        <div
+          className={`absolute ${isOnline ? "top-md" : "top-[calc(1rem+26px)]"} left-1/2 -translate-x-1/2 z-[500] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-sm rounded-lg shadow-custom-xl flex items-center gap-sm text-sm md:text-base font-semibold text-bark dark:text-sand animate-[slideDown_0.3s_ease] max-w-[90%] border-2 border-moss`}
+        >
           <svg
             width="16"
             height="16"
@@ -559,6 +685,39 @@ function Map({
           </span>
         </div>
       )}
+      {/* Download area button */}
+      <div className="absolute bottom-md left-md z-[500]">
+        {downloadProgress ? (
+          <div className="bg-sand dark:bg-bark text-bark dark:text-sand text-xs font-medium px-3 py-2 rounded-lg shadow-custom-lg border-2 border-moss flex items-center gap-2">
+            <div className="w-3 h-3 border-2 border-moss border-t-transparent rounded-full animate-spin" />
+            {downloadProgress.done >= downloadProgress.total
+              ? "Nedlasting fullført!"
+              : `Laster ned… ${downloadProgress.done}/${downloadProgress.total}`}
+          </div>
+        ) : (
+          <button
+            onClick={downloadCurrentLayer}
+            disabled={!isOnline}
+            className="bg-sand dark:bg-bark text-bark dark:text-sand text-xs font-medium px-3 py-2 rounded-lg shadow-custom-lg border-2 border-moss hover:bg-moss dark:hover:bg-moss transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
+            title="Last ned kartfliser for dette området for offline bruk"
+          >
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="shrink-0"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Last ned område
+          </button>
+        )}
+      </div>
       <div
         ref={mapContainer}
         className="absolute inset-0 w-full h-full border-none rounded-t-lg overflow-hidden"

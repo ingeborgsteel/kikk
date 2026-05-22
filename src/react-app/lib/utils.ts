@@ -16,12 +16,16 @@ export function getRecentSpecies(
   limit = 5,
 ): TaxonRecord[] {
   // Create a map to track the most recent observation for each species
-  const speciesMap = new Map<number, { species: TaxonRecord; date: string }>();
+  const speciesMap = new Map<
+    number | string,
+    { species: TaxonRecord; date: string }
+  >();
 
   // Iterate through all observations
   for (const obs of observations) {
     for (const speciesObs of obs.species) {
-      const speciesId = speciesObs.species.Id;
+      const speciesId =
+        speciesObs.species.Id ?? speciesObs.species.PrefferedPopularname;
       const existingEntry = speciesMap.get(speciesId);
 
       // Keep the species with the most recent observation date
@@ -62,7 +66,7 @@ export interface LifeListEntry {
  */
 export function getLifeList(observations: Observation[]): LifeListEntry[] {
   const speciesMap = new Map<
-    number,
+    number | string,
     {
       species: TaxonRecord;
       totalCount: number;
@@ -77,7 +81,8 @@ export function getLifeList(observations: Observation[]): LifeListEntry[] {
   for (const obs of observations) {
     const obsDate = obs.startDate || obs.createdAt;
     for (const speciesObs of obs.species) {
-      const speciesId = speciesObs.species.Id;
+      const speciesId =
+        speciesObs.species.Id ?? speciesObs.species.PrefferedPopularname;
       const existing = speciesMap.get(speciesId);
 
       if (existing) {
@@ -105,14 +110,13 @@ export function getLifeList(observations: Observation[]): LifeListEntry[] {
     }
   }
 
-  return Array.from(speciesMap.values()).sort((a, b) =>
-    (
-      a.species.PrefferedPopularname || a.species.ValidScientificName
-    ).localeCompare(
-      b.species.PrefferedPopularname || b.species.ValidScientificName,
-      "no",
-    ),
-  );
+  return Array.from(speciesMap.values()).sort((a, b) => {
+    const nameA =
+      a.species.PrefferedPopularname || a.species.ValidScientificName || "";
+    const nameB =
+      b.species.PrefferedPopularname || b.species.ValidScientificName || "";
+    return nameA.localeCompare(nameB, "no");
+  });
 }
 
 /**
@@ -166,12 +170,12 @@ export function rankSpeciesResults(
     }
 
     // Boost previously observed species
-    if (previouslyObservedIds.has(species.Id)) {
+    if (species.Id != null && previouslyObservedIds.has(species.Id)) {
       score += 25;
     }
 
     // Boost species existing in Norway
-    if (species.ExistsInCountry) {
+    if (species.ExistsInCountry === true) {
       score += 10;
     }
 

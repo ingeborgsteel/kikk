@@ -11,6 +11,7 @@ import { getAgeOptionsForTaxonGroup } from "../lib/ageOptions.ts";
 interface SpeciesItemProps {
   species: Species;
   updateSpecies: (field: keyof Species, value: string | number) => void;
+  updateTaxonGroup: (taxonGroup: string) => void;
   removeSpecies: () => void;
   key: number;
 }
@@ -18,9 +19,11 @@ interface SpeciesItemProps {
 const SpeciesItem = ({
   species,
   updateSpecies,
+  updateTaxonGroup,
   removeSpecies,
   key,
 }: SpeciesItemProps) => {
+  const isFreeText = species.species.Id == null;
   const [isExpanded, setIsExpanded] = useState(false);
   const [countInput, setCountInput] = useState(String(species.count));
 
@@ -80,9 +83,41 @@ const SpeciesItem = ({
       {isExpanded && (
         <div className="px-md pb-md space-y-sm border-t border-moss/30">
           <div className="pt-sm">
-            <div className="text-sm text-slate italic">
-              {species.species.ValidScientificName}
-            </div>
+            {species.species.ValidScientificName && (
+              <div className="text-sm text-slate italic">
+                {species.species.ValidScientificName}
+              </div>
+            )}
+            {isFreeText && (
+              <div className="mt-1">
+                <Label
+                  htmlFor={`taxon-group-${key}`}
+                  className="text-bark dark:text-sand text-xs"
+                >
+                  Artsgruppe
+                </Label>
+                <Select
+                  id={`taxon-group-${key}`}
+                  value={species.species.TaxonGroup || ""}
+                  onChange={(e) => updateTaxonGroup(e.target.value)}
+                  className="mt-1"
+                >
+                  <option value="">—</option>
+                  <option value="fugler">Fugler</option>
+                  <option value="pattedyr">Pattedyr</option>
+                  <option value="amfibier">Amfibier</option>
+                  <option value="reptiler">Reptiler</option>
+                  <option value="fisker">Fisker</option>
+                  <option value="insekter">Insekter</option>
+                  <option value="sommerfugler">Sommerfugler</option>
+                  <option value="edderkopper">Edderkopper</option>
+                  <option value="karplanter">Karplanter</option>
+                  <option value="moser">Moser</option>
+                  <option value="sopp">Sopp</option>
+                  <option value="lav">Lav</option>
+                </Select>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-sm">

@@ -103,7 +103,7 @@ const ObservationForm = ({
     const ids = new Set<number>();
     for (const obs of observations) {
       for (const s of obs.species) {
-        ids.add(s.species.Id);
+        if (s.species.Id != null) ids.add(s.species.Id);
       }
     }
     return ids;
@@ -385,6 +385,10 @@ const ObservationForm = ({
                 setShowResults(false);
               };
 
+              const addFreeTextSpecies = (name: string) => {
+                addSpecies({ PrefferedPopularname: name });
+              };
+
               const updateSpecies = (
                 index: number,
                 field: keyof Species,
@@ -445,7 +449,7 @@ const ObservationForm = ({
                         <div className="flex flex-wrap gap-1.5">
                           {visibleRecentSpecies.map((species) => (
                             <button
-                              key={species.Id}
+                              key={species.Id ?? species.PrefferedPopularname}
                               type="button"
                               onClick={() => addSpecies(species)}
                               className="px-2 py-1 bg-moss/10 hover:bg-moss/20 dark:bg-moss/20 dark:hover:bg-moss/30 text-bark dark:text-sand text-xs rounded-md border border-moss/30 dark:border-moss/40 transition-colors flex items-center gap-1"
@@ -482,17 +486,22 @@ const ObservationForm = ({
                         value={searchTerm}
                         onChange={(e) => {
                           setSearchTerm(e.target.value);
-                          if (e.target.value.length >= 2) {
-                            setShowResults(true);
-                          } else {
-                            setShowResults(false);
+                          setShowResults(true);
+                        }}
+                        onFocus={() => setShowResults(true)}
+                        onBlur={() =>
+                          setTimeout(() => setShowResults(false), 150)
+                        }
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && searchTerm.length >= 2) {
+                            e.preventDefault();
+                            if (rankedResults.length === 1) {
+                              addSpecies(rankedResults[0]);
+                            } else {
+                              addFreeTextSpecies(searchTerm);
+                            }
                           }
                         }}
-                        onFocus={() =>
-                          searchTerm.length >= 2 &&
-                          rankedResults.length > 0 &&
-                          setShowResults(true)
-                        }
                       />
                       {isLoading && (
                         <div className="absolute right-3 top-3">
@@ -501,11 +510,23 @@ const ObservationForm = ({
                       )}
 
                       {/* Search Results Dropdown */}
-                      {showResults && rankedResults.length > 0 && (
+                      {showResults && searchTerm.length >= 2 && (
                         <div className="absolute z-10 w-full mt-1 bg-white dark:bg-bark border-2 border-slate-border dark:border-slate rounded-md shadow-custom-lg max-h-60 overflow-y-auto">
+                          <button
+                            type="button"
+                            onClick={() => addFreeTextSpecies(searchTerm)}
+                            className="w-full text-left px-3 py-2 hover:bg-sand dark:hover:bg-forest transition-colors border-b border-slate-border dark:border-slate"
+                          >
+                            <div className="font-medium text-bark dark:text-sand">
+                              {searchTerm}
+                            </div>
+                            <div className="text-xs text-slate">
+                              Legg til egendefinert art
+                            </div>
+                          </button>
                           {rankedResults.map((species) => (
                             <button
-                              key={species.Id}
+                              key={species.Id ?? species.PrefferedPopularname}
                               type="button"
                               onClick={() => addSpecies(species)}
                               className="w-full text-left px-3 py-2 hover:bg-sand dark:hover:bg-forest transition-colors border-b border-slate-border dark:border-slate last:border-b-0"
@@ -541,6 +562,17 @@ const ObservationForm = ({
                             field: keyof Species,
                             value: string | number,
                           ) => updateSpecies(index, field, value)}
+                          updateTaxonGroup={(taxonGroup: string) => {
+                            const updated = [...species];
+                            updated[index] = {
+                              ...updated[index],
+                              species: {
+                                ...updated[index].species,
+                                TaxonGroup: taxonGroup,
+                              },
+                            };
+                            onChange(updated);
+                          }}
                           removeSpecies={() => removeSpecies(index)}
                         />
                       ))}

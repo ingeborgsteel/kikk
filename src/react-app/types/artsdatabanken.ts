@@ -1,43 +1,43 @@
 export interface TaxonRecord {
-  Id: number;
-  DateTimeUpdated: string; // ISO 8601
-  CategoryValue: number;
+  Id?: number;
+  DateTimeUpdated?: string; // ISO 8601
+  CategoryValue?: number;
 
-  TaxonId: number;
-  ParentTaxonId: number;
-  ValidScientificNameId: number;
-  ValidScientificName: string;
-  ValidScientificNameFormatted: string; // contains HTML (e.g. <i>...</i>)
-  ValidScientificNameAuthorship: string;
+  TaxonId?: number;
+  ParentTaxonId?: number;
+  ValidScientificNameId?: number;
+  ValidScientificName?: string;
+  ValidScientificNameFormatted?: string; // contains HTML (e.g. <i>...</i>)
+  ValidScientificNameAuthorship?: string;
 
   PrefferedPopularname: string; // note: spelling as in source
-  MatchedName: string;
+  MatchedName?: string;
 
-  TaxonGroup: string;
-  TaxonGroupId: number;
+  TaxonGroup?: string;
+  TaxonGroupId?: number;
 
-  ExistsInCountry: boolean;
+  ExistsInCountry?: boolean;
 
-  ScientificNames: ScientificName[];
-  PopularNames: PopularName[];
-  TaxonTags: TaxonTag[];
+  ScientificNames?: ScientificName[];
+  PopularNames?: PopularName[];
+  TaxonTags?: TaxonTag[];
 
-  Status: string; // e.g. "EN"
-  StatusPrefix: string; // e.g. "RL2021N"
+  Status?: string; // e.g. "EN"
+  StatusPrefix?: string; // e.g. "RL2021N"
 
-  ScientificNameIdHiarchy: number[]; // note: spelling as in source
-  TaxonIdHiarchy: number[]; // note: spelling as in source
+  ScientificNameIdHiarchy?: number[]; // note: spelling as in source
+  TaxonIdHiarchy?: number[]; // note: spelling as in source
 
-  Kingdom: string;
-  Phylum: string;
-  Class: string;
-  Order: string;
-  Family: string;
-  Genus: string;
-  Species: string;
-  SubSpecies: string | null;
+  Kingdom?: string;
+  Phylum?: string;
+  Class?: string;
+  Order?: string;
+  Family?: string;
+  Genus?: string;
+  Species?: string;
+  SubSpecies?: string | null;
 
-  IsDeleted: boolean;
+  IsDeleted?: boolean;
 }
 
 export interface ScientificName {

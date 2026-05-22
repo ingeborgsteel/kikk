@@ -61,6 +61,7 @@ const getTileLayerConfig = (
 // Delay for map resize after initialization to ensure container dimensions are available
 const MAP_RESIZE_DELAY_MS = 100;
 const UNCERTAINTY_ZOOM_THRESHOLD = 9;
+const DEFAULT_ZOOM = 15;
 
 function useOnlineStatus() {
   return useSyncExternalStore(
@@ -164,7 +165,7 @@ function Map({
   const userLocationCirclesRef = useRef<L.Circle[]>([]);
   const userLocationMarkerRef = useRef<L.CircleMarker | null>(null);
   const [showCenteredMessage, setShowCenteredMessage] = useState(false);
-  const [currentZoom, setCurrentZoom] = useState(12);
+  const [currentZoom, setCurrentZoom] = useState(DEFAULT_ZOOM);
   const hasAutoLocatedRef = useRef(false);
   const { currentLayer, setCurrentLayer, showUncertaintyOverlay } =
     useMapPreferences();
@@ -227,7 +228,7 @@ function Map({
 
     // Initialize map with default center (Oslo, Norway)
     const defaultCenter: [number, number] = [59.9139, 10.7522];
-    const defaultZoom = 12;
+    const defaultZoom = DEFAULT_ZOOM;
 
     map.current = L.map(mapContainer.current).setView(
       defaultCenter,
@@ -404,7 +405,7 @@ function Map({
       if (!position) return;
 
       renderUserLocationMarker(position.lat, position.lng);
-      recenterMapTo(position.lat, position.lng, 13);
+      recenterMapTo(position.lat, position.lng, DEFAULT_ZOOM);
       setShowCenteredMessage(true);
     };
 

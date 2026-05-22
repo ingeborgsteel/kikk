@@ -123,6 +123,7 @@ function computeMonthlyStats(observations: Observation[]): MonthStat[] {
   }
 
   for (const obs of observations) {
+    if (!obs.startDate) continue;
     const date = new Date(obs.startDate);
     const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
     if (monthMap.has(key)) {

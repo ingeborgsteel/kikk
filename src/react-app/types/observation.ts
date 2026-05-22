@@ -22,7 +22,7 @@ export interface Observation {
   uncertaintyRadius: number; // in meters
   species: Species[];
   startDate: string; // ISO date string for start time
-  endDate: string; // ISO date string for end time
+  endDate?: string; // ISO date string for end time
   comment: string;
   createdAt: string;
   updatedAt: string;

@@ -13,6 +13,8 @@ import { MapPreferencesProvider } from "./context/MapPreferencesContext.tsx";
 import { GeolocationProvider } from "./context/GeolocationContext.tsx";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { nbNO } from "@mui/x-date-pickers/locales";
+import "dayjs/locale/nb";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,7 +29,7 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="nb" localeText={nbNO.components.MuiLocalizationProvider.defaultProps.localeText}>
           <ThemeProvider>
             <GeolocationProvider>
               <MapPreferencesProvider>

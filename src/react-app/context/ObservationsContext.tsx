@@ -141,7 +141,8 @@ export function ObservationsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (isOnline && supabaseConfigured && offlineQueue.length > 0) {
-      drainQueue();
+      const id = setTimeout(() => drainQueue(), 0);
+      return () => clearTimeout(id);
     }
   }, [isOnline, supabaseConfigured, offlineQueue.length, drainQueue]);
 

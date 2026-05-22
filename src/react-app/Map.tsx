@@ -381,7 +381,7 @@ function Map({
         const popupContent = `
           <div style="min-width: 150px;">
             <strong>${speciesList}</strong><br/>
-            <small>${new Date(observation.startDate).toLocaleDateString("no-NO")}</small><br/>
+            ${observation.startDate ? `<small>${new Date(observation.startDate).toLocaleDateString("no-NO")}</small><br/>` : null}
             <small>±${observation.uncertaintyRadius}m</small>
           </div>
         `;

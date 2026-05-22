@@ -138,7 +138,9 @@ const ObservationForm = ({
   } = useForm<Observation>({
     defaultValues: {
       ...observation,
-      startDate: parseDate(observation?.startDate) ?? (!observation ? dayjs().toISOString() : undefined),
+      startDate:
+        parseDate(observation?.startDate) ??
+        (!observation ? dayjs().toISOString() : undefined),
       endDate: parseDate(observation?.endDate),
       locationName: observation?.locationName || presetLocation?.name || "",
       location: currentLocation,
@@ -254,7 +256,9 @@ const ObservationForm = ({
 
   const save = useCallback(
     (data: Observation) => {
-      const startDate = toStorageDateTimeValue(data.startDate, startTimeEnabled);
+      const startDate =
+        toStorageDateTimeValue(data.startDate, startTimeEnabled) ||
+        dayjs().format(DATE_TIME_STORAGE_FORMAT);
       const endDate = toStorageDateTimeValue(data.endDate, endTimeEnabled);
 
       if (data.id) {
@@ -292,7 +296,9 @@ const ObservationForm = ({
 
   const saveAndAddAnother = useCallback(
     (data: Observation) => {
-      const startDate = toStorageDateTimeValue(data.startDate, startTimeEnabled);
+      const startDate =
+        toStorageDateTimeValue(data.startDate, startTimeEnabled) ||
+        dayjs().format(DATE_TIME_STORAGE_FORMAT);
       const endDate = toStorageDateTimeValue(data.endDate, endTimeEnabled);
 
       addObservation({
@@ -692,12 +698,11 @@ const ObservationForm = ({
                             },
                           },
                         },
-                        field: { clearable: true },
                       }}
                       sx={{ background: "white" }}
                       value={value ? dayjs(value) : null}
                       onChange={(newValue) =>
-                        onChange(newValue ? newValue.toISOString() : null)
+                        newValue && onChange(newValue.toISOString())
                       }
                     />
                   </DemoContainer>

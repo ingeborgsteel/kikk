@@ -21,7 +21,7 @@ export interface Observation {
   locationName?: string; // Optional human-readable location name
   uncertaintyRadius: number; // in meters
   species: Species[];
-  startDate?: string; // ISO date string for start time
+  startDate: string; // ISO date string for start time
   endDate?: string; // ISO date string for end time
   comment: string;
   createdAt: string;

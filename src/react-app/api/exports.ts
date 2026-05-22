@@ -46,8 +46,8 @@ export async function generateExcelFromObservations(
       latitude: obs.location.lat,
       longitude: obs.location.lng,
       uncertainty: obs.uncertaintyRadius,
-      startDate: new Date(obs.startDate).toLocaleString("no-NO"),
-      endDate: new Date(obs.endDate).toLocaleString("no-NO"),
+      startDate: obs.startDate ? new Date(obs.startDate).toLocaleString("no-NO") : "",
+      endDate: obs.endDate ? new Date(obs.endDate).toLocaleString("no-NO") : "",
       comment: obs.comment || "",
       lastExportedAt: obs.lastExportedAt
         ? new Date(obs.lastExportedAt).toLocaleString("no-NO")

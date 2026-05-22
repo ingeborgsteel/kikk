@@ -22,12 +22,12 @@ function MyObservations({ onBack }: MyObservationsProps) {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
+    const isMidnight = date.getHours() === 0 && date.getMinutes() === 0;
     return date.toLocaleString("no-NO", {
       year: "numeric",
       month: "short",
       day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
+      ...(isMidnight ? {} : { hour: "2-digit", minute: "2-digit" }),
     });
   };
 
@@ -47,12 +47,17 @@ function MyObservations({ onBack }: MyObservationsProps) {
     const startDateTime = new Date(start);
     const endDateTime = new Date(end);
 
-    // If same day, just show time range
+    // If same day, show time range only when end time is not midnight
     if (startDateTime.toDateString() === endDateTime.toDateString()) {
-      return `${formatDate(start)} - ${endDateTime.toLocaleString("no-NO", {
-        hour: "2-digit",
-        minute: "2-digit",
-      })}`;
+      const endHasTime =
+        endDateTime.getHours() !== 0 || endDateTime.getMinutes() !== 0;
+      if (endHasTime) {
+        return `${formatDate(start)} - ${endDateTime.toLocaleString("no-NO", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })}`;
+      }
+      return formatDate(start);
     }
 
     // Different days, show full range

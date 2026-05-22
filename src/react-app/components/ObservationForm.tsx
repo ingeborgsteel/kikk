@@ -22,9 +22,16 @@ import { Check, MapPin, MapPinned } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 import dayjs from "dayjs";
 import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
-import { MobileDateTimePicker } from "@mui/x-date-pickers/MobileDateTimePicker";
+import { MobileDatePicker } from "@mui/x-date-pickers/MobileDatePicker";
+import { MobileTimePicker } from "@mui/x-date-pickers/MobileTimePicker";
 
 const DATE_TIME_STORAGE_FORMAT = "YYYY-MM-DDTHH:mm:ssZ";
+
+const hasTime = (value?: string) => {
+  if (!value) return false;
+  const d = dayjs(value);
+  return d.isValid() && (d.hour() !== 0 || d.minute() !== 0);
+};
 
 interface ObservationFormProps {
   observation?: Observation;
@@ -49,22 +56,22 @@ const ObservationForm = ({
   onSaveAsLocation,
   onActivateKikkemodus,
 }: ObservationFormProps) => {
-  const parseDate = (value?: string): string => {
+  const parseDate = (value?: string): string | undefined => {
+    if (!value) return undefined;
     const parsed = dayjs(value);
-    if (!parsed.isValid()) {
-      return dayjs().toISOString();
-    }
+    if (!parsed.isValid()) return undefined;
     return parsed.toISOString();
   };
 
-  const toStorageDateTimeValue = (value?: string): string => {
+  const toStorageDateTimeValue = (
+    value?: string,
+    includeTime?: boolean,
+  ): string | undefined => {
+    if (!value) return undefined;
     const parsed = dayjs(value);
-
-    if (!parsed.isValid()) {
-      return dayjs().format(DATE_TIME_STORAGE_FORMAT);
-    }
-
-    return parsed.format(DATE_TIME_STORAGE_FORMAT);
+    if (!parsed.isValid()) return undefined;
+    const base = includeTime ? parsed : parsed.hour(0).minute(0).second(0);
+    return base.format(DATE_TIME_STORAGE_FORMAT);
   };
 
   const { addObservation, updateObservation, observations } = useObservations();
@@ -81,6 +88,12 @@ const ObservationForm = ({
   > | null>(null);
   const [visibleRecentSpeciesCount, setVisibleRecentSpeciesCount] =
     useState(10);
+  const [startTimeEnabled, setStartTimeEnabled] = useState(
+    !observation || hasTime(observation.startDate),
+  );
+  const [endTimeEnabled, setEndTimeEnabled] = useState(
+    hasTime(observation?.endDate),
+  );
 
   const { data: searchResults = [], isLoading } = useSpeciesSearch(searchTerm);
 
@@ -125,7 +138,7 @@ const ObservationForm = ({
   } = useForm<Observation>({
     defaultValues: {
       ...observation,
-      startDate: parseDate(observation?.startDate),
+      startDate: parseDate(observation?.startDate) ?? (!observation ? dayjs().toISOString() : undefined),
       endDate: parseDate(observation?.endDate),
       locationName: observation?.locationName || presetLocation?.name || "",
       location: currentLocation,
@@ -241,8 +254,8 @@ const ObservationForm = ({
 
   const save = useCallback(
     (data: Observation) => {
-      const startDate = toStorageDateTimeValue(data.startDate);
-      const endDate = toStorageDateTimeValue(data.endDate);
+      const startDate = toStorageDateTimeValue(data.startDate, startTimeEnabled);
+      const endDate = toStorageDateTimeValue(data.endDate, endTimeEnabled);
 
       if (data.id) {
         updateObservation({
@@ -272,13 +285,15 @@ const ObservationForm = ({
       presetLocation,
       onActivateKikkemodus,
       toStorageDateTimeValue,
+      startTimeEnabled,
+      endTimeEnabled,
     ],
   );
 
   const saveAndAddAnother = useCallback(
     (data: Observation) => {
-      const startDate = toStorageDateTimeValue(data.startDate);
-      const endDate = toStorageDateTimeValue(data.endDate);
+      const startDate = toStorageDateTimeValue(data.startDate, startTimeEnabled);
+      const endDate = toStorageDateTimeValue(data.endDate, endTimeEnabled);
 
       addObservation({
         ...data,
@@ -320,6 +335,8 @@ const ObservationForm = ({
       successTimeout,
       onActivateKikkemodus,
       toStorageDateTimeValue,
+      startTimeEnabled,
+      endTimeEnabled,
     ],
   );
 
@@ -658,10 +675,10 @@ const ObservationForm = ({
                     htmlFor="startDate"
                     className="text-bark dark:text-sand"
                   >
-                    Startdato og tid
+                    Startdato
                   </Label>
-                  <DemoContainer components={["DateTimePicker"]}>
-                    <MobileDateTimePicker
+                  <DemoContainer components={["DatePicker"]}>
+                    <MobileDatePicker
                       slotProps={{
                         textField: {
                           fullWidth: true,
@@ -675,15 +692,67 @@ const ObservationForm = ({
                             },
                           },
                         },
+                        field: { clearable: true },
                       }}
                       sx={{ background: "white" }}
-                      ampm={false}
                       value={value ? dayjs(value) : null}
                       onChange={(newValue) =>
                         onChange(newValue ? newValue.toISOString() : null)
                       }
                     />
                   </DemoContainer>
+                  {startTimeEnabled ? (
+                    <div className="mt-2 flex items-center gap-2">
+                      <DemoContainer components={["TimePicker"]}>
+                        <MobileTimePicker
+                          slotProps={{
+                            textField: {
+                              fullWidth: true,
+                              sx: {
+                                "& .MuiOutlinedInput-root": {
+                                  borderRadius: 10,
+                                  background: "white",
+                                  "& fieldset": { border: "none" },
+                                  "&:hover fieldset": { border: "none" },
+                                  "&.Mui-focused fieldset": { border: "none" },
+                                },
+                              },
+                            },
+                          }}
+                          sx={{ background: "white" }}
+                          ampm={false}
+                          value={value ? dayjs(value) : null}
+                          onChange={(newValue) => {
+                            if (newValue) {
+                              const base = value ? dayjs(value) : dayjs();
+                              onChange(
+                                base
+                                  .hour(newValue.hour())
+                                  .minute(newValue.minute())
+                                  .second(0)
+                                  .toISOString(),
+                              );
+                            }
+                          }}
+                        />
+                      </DemoContainer>
+                      <button
+                        type="button"
+                        onClick={() => setStartTimeEnabled(false)}
+                        className="text-xs text-gray-400 hover:text-gray-600 whitespace-nowrap"
+                      >
+                        Fjern tid
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setStartTimeEnabled(true)}
+                      className="mt-1 text-xs text-gray-400 hover:text-gray-600"
+                    >
+                      + Legg til klokkeslett
+                    </button>
+                  )}
                 </div>
               )}
             />
@@ -694,10 +763,10 @@ const ObservationForm = ({
               render={({ field: { value, onChange } }) => (
                 <div>
                   <Label htmlFor="endDate" className="text-bark dark:text-sand">
-                    Sluttdato og tid
+                    Sluttdato
                   </Label>
-                  <DemoContainer components={["DateTimePicker"]}>
-                    <MobileDateTimePicker
+                  <DemoContainer components={["DatePicker"]}>
+                    <MobileDatePicker
                       slotProps={{
                         textField: {
                           fullWidth: true,
@@ -711,15 +780,67 @@ const ObservationForm = ({
                             },
                           },
                         },
+                        field: { clearable: true },
                       }}
                       sx={{ background: "white" }}
-                      ampm={false}
                       value={value ? dayjs(value) : null}
                       onChange={(newValue) =>
                         onChange(newValue ? newValue.toISOString() : null)
                       }
                     />
                   </DemoContainer>
+                  {endTimeEnabled ? (
+                    <div className="mt-2 flex items-center gap-2">
+                      <DemoContainer components={["TimePicker"]}>
+                        <MobileTimePicker
+                          slotProps={{
+                            textField: {
+                              fullWidth: true,
+                              sx: {
+                                "& .MuiOutlinedInput-root": {
+                                  borderRadius: 5,
+                                  background: "white",
+                                  "& fieldset": { border: "none" },
+                                  "&:hover fieldset": { border: "none" },
+                                  "&.Mui-focused fieldset": { border: "none" },
+                                },
+                              },
+                            },
+                          }}
+                          sx={{ background: "white" }}
+                          ampm={false}
+                          value={value ? dayjs(value) : null}
+                          onChange={(newValue) => {
+                            if (newValue) {
+                              const base = value ? dayjs(value) : dayjs();
+                              onChange(
+                                base
+                                  .hour(newValue.hour())
+                                  .minute(newValue.minute())
+                                  .second(0)
+                                  .toISOString(),
+                              );
+                            }
+                          }}
+                        />
+                      </DemoContainer>
+                      <button
+                        type="button"
+                        onClick={() => setEndTimeEnabled(false)}
+                        className="text-xs text-gray-400 hover:text-gray-600 whitespace-nowrap"
+                      >
+                        Fjern tid
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setEndTimeEnabled(true)}
+                      className="mt-1 text-xs text-gray-400 hover:text-gray-600"
+                    >
+                      + Legg til klokkeslett
+                    </button>
+                  )}
                 </div>
               )}
             />

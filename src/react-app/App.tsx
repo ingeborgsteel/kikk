@@ -12,6 +12,7 @@ import { LoginForm } from "./components/LoginForm.tsx";
 import { BottomNav } from "./components/BottomNav";
 import { UserProfile } from "./components/UserProfile.tsx";
 import { MapClickDialog } from "./components/MapClickDialog.tsx";
+import { LocationObservationsDialog } from "./components/LocationObservationsDialog.tsx";
 import { LocationForm } from "./components/LocationForm.tsx";
 import { KikkemodusToggle } from "./components/KikkemodusToggle.tsx";
 import { GitHubSuggestionButton } from "./components/GitHubSuggestionButton.tsx";
@@ -46,6 +47,12 @@ function App() {
   );
   const [kikkemodusActive, setKikkemodusActive] = useState(false);
   const [showGitHubIssueForm, setShowGitHubIssueForm] = useState(false);
+  const [showLocationObservations, setShowLocationObservations] =
+    useState(false);
+  const [selectedUserLocation, setSelectedUserLocation] =
+    useState<UserLocation | null>(null);
+  const [editingUserLocation, setEditingUserLocation] =
+    useState<UserLocation | null>(null);
   const [returnToObservationAfterSave, setReturnToObservationAfterSave] =
     useState(false);
   const { observations } = useObservations();
@@ -100,16 +107,50 @@ function App() {
   };
 
   const handleUserLocationClick = (locationId: string) => {
-    // Find the user location
     const userLocation = locations.find((loc) => loc.id === locationId);
     if (userLocation) {
-      // Set the location to create a new observation at this preset location
-      setSelectedLocation(userLocation.location);
-      setPresetLocation(userLocation); // Set preset location name to lock it
-      setSelectedZoom(13);
-      setEditingObservationId(null);
-      setShowAddForm(true);
+      setSelectedUserLocation(userLocation);
+      setShowLocationObservations(true);
     }
+  };
+
+  const handleLocationObservationAdd = () => {
+    if (!selectedUserLocation) return;
+    setSelectedLocation(selectedUserLocation.location);
+    setPresetLocation(selectedUserLocation);
+    setSelectedZoom(13);
+    setEditingObservationId(null);
+    setShowLocationObservations(false);
+    setShowAddForm(true);
+  };
+
+  const handleLocationObservationClick = (observationId: string) => {
+    setShowLocationObservations(false);
+    setEditingObservationId(observationId);
+    setSelectedLocation(null);
+    setPresetLocation(null);
+    setShowAddForm(true);
+  };
+
+  const handleCloseLocationObservations = () => {
+    setShowLocationObservations(false);
+    setSelectedUserLocation(null);
+  };
+
+  const handleEditLocationFromDialog = () => {
+    if (!selectedUserLocation) return;
+    setEditingUserLocation(selectedUserLocation);
+    setSelectedLocation(selectedUserLocation.location);
+    setSelectedZoom(13);
+    setShowLocationObservations(false);
+    setShowAddLocationForm(true);
+  };
+
+  const handleLocationEditFormClose = () => {
+    setShowAddLocationForm(false);
+    setEditingUserLocation(null);
+    setSelectedLocation(null);
+    setSelectedUserLocation(null);
   };
 
   const handleSaveAsLocation = (loc: { lat: number; lng: number }) => {
@@ -228,6 +269,16 @@ function App() {
                   onActivateKikkemodus={() => setKikkemodusActive(true)}
                 />
               )}
+              {showLocationObservations && selectedUserLocation && (
+                <LocationObservationsDialog
+                  location={selectedUserLocation}
+                  isOpen={showLocationObservations}
+                  onClose={handleCloseLocationObservations}
+                  onAddObservation={handleLocationObservationAdd}
+                  onObservationClick={handleLocationObservationClick}
+                  onEditLocation={handleEditLocationFromDialog}
+                />
+              )}
               {showMapClickDialog && selectedLocation && (
                 <MapClickDialog
                   zoom={selectedZoom}
@@ -242,7 +293,12 @@ function App() {
                 <LocationForm
                   isOpen={showAddLocationForm}
                   initialLocation={selectedLocation}
-                  onClose={handleLocationFormClose}
+                  onClose={
+                    editingUserLocation
+                      ? handleLocationEditFormClose
+                      : handleLocationFormClose
+                  }
+                  editingLocation={editingUserLocation}
                   onSaved={
                     returnToObservationAfterSave
                       ? handleLocationSaved

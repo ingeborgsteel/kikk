@@ -263,7 +263,7 @@ function App() {
         onClose={() => setShowGitHubIssueForm(false)}
         showForm={showGitHubIssueForm}
       />
-      <div className="fixed bottom-20 md:bottom-6 right-6 z-[500] flex flex-col gap-3 items-end">
+      <div className="fixed bottom-20 md:bottom-14 right-6 z-[500] flex flex-col gap-3 items-end">
         {getCurrentView() === "map" && (
           <>
             <div className="relative group">

@@ -243,6 +243,10 @@ function Map({
       attribution,
     }).addTo(map.current);
 
+    L.control
+      .scale({ imperial: false, position: "bottomright" })
+      .addTo(map.current);
+
     // Ensure the map container is properly sized
     // This is necessary when the container size is not immediately available
     setTimeout(() => {

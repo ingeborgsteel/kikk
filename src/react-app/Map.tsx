@@ -8,6 +8,7 @@ import {
 import L from "leaflet";
 import { Observation } from "./types/observation";
 import { UserLocation } from "./types/location";
+import { useObservations } from "./context/ObservationsContext";
 
 // Fix for default marker icons in Leaflet with bundlers
 import icon from "leaflet/dist/images/marker-icon.png";
@@ -151,6 +152,7 @@ function Map({
     lng: number;
   } | null>(null);
   const isOnline = useOnlineStatus();
+  const { pendingSyncCount } = useObservations();
   const [downloadProgress, setDownloadProgress] = useState<{
     done: number;
     total: number;
@@ -565,7 +567,10 @@ function Map({
             <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
             <line x1="12" y1="20" x2="12.01" y2="20" />
           </svg>
-          Offline — kartet viser bufrede fliser
+          Offline
+          {pendingSyncCount > 0
+            ? ` · ${pendingSyncCount} obs. venter synkronisering`
+            : ""}
         </div>
       )}
       {/* Layer Control */}
@@ -611,7 +616,9 @@ function Map({
         </div>
       )}
       {locationError && (
-        <div className="absolute top-md left-1/2 -translate-x-1/2 z-[500] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-md md:p-xl rounded-lg shadow-custom-xl flex items-start gap-sm text-sm md:text-base font-medium text-rust dark:text-rust animate-[slideDown_0.3s_ease] max-w-[90%] border-2 border-rust leading-relaxed">
+        <div
+          className={`absolute ${isOnline ? "top-md" : "top-[calc(1rem+26px)]"} left-1/2 -translate-x-1/2 z-[500] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-md md:p-xl rounded-lg shadow-custom-xl flex items-start gap-sm text-sm md:text-base font-medium text-rust dark:text-rust animate-[slideDown_0.3s_ease] max-w-[90%] border-2 border-rust leading-relaxed`}
+        >
           <svg
             width="20"
             height="20"
@@ -635,7 +642,9 @@ function Map({
         </div>
       )}
       {showCenteredMessage && currentPosition && !selectedLocation && (
-        <div className="absolute top-md left-1/2 -translate-x-1/2 z-[500] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-sm md:p-md px-lg md:px-xl rounded-lg shadow-custom-xl flex items-center gap-sm text-sm md:text-base font-semibold text-moss dark:text-moss animate-[slideDown_0.3s_ease] max-w-[90%] border-2 border-moss">
+        <div
+          className={`absolute ${isOnline ? "top-md" : "top-[calc(1rem+26px)]"} left-1/2 -translate-x-1/2 z-[500] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-sm md:p-md px-lg md:px-xl rounded-lg shadow-custom-xl flex items-center gap-sm text-sm md:text-base font-semibold text-moss dark:text-moss animate-[slideDown_0.3s_ease] max-w-[90%] border-2 border-moss`}
+        >
           <svg
             width="16"
             height="16"
@@ -651,7 +660,9 @@ function Map({
         </div>
       )}
       {selectedLocation && (
-        <div className="absolute top-md left-1/2 -translate-x-1/2 z-[500] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-sm rounded-lg shadow-custom-xl flex items-center gap-sm text-sm md:text-base font-semibold text-bark dark:text-sand animate-[slideDown_0.3s_ease] max-w-[90%] border-2 border-moss">
+        <div
+          className={`absolute ${isOnline ? "top-md" : "top-[calc(1rem+26px)]"} left-1/2 -translate-x-1/2 z-[500] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-sm rounded-lg shadow-custom-xl flex items-center gap-sm text-sm md:text-base font-semibold text-bark dark:text-sand animate-[slideDown_0.3s_ease] max-w-[90%] border-2 border-moss`}
+        >
           <svg
             width="16"
             height="16"

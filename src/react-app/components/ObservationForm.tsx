@@ -5,6 +5,8 @@ import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { useObservations } from "../context/ObservationsContext";
 import { Observation, Species } from "../types/observation";
+import { useProfiles } from "../queries/useProfiles.ts";
+import { isSupabaseConfigured } from "../lib/supabase.ts";
 import { useSpeciesSearch } from "../queries/useSpeciesSearch.ts";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import {
@@ -18,7 +20,7 @@ import { Modal } from "./ui/Modal.tsx";
 import { TaxonRecord } from "../types/artsdatabanken.ts";
 import { CreateSpecies } from "../api/observations.ts";
 import SpeciesItem from "./SpeciesItem.tsx";
-import { Check, MapPin, MapPinned } from "lucide-react";
+import { Check, MapPin, MapPinned, User } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 import dayjs from "dayjs";
 import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
@@ -26,6 +28,9 @@ import { MobileDatePicker } from "@mui/x-date-pickers/MobileDatePicker";
 import { MobileTimePicker } from "@mui/x-date-pickers/MobileTimePicker";
 
 const DATE_TIME_STORAGE_FORMAT = "YYYY-MM-DDTHH:mm:ssZ";
+
+// Session-level memory for the last used observer name (persists across form opens, cleared on page reload)
+let sessionObserverName: string | undefined = undefined;
 
 const hasTime = (value?: string) => {
   if (!value) return false;
@@ -95,6 +100,10 @@ const ObservationForm = ({
     hasTime(observation?.endDate),
   );
 
+  const supabaseConfigured = isSupabaseConfigured();
+  const { data: profiles = [] } = useProfiles({ enabled: supabaseConfigured });
+  const [showProfileResults, setShowProfileResults] = useState(false);
+
   const { data: searchResults = [], isLoading } = useSpeciesSearch(searchTerm);
 
   // Get up to 30 most recent unique species from all observations
@@ -148,6 +157,7 @@ const ObservationForm = ({
         observation?.uncertaintyRadius ||
         presetLocation?.uncertaintyRadius ||
         100,
+      ...(!observation ? { observerName: sessionObserverName } : {}),
       ...(!observation && presetSpecies
         ? {
             species: [{ species: presetSpecies }],
@@ -269,6 +279,7 @@ const ObservationForm = ({
           endDate,
         });
       } else {
+        if (data.observerName) sessionObserverName = data.observerName;
         addObservation({
           ...data,
           locationId: presetLocation?.id,
@@ -301,6 +312,7 @@ const ObservationForm = ({
         dayjs().format(DATE_TIME_STORAGE_FORMAT);
       const endDate = toStorageDateTimeValue(data.endDate, endTimeEnabled);
 
+      if (data.observerName) sessionObserverName = data.observerName;
       addObservation({
         ...data,
         locationId: presetLocation?.id,
@@ -318,7 +330,7 @@ const ObservationForm = ({
       setSuccessMessage("Observasjon lagret!");
       setSuccessTimeout(setTimeout(() => setSuccessMessage(""), 3000));
 
-      // Reset form for a new observation, keeping location
+      // Reset form for a new observation, keeping location and observer
       const newStartDate = dayjs().toISOString();
       reset({
         startDate: newStartDate,
@@ -326,6 +338,7 @@ const ObservationForm = ({
         locationName: getValues("locationName"),
         location: currentLocation,
         uncertaintyRadius: getValues("uncertaintyRadius"),
+        observerName: sessionObserverName,
         species: [],
         comment: "",
       });
@@ -850,6 +863,98 @@ const ObservationForm = ({
               )}
             />
           </div>
+
+          <Controller
+            name={"observerName"}
+            control={control}
+            render={({ field: { value, onChange } }) => {
+              const inputValue = value ?? "";
+              const filteredProfiles =
+                inputValue.length >= 1
+                  ? profiles.filter((p) =>
+                      (p.display_name ?? p.email ?? "")
+                        .toLowerCase()
+                        .includes(inputValue.toLowerCase()),
+                    )
+                  : [];
+
+              return (
+                <div>
+                  <Label
+                    htmlFor="observerName"
+                    className="text-bark dark:text-sand"
+                  >
+                    Observatør
+                  </Label>
+                  <div className="relative mt-1">
+                    <User
+                      size={16}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-slate pointer-events-none"
+                    />
+                    <Input
+                      id="observerName"
+                      type="text"
+                      placeholder="Navn eller velg fra liste..."
+                      value={inputValue}
+                      className={twMerge("pl-8", inputValue && "pr-8")}
+                      onChange={(e) => {
+                        onChange(e.target.value);
+                        setShowProfileResults(true);
+                      }}
+                      onFocus={() =>
+                        inputValue.length >= 1 && setShowProfileResults(true)
+                      }
+                      onBlur={() =>
+                        setTimeout(() => setShowProfileResults(false), 150)
+                      }
+                    />
+                    {inputValue && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onChange("");
+                          sessionObserverName = undefined;
+                          setShowProfileResults(false);
+                        }}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate hover:text-bark dark:hover:text-sand"
+                        aria-label="Fjern observatør"
+                      >
+                        {"\u00d7"}
+                      </button>
+                    )}
+                  </div>
+                  {showProfileResults && filteredProfiles.length > 0 && (
+                    <div className="w-full mt-1 bg-white dark:bg-bark border-2 border-slate-border dark:border-slate rounded-md shadow-custom-lg">
+                      {filteredProfiles.map((p) => {
+                        const label = p.display_name ?? p.email ?? p.id;
+                        return (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => {
+                              onChange(label);
+                              setShowProfileResults(false);
+                            }}
+                            className="w-full text-left px-3 py-2 hover:bg-sand dark:hover:bg-forest transition-colors border-b border-slate-border dark:border-slate last:border-b-0"
+                          >
+                            <div className="font-medium text-bark dark:text-sand">
+                              {label}
+                            </div>
+                            {p.display_name && p.email && (
+                              <div className="text-xs text-slate">
+                                {p.email}
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            }}
+          />
 
           <Controller
             name={"comment"}

@@ -40,7 +40,6 @@ interface Observation {
   comment: string;
   createdAt: string;
   updatedAt: string;
-  coObserverName?: string;
 }
 
 /**
@@ -110,7 +109,6 @@ async function fetchObservationsSince(
  */
 function generateCSVFromObservations(observations: Observation[]): string {
   const headers = [
-    "Medobservatør",
     "Lokalitet",
     "Latitude",
     "Longitude",
@@ -130,7 +128,6 @@ function generateCSVFromObservations(observations: Observation[]): string {
 
   observations.forEach((obs) => {
     const baseRow = [
-      escapeCsv(obs.coObserverName || ""),
       escapeCsv(obs.locationName || ""),
       obs.location.lat,
       obs.location.lng,

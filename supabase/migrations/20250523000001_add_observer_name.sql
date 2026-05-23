@@ -4,7 +4,6 @@
 -- 1. Add observer_name column to observations table
 ALTER TABLE observations
   ADD COLUMN IF NOT EXISTS "observerName" text;
-ALTER TABLE observations RENAME COLUMN "observerName" TO "medobservatorName";
 
 -- 2. Create a public profiles table that mirrors basic auth.users data.
 --    Each row is auto-created/updated by a trigger when a user signs up or updates their email.

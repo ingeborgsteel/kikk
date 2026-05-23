@@ -12,7 +12,6 @@ import {
   Plus,
   Search,
   TrendingUp,
-  Users,
 } from "lucide-react";
 import { useObservations } from "../context/ObservationsContext";
 import { useLocations } from "../context/LocationsContext";
@@ -140,31 +139,6 @@ function computeMonthlyStats(observations: Observation[]): MonthStat[] {
     })(),
     count: monthMap.get(key) || 0,
   }));
-}
-
-
-interface ObserverStat {
-  name: string;
-  observationCount: number;
-  uniqueSpeciesCount: number;
-}
-
-function computeObserverStats(observations: Observation[]): ObserverStat[] {
-  const map = new Map<string, { obsCt: number; species: Set<number> }>();
-  for (const obs of observations) {
-    if (!obs.coObserverName) continue;
-    const entry = map.get(obs.coObserverName) ?? { obsCt: 0, species: new Set() };
-    entry.obsCt += 1;
-    for (const s of obs.species) { if (s.species.TaxonId != null) entry.species.add(s.species.TaxonId); }
-    map.set(obs.coObserverName, entry);
-  }
-  return Array.from(map.entries())
-    .map(([name, { obsCt, species }]) => ({
-      name,
-      observationCount: obsCt,
-      uniqueSpeciesCount: species.size,
-    }))
-    .sort((a, b) => b.observationCount - a.observationCount);
 }
 
 function countUniqueSpecies(observations: Observation[]): number {
@@ -310,11 +284,6 @@ export function StatsDashboard({ onBack }: StatsDashboardProps) {
       setSortDirection(field === "name" ? "asc" : "desc");
     }
   };
-
-  const observerStats = useMemo(
-    () => computeObserverStats(observations),
-    [observations],
-  );
 
   const groupStats = useMemo(() => {
     const groups = new Map<string, number>();
@@ -580,38 +549,6 @@ export function StatsDashboard({ onBack }: StatsDashboardProps) {
           )}
         </div>
       </div>
-
-
-      {/* Observer stats */}
-      {observerStats.length > 0 && (
-        <div className="bg-white dark:bg-[#2c2c2c] rounded-lg border-2 border-moss/30 p-lg">
-          <h2 className="text-lg font-semibold text-bark dark:text-sand mb-md flex items-center gap-2">
-            <Users size={20} className="text-moss" />
-            Medobservatører
-          </h2>
-          <div className="space-y-sm">
-            {observerStats.map((stat) => (
-              <div
-                key={stat.name}
-                className="flex items-center justify-between p-sm rounded-md hover:bg-sand dark:hover:bg-bark/50 transition-colors"
-              >
-                <div className="font-medium text-bark dark:text-sand">{stat.name}</div>
-                <div className="flex items-center gap-md text-sm text-bark/70 dark:text-sand/70">
-                  <span className="flex items-center gap-1">
-                    <Binoculars size={14} className="text-moss" />
-                    {stat.observationCount}{" "}
-                    {stat.observationCount === 1 ? "obs." : "obs."}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <ListChecks size={14} className="text-moss" />
-                    {stat.uniqueSpeciesCount} {stat.uniqueSpeciesCount === 1 ? "art" : "arter"}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Observation form for adding from stats */}
       {addFormLocation && (

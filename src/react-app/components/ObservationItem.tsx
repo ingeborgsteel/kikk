@@ -7,6 +7,7 @@ import {
   Sparkles,
   Trash2,
   MapPinned,
+  User,
 } from "lucide-react";
 import { Observation } from "../types/observation";
 import { Button } from "./ui/button";
@@ -88,6 +89,12 @@ function ObservationItem({
             <p className="text-sm text-slate">
               {formatDateRange(observation.startDate, observation.endDate)}
             </p>
+            {observation.observerName && (
+              <p className="text-sm text-slate flex items-center gap-1 mt-0.5">
+                <User size={13} />
+                {observation.observerName}
+              </p>
+            )}
             {isExported && observation.lastExportedAt && (
               <p className="text-xs text-slate mt-1">
                 Sist eksportert: {formatDate(observation.lastExportedAt)}

@@ -15,7 +15,7 @@ export async function generateExcelFromObservations(
 
   // Define columns
   worksheet.columns = [
-    { header: "Observatør", key: "observerName", width: 20 },
+    { header: "Medobservatør", key: "coObserverName", width: 20 },
     { header: "Lokalitet", key: "locationName", width: 20 },
     { header: "Latitude", key: "latitude", width: 12 },
     { header: "Longitude", key: "longitude", width: 12 },
@@ -43,7 +43,7 @@ export async function generateExcelFromObservations(
   // Add data rows
   observations.forEach((obs) => {
     worksheet.addRow({
-      observerName: obs.observerName || "",
+      coObserverName: obs.coObserverName || "",
       locationName: obs.locationName,
       latitude: obs.location.lat,
       longitude: obs.location.lng,
@@ -208,4 +208,44 @@ export function getExportFileUrl(filePath: string): string {
   const bucketName = "exports";
   const { data } = supabase.storage.from(bucketName).getPublicUrl(filePath);
   return data.publicUrl;
+}
+
+/**
+ * Send observations via email through the Worker API
+ * Note: This does NOT mark observations as exported (pure backup)
+ */
+export async function emailExport(
+  observations: Observation[],
+  toEmail: string,
+  fromEmail: string,
+  workerUrl: string,
+  resendApiKey: string,
+  supabaseUrl: string,
+  supabaseKey: string,
+): Promise<{ success: boolean; message: string; count: number }> {
+  // Get the earliest observation date to determine "since" parameter
+  const sinceDate = observations.reduce((earliest, obs) => {
+    const obsDate = new Date(obs.createdAt);
+    return obsDate < earliest ? obsDate : earliest;
+  }, new Date());
+
+  const response = await fetch(`${workerUrl}/api/export/email`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      supabaseUrl,
+      supabaseKey,
+      resendKey: resendApiKey,
+      to: toEmail,
+      from: fromEmail,
+      since: sinceDate.toISOString(),
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Email export failed: ${error}`);
+  }
+
+  return response.json();
 }

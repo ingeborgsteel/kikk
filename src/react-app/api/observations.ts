@@ -18,7 +18,10 @@ export async function fetchObservations(
   const { data, error } = await query;
 
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []).map((row) => {
+    const { medobservatorName, ...rest } = row as typeof row & { medobservatorName?: string };
+    return { ...rest, coObserverName: medobservatorName } as Observation;
+  });
 }
 
 export type CreateObservation = Omit<
@@ -35,11 +38,11 @@ export async function createObservation(
   observation: CreateObservation,
   user: { id: string } | null = null,
 ): Promise<Observation> {
-  const { species, ...observationRow } = observation;
+  const { species, coObserverName, ...observationRow } = observation;
 
   const { data: insertedObs, error: obsError } = await supabase
     .from("observations")
-    .insert({ ...observationRow, userId: user?.id })
+    .insert({ ...observationRow, medobservatorName: coObserverName, userId: user?.id })
     .select(
       `
       *,
@@ -50,6 +53,8 @@ export async function createObservation(
 
   if (obsError) throw obsError;
   if (!insertedObs) throw new Error("Failed to insert observation");
+  const { medobservatorName: insertedMedo, ...insertedRest } = insertedObs as typeof insertedObs & { medobservatorName?: string };
+  const mappedObs = { ...insertedRest, coObserverName: insertedMedo } as Observation;
 
   // 2) insert child rows (if any)
   if (species.length > 0) {
@@ -62,7 +67,7 @@ export async function createObservation(
     if (childError) throw childError;
   }
 
-  return insertedObs;
+  return mappedObs;
 }
 
 export async function updateObservation(
@@ -71,6 +76,7 @@ export async function updateObservation(
   const {
     id: observationId,
     species,
+    coObserverName,
     ...observationPatch
   } = updatedObservation;
 
@@ -79,6 +85,7 @@ export async function updateObservation(
     .from("observations")
     .update({
       ...observationPatch,
+      medobservatorName: coObserverName,
       updatedAt: new Date().toISOString(),
     })
     .eq("id", observationId)
@@ -91,6 +98,8 @@ export async function updateObservation(
     .single();
 
   if (parentError) throw parentError;
+  const { medobservatorName: updatedMedo, ...updatedRest } = observation as typeof observation & { medobservatorName?: string };
+  const mappedObservation = { ...updatedRest, coObserverName: updatedMedo } as Observation;
 
   // 2) Replace children if provided
   if (species) {
@@ -121,7 +130,7 @@ export async function updateObservation(
     }
   }
 
-  return observation;
+  return mappedObservation;
 }
 
 export async function deleteObservation(observationId: string): Promise<void> {

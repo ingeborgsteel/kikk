@@ -89,10 +89,10 @@ function ObservationItem({
             <p className="text-sm text-slate">
               {formatDateRange(observation.startDate, observation.endDate)}
             </p>
-            {observation.observerName && (
+            {observation.coObserverName && (
               <p className="text-sm text-slate flex items-center gap-1 mt-0.5">
                 <User size={13} />
-                {observation.observerName}
+                {observation.coObserverName}
               </p>
             )}
             {isExported && observation.lastExportedAt && (

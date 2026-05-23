@@ -47,6 +47,7 @@ src/react-app/
 ```
 
 **Key Rules:**
+
 - `api/` files NEVER import React - they return plain data/promises
 - `queries/` files wrap `api/` functions with TanStack Query hooks
 - `types/` contains one interface per domain concept
@@ -55,6 +56,7 @@ src/react-app/
 ## Mandatory Unified Components
 
 ### Modal Component (`components/ui/Modal.tsx`)
+
 - **ALWAYS** use this for all dialogs/pop-ups
 - Consistent header with title and X button
 - ESC key closes automatically
@@ -62,12 +64,14 @@ src/react-app/
 - Configurable width via `maxWidth` prop
 
 ### Map Components
+
 - **Map.tsx**: Full-page map with layer controls
 - **LocationEditor**: Embedded 300px map for forms
 - Both share layer preference via `MapPreferencesContext`
 - Layer selection persists in localStorage
 
 ### Marker Icons (`lib/markerIcons.ts`)
+
 - `createSelectionIcon()`: Rust-colored for selections/editable positions
 - `createObservationIcon()`: Forest green for observations
 - `createUserLocationIcon()`: Purple for saved locations
@@ -76,18 +80,21 @@ src/react-app/
 ## Code Style Requirements
 
 ### TypeScript
+
 - Strict mode enabled - NO `any` types
 - Define interfaces in `types/` directory
 - Use utility types when appropriate
 - All functions must have return types
 
 ### React Patterns
+
 - Functional components with hooks only
 - React Hook Form for ALL forms
 - Custom hooks for complex logic
 - Single responsibility principle
 
 ### Styling
+
 - Tailwind utility classes only
 - Custom design tokens: `forest` (dark green), `sand` (light), `bark` (dark)
 - Mobile-first responsive design
@@ -108,6 +115,7 @@ if (isSupabaseConfigured()) {
 ```
 
 **localStorage keys:**
+
 - `kikk_observations`
 - `kikk_user_locations`
 - `kikk_theme`
@@ -116,11 +124,13 @@ if (isSupabaseConfigured()) {
 ## API Integration Patterns
 
 ### External Services
+
 - **Artsdatabanken**: Species search (`api/artsdatabanken.ts`)
 - **GitHub**: Issue submission (component-level)
 - **Supabase**: CRUD operations (`api/observations.ts`, etc.)
 
 ### Error Handling
+
 - Always handle API errors gracefully
 - Show user-friendly error messages
 - Implement loading states for async operations
@@ -128,6 +138,7 @@ if (isSupabaseConfigured()) {
 ## Testing Requirements
 
 Before submitting changes, verify:
+
 1. **Desktop and mobile viewports** - responsive layout
 2. **Light and dark mode** - `dark:` classes work correctly
 3. **Map interactions** - click-to-select, markers, layer switching
@@ -166,9 +177,42 @@ npm run deploy       # Deploy to Cloudflare Workers
 5. **Components** → Build UI using unified components
 6. **Testing** → Verify all testing requirements above
 
+## Git Workflow & Subtrees
+
+For **complex, cross-cutting features** that touch multiple layers (Worker, API, UI, config), use a **dedicated feature branch** that can be optionally extracted as a subtree:
+
+```bash
+# Create feature branch
+git checkout -b feature/descriptive-name
+
+# Work on the feature...
+git add -A
+git commit -m "feat: description (#issue)"
+
+# Push for PR/review
+git push origin feature/descriptive-name
+```
+
+### When to Use a Subtree
+
+Create a subtree when a feature:
+
+- Touches 3+ different areas (e.g., Worker + API + UI + config)
+- Could be extracted as a reusable module later
+- Needs isolated testing/review before merge
+- Involves external integrations (email, SMS, etc.)
+
+Subtree branches make it easier to:
+
+- Squash/rebase messy commits before merge
+- Cherry-pick to other projects
+- Rollback if needed
+- Review as a cohesive unit
+
 ## PWA & Offline Features
 
 The app includes offline support with tile caching:
+
 - Tiles are cached for current zoom ±2 levels
 - Cache size limit: 4MB
 - Uses CacheFirst strategy for map tiles

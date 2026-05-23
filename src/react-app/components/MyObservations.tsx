@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileSpreadsheet, Filter, MapPin } from "lucide-react";
+import { FileSpreadsheet, Filter, MapPin, User } from "lucide-react";
 import { useObservations } from "../context/ObservationsContext";
 import { useLocations } from "../context/LocationsContext";
 import { Button } from "./ui/button";
@@ -19,6 +19,7 @@ function MyObservations({ onBack }: MyObservationsProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [filterLocationId, setFilterLocationId] = useState<string | null>(null);
+  const [filterMedobservator, setFilterMedobservator] = useState<string | null>(null);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -72,10 +73,14 @@ function MyObservations({ onBack }: MyObservationsProps) {
     }
   };
 
-  // Filter observations by location if a filter is active
-  const filteredObservations = filterLocationId
-    ? observations.filter((obs) => obs.locationId === filterLocationId)
-    : observations;
+  // Filter observations by location and medobservator if filters are active
+  const filteredObservations = observations
+    .filter((obs) => !filterLocationId || obs.locationId === filterLocationId)
+    .filter((obs) => !filterMedobservator || obs.medobservatorName === filterMedobservator);
+
+  const medobservatorNames = Array.from(
+    new Set(observations.map((obs) => obs.medobservatorName).filter(Boolean))
+  ) as string[];
 
   const unexportedCount = getUnexportedCount(filteredObservations);
 
@@ -101,10 +106,29 @@ function MyObservations({ onBack }: MyObservationsProps) {
                 onChange={(e) => setFilterLocationId(e.target.value || null)}
                 className="flex-1 md:flex-initial p-2 rounded border-2 border-moss bg-sand dark:bg-bark text-bark dark:text-sand"
               >
-                <option value="">Alle observasjoner</option>
+                <option value="">Alle lokaliteter</option>
                 {locations.map((location) => (
                   <option key={location.id} value={location.id}>
                     {location.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Medobservator filter */}
+          {medobservatorNames.length > 0 && (
+            <div className="flex items-center gap-2 w-full md:w-auto">
+              <User size={20} className="text-bark dark:text-sand" />
+              <select
+                value={filterMedobservator || ""}
+                onChange={(e) => setFilterMedobservator(e.target.value || null)}
+                className="flex-1 md:flex-initial p-2 rounded border-2 border-moss bg-sand dark:bg-bark text-bark dark:text-sand"
+              >
+                <option value="">Alle medobservatører</option>
+                {medobservatorNames.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
                   </option>
                 ))}
               </select>

@@ -30,7 +30,7 @@ import { MobileTimePicker } from "@mui/x-date-pickers/MobileTimePicker";
 const DATE_TIME_STORAGE_FORMAT = "YYYY-MM-DDTHH:mm:ssZ";
 
 // Session-level memory for the last used observer name (persists across form opens, cleared on page reload)
-let sessionObserverName: string | undefined = undefined;
+let sessionMedobservatorName: string | undefined = undefined;
 
 const hasTime = (value?: string) => {
   if (!value) return false;
@@ -157,7 +157,7 @@ const ObservationForm = ({
         observation?.uncertaintyRadius ||
         presetLocation?.uncertaintyRadius ||
         100,
-      ...(!observation ? { observerName: sessionObserverName } : {}),
+      ...(!observation ? { medobservatorName: sessionMedobservatorName } : {}),
       ...(!observation && presetSpecies
         ? {
             species: [{ species: presetSpecies }],
@@ -279,7 +279,7 @@ const ObservationForm = ({
           endDate,
         });
       } else {
-        if (data.observerName) sessionObserverName = data.observerName;
+        if (data.medobservatorName) sessionMedobservatorName = data.medobservatorName;
         addObservation({
           ...data,
           locationId: presetLocation?.id,
@@ -312,7 +312,7 @@ const ObservationForm = ({
         dayjs().format(DATE_TIME_STORAGE_FORMAT);
       const endDate = toStorageDateTimeValue(data.endDate, endTimeEnabled);
 
-      if (data.observerName) sessionObserverName = data.observerName;
+      if (data.medobservatorName) sessionMedobservatorName = data.medobservatorName;
       addObservation({
         ...data,
         locationId: presetLocation?.id,
@@ -338,7 +338,7 @@ const ObservationForm = ({
         locationName: getValues("locationName"),
         location: currentLocation,
         uncertaintyRadius: getValues("uncertaintyRadius"),
-        observerName: sessionObserverName,
+        medobservatorName: sessionMedobservatorName,
         species: [],
         comment: "",
       });
@@ -865,7 +865,7 @@ const ObservationForm = ({
           </div>
 
           <Controller
-            name={"observerName"}
+            name={"medobservatorName"}
             control={control}
             render={({ field: { value, onChange } }) => {
               const inputValue = value ?? "";
@@ -881,10 +881,10 @@ const ObservationForm = ({
               return (
                 <div>
                   <Label
-                    htmlFor="observerName"
+                    htmlFor="medobservatorName"
                     className="text-bark dark:text-sand"
                   >
-                    Observatør
+                    Medobservatør
                   </Label>
                   <div className="relative mt-1">
                     <User
@@ -892,7 +892,7 @@ const ObservationForm = ({
                       className="absolute left-3 top-1/2 -translate-y-1/2 text-slate pointer-events-none"
                     />
                     <Input
-                      id="observerName"
+                      id="medobservatorName"
                       type="text"
                       placeholder="Navn eller velg fra liste..."
                       value={inputValue}
@@ -913,11 +913,11 @@ const ObservationForm = ({
                         type="button"
                         onClick={() => {
                           onChange("");
-                          sessionObserverName = undefined;
+                          sessionMedobservatorName = undefined;
                           setShowProfileResults(false);
                         }}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-slate hover:text-bark dark:hover:text-sand"
-                        aria-label="Fjern observatør"
+                        aria-label="Fjern medobservatør"
                       >
                         {"\u00d7"}
                       </button>

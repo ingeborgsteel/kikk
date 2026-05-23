@@ -122,3 +122,44 @@ export function getUnexportedObservations(
 export function getUnexportedCount(observations: Observation[]): number {
   return getUnexportedObservations(observations).length;
 }
+
+/**
+ * Hook to email observations export
+ * Note: Does NOT mark observations as exported (pure backup)
+ */
+export function useEmailExport() {
+  return useMutation({
+    mutationFn: async ({
+      observations,
+      toEmail,
+      fromEmail,
+      workerUrl,
+      resendApiKey,
+    }: {
+      observations: Observation[];
+      toEmail: string;
+      fromEmail: string;
+      workerUrl: string;
+      resendApiKey: string;
+    }) => {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
+      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
+
+      if (!supabaseUrl || !supabaseKey) {
+        throw new Error("Supabase is not configured");
+      }
+
+      const result = await emailExport(
+        observations,
+        toEmail,
+        fromEmail,
+        workerUrl,
+        resendApiKey,
+        supabaseUrl,
+        supabaseKey,
+      );
+
+      return result;
+    },
+  });
+}

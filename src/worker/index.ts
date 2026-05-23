@@ -208,7 +208,7 @@ async function sendBackupEmail(
     `--${boundary}`,
     `Content-Disposition: form-data; name="text"`,
     "",
-    `Daglig backup av observasjoner fra Kikk.\n\nVedlagt finner du CSV-fil med observasjoner registrert i perioden.`,
+    `Hei!\n\nHer er din daglige backup av observasjoner fra Kikk.\n\nVedlagt finner du en CSV-fil med observasjoner du har registrert de siste 24 timene.\n\nDette er en automatisk sikkerhetskopi - observasjonene er fortsatt trygt lagret i Kikk.`,
     `--${boundary}`,
     `Content-Disposition: form-data; name="attachment"; filename="${fileName}"`,
     "Content-Type: text/csv",
@@ -301,9 +301,9 @@ export default {
    * Sends individual emails to each user with their own observations
    */
   async scheduled(
-    event: ScheduledEvent,
+    _event: ScheduledEvent,
     env: Bindings,
-    ctx: ExecutionContext,
+    _ctx: ExecutionContext,
   ): Promise<void> {
     // Only run if email is configured
     if (!env.RESEND_API_KEY || !env.BACKUP_EMAIL_FROM) {

@@ -6,6 +6,7 @@ import { Observation } from "../types/observation";
 import {
   getUnexportedObservations,
   useDownloadExport,
+  useEmailExport,
   useExportLogs,
   useExportObservations,
 } from "../queries/useExports";
@@ -19,8 +20,12 @@ interface ExportDialogProps {
 
 function ExportDialog({ observations, onClose, isOpen }: ExportDialogProps) {
   const [exportType, setExportType] = useState<"all" | "new">("new");
+  const [emailExport, setEmailExport] = useState(false);
+  const [emailAddress, setEmailAddress] = useState("");
   const { mutate: exportObservations, isPending: isExporting } =
     useExportObservations();
+  const { mutate: emailExportObservations, isPending: isEmailing } =
+    useEmailExport();
   const { data: exportLogs = [], isLoading: isLoadingLogs } = useExportLogs();
   const { mutate: downloadExport, isPending: isDownloading } =
     useDownloadExport();
@@ -30,18 +35,64 @@ function ExportDialog({ observations, onClose, isOpen }: ExportDialogProps) {
   const observationsToExport =
     exportType === "new" ? unexportedObservations : observations;
 
+  const isProcessing = isExporting || isEmailing;
+
   const handleExport = () => {
     if (observationsToExport.length === 0) {
       alert("Ingen observasjoner å eksportere");
       return;
     }
 
+    // Validate email if email export is enabled
+    if (emailExport && !emailAddress) {
+      alert("Vennligst oppgi en e-postadresse");
+      return;
+    }
+
+    // Perform regular export
     exportObservations(
       { observations: observationsToExport, saveToStorage: supabaseConfigured },
       {
         onSuccess: () => {
-          alert(`${observationsToExport.length} observasjoner eksportert!`);
-          onClose();
+          // If email export is enabled, also send via email
+          if (emailExport) {
+            const workerUrl =
+              import.meta.env.VITE_WORKER_URL || window.location.origin;
+            const resendKey = import.meta.env.VITE_RESEND_API_KEY || "";
+            const fromEmail =
+              import.meta.env.VITE_EXPORT_EMAIL_FROM || "kikk@example.com";
+
+            if (!resendKey) {
+              alert("E-post eksport er konfigurert, men API-nøkkel mangler");
+              onClose();
+              return;
+            }
+
+            emailExportObservations(
+              {
+                observations: observationsToExport,
+                toEmail: emailAddress,
+                fromEmail,
+                workerUrl,
+                resendApiKey: resendKey,
+              },
+              {
+                onSuccess: (result) => {
+                  alert(
+                    `${observationsToExport.length} observasjoner eksportert!\n\n${result.message}`,
+                  );
+                  onClose();
+                },
+                onError: (error) => {
+                  alert(`Fil eksportert, men e-post feilet: ${error.message}`);
+                  onClose();
+                },
+              },
+            );
+          } else {
+            alert(`${observationsToExport.length} observasjoner eksportert!`);
+            onClose();
+          }
         },
         onError: (error) => {
           alert(`Feil ved eksport: ${error.message}`);
@@ -119,17 +170,52 @@ function ExportDialog({ observations, onClose, isOpen }: ExportDialogProps) {
           </div>
         </div>
 
+        {/* Email Export Option */}
+        <div className="border-t-2 border-slate-border pt-lg">
+          <label className="flex items-start gap-sm cursor-pointer">
+            <input
+              type="checkbox"
+              checked={emailExport}
+              onChange={(e) => setEmailExport(e.target.checked)}
+              className="w-5 h-5 mt-0.5"
+            />
+            <div className="flex-1">
+              <div className="font-medium text-bark dark:text-sand flex items-center gap-sm">
+                <Mail size={18} />
+                Send også på e-post
+              </div>
+              <div className="text-sm text-slate">
+                Får en kopi på e-post i tillegg til nedlasting
+              </div>
+            </div>
+          </label>
+
+          {emailExport && (
+            <div className="mt-md pl-7">
+              <Input
+                type="email"
+                placeholder="din@epost.no"
+                value={emailAddress}
+                onChange={(e) => setEmailAddress(e.target.value)}
+                className="w-full"
+              />
+            </div>
+          )}
+        </div>
+
         {/* Export Button */}
         <div>
           <Button
             onClick={handleExport}
-            disabled={isExporting || observationsToExport.length === 0}
+            disabled={isProcessing || observationsToExport.length === 0}
             className="w-full"
             size="lg"
           >
             <Download size={20} className="mr-2" />
-            {isExporting
-              ? "Eksporterer..."
+            {isProcessing
+              ? emailExport
+                ? "Eksporterer og sender e-post..."
+                : "Eksporterer..."
               : `Eksporter ${observationsToExport.length} observasjoner`}
           </Button>
         </div>

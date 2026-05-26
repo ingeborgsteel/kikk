@@ -26,7 +26,6 @@ function ObservationItem({
   onEdit,
   onDelete,
   formatDate,
-  formatDateRange,
 }: ObservationItemProps) {
   // Automatically collapse exported observations
   const [isExpanded, setIsExpanded] = useState(!observation.lastExportedAt);
@@ -53,7 +52,8 @@ function ObservationItem({
         onClick={() => isExported && setIsExpanded(!isExpanded)}
       >
         <div className="flex justify-between items-center">
-          <div className="flex-1">
+          <div className="flex-1 space-y-1">
+            {/* Location name + pills row */}
             <div className="flex items-center gap-sm flex-wrap">
               {observation.locationName && (
                 <div className="font-medium text-bark flex items-center gap-1">
@@ -73,7 +73,7 @@ function ObservationItem({
               </span>
               {observation.observerName && (
                 <span
-                  className="inline-flex items-center gap-1 px-2 py-0.5 bg-forest/20 text-bark dark:text-sand text-xs rounded-full"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 bg-moss/20 text-bark dark:text-sand text-xs rounded-full"
                   title={observation.observerName}
                 >
                   <User size={12} />
@@ -81,29 +81,54 @@ function ObservationItem({
                   {observation.observerName.length > 12 ? "..." : ""}
                 </span>
               )}
+              <span
+                className="inline-flex items-center gap-1 px-2 py-0.5 bg-moss/20 text-bark dark:text-sand text-xs rounded-full"
+                title={`±${observation.uncertaintyRadius}m usikkerhet`}
+              >
+                <MapPin size={12} />±{observation.uncertaintyRadius}m
+              </span>
               {isExported && (
                 <div
-                  className="text-slate hover:text-bark transition-colors"
+                  className="ml-auto text-slate hover:text-bark transition-colors"
                   aria-label={isExpanded ? "Collapse" : "Expand"}
                 >
                   {isExpanded ? (
-                    <ChevronUp size={20} />
+                    <ChevronUp size={18} />
                   ) : (
-                    <ChevronDown size={20} />
+                    <ChevronDown size={18} />
                   )}
                 </div>
               )}
             </div>
-            <div className="flex items-center gap-sm text-sm text-slate mb-xs">
-              <MapPin size={16} />
-              <span>
-                {observation.location.lat.toFixed(4)},{" "}
-                {observation.location.lng.toFixed(4)} ±
-                {observation.uncertaintyRadius}m
-              </span>
-            </div>
-            <p className="text-sm text-slate">
-              {formatDateRange(observation.startDate, observation.endDate)}
+
+            {/* Coordinates with icon */}
+            <p className="flex items-center gap-1 font-mono text-xs text-bark/60">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                className="text-slate/50"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 2v20M2 12h20" />
+              </svg>
+              {observation.location.lat.toFixed(4)},{" "}
+              {observation.location.lng.toFixed(4)}
+            </p>
+
+            {/* Date */}
+            <p className="text-sm text-bark/70">
+              {observation.startDate
+                ? new Date(observation.startDate).toLocaleDateString("no-NO", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  })
+                : ""}
             </p>
             {isExported && observation.lastExportedAt && (
               <p className="text-xs text-slate mt-1">
@@ -144,28 +169,48 @@ function ObservationItem({
       {/* Collapsible content */}
       {isExpanded && (
         <div className="px-lg pb-lg space-y-sm">
-          <h3 className="font-semibold text-bark">Arter observert:</h3>
           {observation.species.map((speciesObs, idx) => (
-            <div key={idx} className="pl-md border-l-2 border-moss">
-              <div className="font-medium text-bark">
-                {speciesObs.species.PrefferedPopularname ??
-                  speciesObs.species.ValidScientificName}
-              </div>
-              <div className="text-sm text-slate">
-                {[
-                  speciesObs.count,
-                  speciesObs.gender,
-                  speciesObs.age,
-                  speciesObs.method,
-                  speciesObs.comment,
-                ]
-                  .filter(Boolean)
-                  .join(" • ")}
+            <div
+              key={idx}
+              className="bg-sand/50 dark:bg-bark/30 rounded-lg p-3 space-y-1"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-medium text-bark">
+                  {speciesObs.species.PrefferedPopularname ??
+                    speciesObs.species.ValidScientificName}
+                </span>
+                <div className="flex items-center gap-1 flex-wrap">
+                  {speciesObs.count && (
+                    <span className="text-xs bg-moss/20 text-bark dark:text-sand px-2 py-0.5 rounded-full">
+                      {speciesObs.count}
+                    </span>
+                  )}
+                  {speciesObs.gender && (
+                    <span className="text-xs bg-forest/20 text-bark dark:text-sand px-2 py-0.5 rounded-full">
+                      {speciesObs.gender}
+                    </span>
+                  )}
+                  {speciesObs.age && (
+                    <span className="text-xs bg-sand dark:bg-bark/50 text-bark dark:text-sand px-2 py-0.5 rounded-full border border-slate/20">
+                      {speciesObs.age}
+                    </span>
+                  )}
+                  {speciesObs.method && (
+                    <span className="text-xs bg-slate/20 text-bark dark:text-sand px-2 py-0.5 rounded-full">
+                      {speciesObs.method}
+                    </span>
+                  )}
+                  {speciesObs.activity && (
+                    <span className="text-xs bg-rust/20 text-bark dark:text-sand px-2 py-0.5 rounded-full">
+                      {speciesObs.activity}
+                    </span>
+                  )}
+                </div>
               </div>
               {speciesObs.comment && (
-                <div className="text-sm text-bark mt-1 italic">
-                  "{speciesObs.comment}"
-                </div>
+                <p className="text-sm text-bark/80 italic border-l-2 border-moss/30 pl-2 mt-1">
+                  {speciesObs.comment}
+                </p>
               )}
             </div>
           ))}

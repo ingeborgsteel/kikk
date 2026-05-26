@@ -1,7 +1,16 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "./ui/button";
 import { useLocations } from "../context/LocationsContext";
-import { Download, Edit2, History, MapPin, Plus, Trash2 } from "lucide-react";
+import { useObservations } from "../context/ObservationsContext";
+import {
+  Download,
+  Edit2,
+  History,
+  MapPin,
+  Plus,
+  Trash2,
+  Binoculars,
+} from "lucide-react";
 import { UserLocation } from "../types/location";
 import { useDownloadExport, useExportLogs } from "../queries/useExports";
 import { isSupabaseConfigured } from "../lib/supabase";
@@ -14,6 +23,18 @@ interface UserProfileProps {
 
 export function UserProfile({ onBack }: UserProfileProps) {
   const { locations, deleteLocation } = useLocations();
+  const { observations } = useObservations();
+
+  // Count observations per location
+  const locationObservationCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const obs of observations) {
+      if (obs.locationId) {
+        counts.set(obs.locationId, (counts.get(obs.locationId) || 0) + 1);
+      }
+    }
+    return counts;
+  }, [observations]);
   const [showLocationForm, setShowLocationForm] = useState(false);
   const [editingLocation, setEditingLocation] = useState<UserLocation | null>(
     null,
@@ -124,6 +145,16 @@ export function UserProfile({ onBack }: UserProfileProps) {
                       {location.description && (
                         <p className="text-sm text-bark/80 dark:text-sand/80 mt-2">
                           {location.description}
+                        </p>
+                      )}
+                      {location.id && (
+                        <p className="text-sm text-bark/70 dark:text-sand/70 mt-2 flex items-center gap-1">
+                          <Binoculars size={14} className="text-moss" />
+                          {locationObservationCounts.get(location.id) || 0}{" "}
+                          {(locationObservationCounts.get(location.id) || 0) ===
+                          1
+                            ? "observasjon"
+                            : "observasjoner"}
                         </p>
                       )}
                     </div>

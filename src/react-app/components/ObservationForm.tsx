@@ -29,8 +29,23 @@ import { MobileTimePicker } from "@mui/x-date-pickers/MobileTimePicker";
 
 const DATE_TIME_STORAGE_FORMAT = "YYYY-MM-DDTHH:mm:ssZ";
 
-// Session-level memory for the last used observer name (persists across form opens, cleared on page reload)
-let sessionObserverName: string | undefined = undefined;
+const MEDOBSERVATOR_STORAGE_KEY = "kikk-medobservator";
+
+function getStoredMedobservator(): string | undefined {
+  const value = localStorage.getItem(MEDOBSERVATOR_STORAGE_KEY);
+  console.log("[Medobservator] Getting stored value:", value);
+  return value || undefined;
+}
+
+function setStoredMedobservator(name: string | undefined) {
+  if (name) {
+    console.log("[Medobservator] Storing:", name);
+    localStorage.setItem(MEDOBSERVATOR_STORAGE_KEY, name);
+  } else {
+    console.log("[Medobservator] Clearing stored value");
+    localStorage.removeItem(MEDOBSERVATOR_STORAGE_KEY);
+  }
+}
 
 const hasTime = (value?: string) => {
   if (!value) return false;
@@ -157,7 +172,7 @@ const ObservationForm = ({
         observation?.uncertaintyRadius ||
         presetLocation?.uncertaintyRadius ||
         100,
-      ...(!observation ? { observerName: sessionObserverName } : {}),
+      ...(!observation ? { observerName: getStoredMedobservator() } : {}),
       ...(!observation && presetSpecies
         ? {
             species: [{ species: presetSpecies }],
@@ -271,6 +286,11 @@ const ObservationForm = ({
         dayjs().format(DATE_TIME_STORAGE_FORMAT);
       const endDate = toStorageDateTimeValue(data.endDate, endTimeEnabled);
 
+      // Persist medobservator whenever there's a value (new or edit)
+      if (data.observerName?.trim()) {
+        setStoredMedobservator(data.observerName.trim());
+      }
+
       if (data.id) {
         updateObservation({
           ...data,
@@ -279,7 +299,6 @@ const ObservationForm = ({
           endDate,
         });
       } else {
-        if (data.observerName) sessionObserverName = data.observerName;
         addObservation({
           ...data,
           locationId: presetLocation?.id,
@@ -312,7 +331,10 @@ const ObservationForm = ({
         dayjs().format(DATE_TIME_STORAGE_FORMAT);
       const endDate = toStorageDateTimeValue(data.endDate, endTimeEnabled);
 
-      if (data.observerName) sessionObserverName = data.observerName;
+      // Only store if there's a value (don't clear existing on empty)
+      if (data.observerName?.trim()) {
+        setStoredMedobservator(data.observerName.trim());
+      }
       addObservation({
         ...data,
         locationId: presetLocation?.id,
@@ -338,7 +360,7 @@ const ObservationForm = ({
         locationName: getValues("locationName"),
         location: currentLocation,
         uncertaintyRadius: getValues("uncertaintyRadius"),
-        observerName: sessionObserverName,
+        observerName: getStoredMedobservator(),
         species: [],
         comment: "",
       });
@@ -619,6 +641,99 @@ const ObservationForm = ({
             }}
           />
 
+          <Controller
+            name={"observerName"}
+            control={control}
+            render={({ field: { value, onChange } }) => {
+              const inputValue = value ?? "";
+              const filteredProfiles =
+                inputValue.length >= 1
+                  ? profiles.filter((p) =>
+                      (p.display_name ?? p.email ?? "")
+                        .toLowerCase()
+                        .includes(inputValue.toLowerCase()),
+                    )
+                  : [];
+
+              return (
+                <div>
+                  <Label
+                    htmlFor="observerName"
+                    className="text-bark dark:text-sand"
+                  >
+                    Medobservatør
+                  </Label>
+                  <div className="relative mt-1">
+                    <User
+                      size={16}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-slate pointer-events-none"
+                    />
+                    <Input
+                      id="observerName"
+                      type="text"
+                      placeholder="Navn eller velg fra liste..."
+                      value={inputValue}
+                      className={twMerge("pl-8", inputValue && "pr-8")}
+                      onChange={(e) => {
+                        onChange(e.target.value);
+                        setShowProfileResults(true);
+                      }}
+                      onFocus={() =>
+                        inputValue.length >= 1 && setShowProfileResults(true)
+                      }
+                      onBlur={() =>
+                        setTimeout(() => setShowProfileResults(false), 150)
+                      }
+                    />
+                    {inputValue && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onChange("");
+                          setStoredMedobservator(undefined);
+                          setShowProfileResults(false);
+                        }}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate hover:text-bark dark:hover:text-sand"
+                        aria-label="Fjern medobservatør"
+                      >
+                        {"\u00d7"}
+                      </button>
+                    )}
+                  </div>
+                  {showProfileResults && filteredProfiles.length > 0 && (
+                    <div className="w-full mt-1 bg-white dark:bg-bark border-2 border-slate-border dark:border-slate rounded-md shadow-custom-lg">
+                      {filteredProfiles.map((p) => {
+                        const label = p.display_name ?? p.email ?? p.id;
+                        return (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => {
+                              onChange(label);
+                              setStoredMedobservator(label);
+                              setShowProfileResults(false);
+                            }}
+                            className="w-full text-left px-3 py-2 hover:bg-sand dark:hover:bg-forest transition-colors border-b border-slate-border dark:border-slate last:border-b-0"
+                          >
+                            <div className="font-medium text-bark dark:text-sand">
+                              {label}
+                            </div>
+                            {p.display_name && p.email && (
+                              <div className="text-xs text-slate">
+                                {p.email}
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            }}
+          />
+
           <div>
             <Controller
               name={"locationName"}
@@ -895,98 +1010,6 @@ const ObservationForm = ({
               )}
             />
           </div>
-
-          <Controller
-            name={"observerName"}
-            control={control}
-            render={({ field: { value, onChange } }) => {
-              const inputValue = value ?? "";
-              const filteredProfiles =
-                inputValue.length >= 1
-                  ? profiles.filter((p) =>
-                      (p.display_name ?? p.email ?? "")
-                        .toLowerCase()
-                        .includes(inputValue.toLowerCase()),
-                    )
-                  : [];
-
-              return (
-                <div>
-                  <Label
-                    htmlFor="observerName"
-                    className="text-bark dark:text-sand"
-                  >
-                    Observatør
-                  </Label>
-                  <div className="relative mt-1">
-                    <User
-                      size={16}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-slate pointer-events-none"
-                    />
-                    <Input
-                      id="observerName"
-                      type="text"
-                      placeholder="Navn eller velg fra liste..."
-                      value={inputValue}
-                      className={twMerge("pl-8", inputValue && "pr-8")}
-                      onChange={(e) => {
-                        onChange(e.target.value);
-                        setShowProfileResults(true);
-                      }}
-                      onFocus={() =>
-                        inputValue.length >= 1 && setShowProfileResults(true)
-                      }
-                      onBlur={() =>
-                        setTimeout(() => setShowProfileResults(false), 150)
-                      }
-                    />
-                    {inputValue && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          onChange("");
-                          sessionObserverName = undefined;
-                          setShowProfileResults(false);
-                        }}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate hover:text-bark dark:hover:text-sand"
-                        aria-label="Fjern observatør"
-                      >
-                        {"\u00d7"}
-                      </button>
-                    )}
-                  </div>
-                  {showProfileResults && filteredProfiles.length > 0 && (
-                    <div className="w-full mt-1 bg-white dark:bg-bark border-2 border-slate-border dark:border-slate rounded-md shadow-custom-lg">
-                      {filteredProfiles.map((p) => {
-                        const label = p.display_name ?? p.email ?? p.id;
-                        return (
-                          <button
-                            key={p.id}
-                            type="button"
-                            onMouseDown={(e) => e.preventDefault()}
-                            onClick={() => {
-                              onChange(label);
-                              setShowProfileResults(false);
-                            }}
-                            className="w-full text-left px-3 py-2 hover:bg-sand dark:hover:bg-forest transition-colors border-b border-slate-border dark:border-slate last:border-b-0"
-                          >
-                            <div className="font-medium text-bark dark:text-sand">
-                              {label}
-                            </div>
-                            {p.display_name && p.email && (
-                              <div className="text-xs text-slate">
-                                {p.email}
-                              </div>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            }}
-          />
 
           <Controller
             name={"comment"}

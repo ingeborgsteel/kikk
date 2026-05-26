@@ -21,7 +21,7 @@ import {
   mapboxTopo,
 } from "./lib/mapUtils.ts";
 import {
-  createObservationIcon,
+  createObservationIconWithInitials,
   createSelectionIcon,
   createUserLocationIcon,
 } from "./lib/markerIcons.ts";
@@ -37,7 +37,6 @@ const DefaultIcon = L.icon({
 
 // Create icon instances for use in the map
 const SelectionIcon = createSelectionIcon();
-const ObservationIcon = createObservationIcon();
 const UserLocationIcon = createUserLocationIcon();
 
 L.Marker.prototype.options.icon = DefaultIcon;
@@ -461,7 +460,7 @@ function Map({
       if (map.current) {
         const marker = L.marker(
           [observation.location.lat, observation.location.lng],
-          { icon: ObservationIcon },
+          { icon: createObservationIconWithInitials(observation.observerName) },
         ).addTo(map.current);
 
         // Create popup content
@@ -473,10 +472,15 @@ function Map({
           )
           .join(", ");
 
+        const speciesCount = observation.species?.length || 0;
+        const speciesCountText =
+          speciesCount === 1 ? "1 art" : `${speciesCount} arter`;
+
         const popupContent = `
           <div style="min-width: 150px;">
+            <small style="color: #2F5D50; font-weight: 600;">${speciesCountText}</small><br/>
             <strong>${speciesList}</strong><br/>
-            ${observation.startDate ? `<small>${new Date(observation.startDate).toLocaleDateString("no-NO")}</small><br/>` : null}
+            ${observation.startDate ? `<small>${new Date(observation.startDate).toLocaleDateString("no-NO")}</small><br/>` : ""}
             <small>±${observation.uncertaintyRadius}m</small>
           </div>
         `;
@@ -499,6 +503,17 @@ function Map({
   useEffect(() => {
     if (!map.current) return;
 
+    // Count observations per location
+    const obsCountByLocation = new globalThis.Map<string, number>();
+    for (const obs of observations) {
+      if (obs.locationId) {
+        obsCountByLocation.set(
+          obs.locationId,
+          (obsCountByLocation.get(obs.locationId) || 0) + 1,
+        );
+      }
+    }
+
     // Remove existing user location markers
     userLocationsMarkersRef.current.forEach((marker) => marker.remove());
     userLocationsMarkersRef.current = [];
@@ -510,11 +525,16 @@ function Map({
           icon: UserLocationIcon,
         }).addTo(map.current);
 
-        // Create popup content
+        // Create popup content with observation count
+        const obsCount = obsCountByLocation.get(userLoc.id || "") || 0;
+        const obsCountText =
+          obsCount === 1 ? "1 observasjon" : `${obsCount} observasjoner`;
+
         const popupContent = `
           <div style="min-width: 150px;">
             <strong>${userLoc.name}</strong><br/>
             ${userLoc.description ? `<small>${userLoc.description}</small><br/>` : ""}
+            <small style="color: #7C3AED; font-weight: 500;">${obsCountText}</small><br/>
             <small>±${userLoc.uncertaintyRadius}m</small>
           </div>
         `;
@@ -531,7 +551,7 @@ function Map({
         userLocationsMarkersRef.current.push(marker);
       }
     });
-  }, [userLocations, onUserLocationClick]);
+  }, [userLocations, onUserLocationClick, observations]);
 
   // Effect to handle layer switching
   useEffect(() => {

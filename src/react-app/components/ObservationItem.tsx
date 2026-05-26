@@ -8,6 +8,7 @@ import {
   Trash2,
   MapPinned,
   User,
+  Bird,
 } from "lucide-react";
 import { Observation } from "../types/observation";
 import { Button } from "./ui/button";
@@ -53,7 +54,7 @@ function ObservationItem({
       >
         <div className="flex justify-between items-center">
           <div className="flex-1">
-            <div className="flex items-center gap-sm">
+            <div className="flex items-center gap-sm flex-wrap">
               {observation.locationName && (
                 <div className="font-medium text-bark flex items-center gap-1">
                   {observation.locationId && (
@@ -65,6 +66,11 @@ function ObservationItem({
                   {observation.locationName}
                 </div>
               )}
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-moss/20 text-bark dark:text-sand text-xs rounded-full">
+                <Bird size={12} />
+                {observation.species.length}{" "}
+                {observation.species.length === 1 ? "art" : "arter"}
+              </span>
               {isExported && (
                 <div
                   className="text-slate hover:text-bark transition-colors"
@@ -92,6 +98,9 @@ function ObservationItem({
             {observation.observerName && (
               <p className="text-sm text-slate flex items-center gap-1 mt-0.5">
                 <User size={13} />
+                <span className="text-bark/60 dark:text-sand/60">
+                  Medobservatør:
+                </span>
                 {observation.observerName}
               </p>
             )}

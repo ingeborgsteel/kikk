@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -29,23 +29,8 @@ import { MobileTimePicker } from "@mui/x-date-pickers/MobileTimePicker";
 
 const DATE_TIME_STORAGE_FORMAT = "YYYY-MM-DDTHH:mm:ssZ";
 
-const MEDOBSERVATOR_STORAGE_KEY = "kikk-medobservator";
-
-function getStoredMedobservator(): string | undefined {
-  const value = localStorage.getItem(MEDOBSERVATOR_STORAGE_KEY);
-  console.log("[Medobservator] Getting stored value:", value);
-  return value || undefined;
-}
-
-function setStoredMedobservator(name: string | undefined) {
-  if (name) {
-    console.log("[Medobservator] Storing:", name);
-    localStorage.setItem(MEDOBSERVATOR_STORAGE_KEY, name);
-  } else {
-    console.log("[Medobservator] Clearing stored value");
-    localStorage.removeItem(MEDOBSERVATOR_STORAGE_KEY);
-  }
-}
+// Session-level memory for the last used observer name (persists across form opens, cleared on page reload)
+let sessionObserverName: string | undefined = undefined;
 
 const hasTime = (value?: string) => {
   if (!value) return false;
@@ -102,6 +87,7 @@ const ObservationForm = ({
   );
   const [geocodingFailed, setGeocodingFailed] = useState(false);
   const [currentLocation, setCurrentLocation] = useState(location);
+  const originalLocationRef = useRef(location);
   const [successMessage, setSuccessMessage] = useState("");
   const [successTimeout, setSuccessTimeout] = useState<ReturnType<
     typeof setTimeout
@@ -172,7 +158,7 @@ const ObservationForm = ({
         observation?.uncertaintyRadius ||
         presetLocation?.uncertaintyRadius ||
         100,
-      ...(!observation ? { observerName: getStoredMedobservator() } : {}),
+      ...(!observation ? { observerName: sessionObserverName } : {}),
       ...(!observation && presetSpecies
         ? {
             species: [{ species: presetSpecies }],
@@ -198,7 +184,10 @@ const ObservationForm = ({
 
       const newLocation = { lat, lng };
       setCurrentLocation(newLocation);
-      setValue("location", newLocation);
+      setValue("location", newLocation, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
 
       // Re-fetch location name when position changes significantly (> 100m)
       const distance = Math.sqrt(
@@ -286,11 +275,6 @@ const ObservationForm = ({
         dayjs().format(DATE_TIME_STORAGE_FORMAT);
       const endDate = toStorageDateTimeValue(data.endDate, endTimeEnabled);
 
-      // Persist medobservator whenever there's a value (new or edit)
-      if (data.observerName?.trim()) {
-        setStoredMedobservator(data.observerName.trim());
-      }
-
       if (data.id) {
         updateObservation({
           ...data,
@@ -299,6 +283,7 @@ const ObservationForm = ({
           endDate,
         });
       } else {
+        if (data.observerName) sessionObserverName = data.observerName;
         addObservation({
           ...data,
           locationId: presetLocation?.id,
@@ -331,10 +316,7 @@ const ObservationForm = ({
         dayjs().format(DATE_TIME_STORAGE_FORMAT);
       const endDate = toStorageDateTimeValue(data.endDate, endTimeEnabled);
 
-      // Only store if there's a value (don't clear existing on empty)
-      if (data.observerName?.trim()) {
-        setStoredMedobservator(data.observerName.trim());
-      }
+      if (data.observerName) sessionObserverName = data.observerName;
       addObservation({
         ...data,
         locationId: presetLocation?.id,
@@ -360,7 +342,7 @@ const ObservationForm = ({
         locationName: getValues("locationName"),
         location: currentLocation,
         uncertaintyRadius: getValues("uncertaintyRadius"),
-        observerName: getStoredMedobservator(),
+        observerName: sessionObserverName,
         species: [],
         comment: "",
       });
@@ -412,13 +394,34 @@ const ObservationForm = ({
                 <Button
                   type="button"
                   variant="secondary"
-                  disabled={!isDirty || !isValid}
+                  disabled={
+                    (!isDirty &&
+                      Math.abs(
+                        originalLocationRef.current.lat - currentLocation.lat,
+                      ) < 0.0001 &&
+                      Math.abs(
+                        originalLocationRef.current.lng - currentLocation.lng,
+                      ) < 0.0001) ||
+                    !isValid
+                  }
                   onClick={handleSubmit(saveAndAddAnother)}
                 >
                   Lagre og legg til ny
                 </Button>
               )}
-              <Button type="submit" disabled={!isDirty || !isValid}>
+              <Button
+                type="submit"
+                disabled={
+                  (!isDirty &&
+                    Math.abs(
+                      originalLocationRef.current.lat - currentLocation.lat,
+                    ) < 0.0001 &&
+                    Math.abs(
+                      originalLocationRef.current.lng - currentLocation.lng,
+                    ) < 0.0001) ||
+                  !isValid
+                }
+              >
                 Lagre
               </Button>
             </div>
@@ -938,7 +941,7 @@ const ObservationForm = ({
                     htmlFor="observerName"
                     className="text-bark dark:text-sand"
                   >
-                    Medobservatør
+                    Observatør
                   </Label>
                   <div className="relative mt-1">
                     <User
@@ -967,11 +970,11 @@ const ObservationForm = ({
                         type="button"
                         onClick={() => {
                           onChange("");
-                          setStoredMedobservator(undefined);
+                          sessionObserverName = undefined;
                           setShowProfileResults(false);
                         }}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-slate hover:text-bark dark:hover:text-sand"
-                        aria-label="Fjern medobservatør"
+                        aria-label="Fjern observatør"
                       >
                         {"\u00d7"}
                       </button>
@@ -988,7 +991,6 @@ const ObservationForm = ({
                             onMouseDown={(e) => e.preventDefault()}
                             onClick={() => {
                               onChange(label);
-                              setStoredMedobservator(label);
                               setShowProfileResults(false);
                             }}
                             className="w-full text-left px-3 py-2 hover:bg-sand dark:hover:bg-forest transition-colors border-b border-slate-border dark:border-slate last:border-b-0"

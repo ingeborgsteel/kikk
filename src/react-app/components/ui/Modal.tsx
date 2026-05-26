@@ -100,6 +100,7 @@ export function Modal({
             {title}
           </h2>
           <Button
+            type="button"
             variant="ghost"
             size="icon"
             onClick={onClose}

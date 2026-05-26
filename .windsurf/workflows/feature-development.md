@@ -8,17 +8,22 @@ This workflow guides you through adding a new feature to kikk while maintaining 
 
 ## 1. Planning & Requirements
 
-1. **Define the feature scope**
+1. **Ask clarifying questions first**
+   - When requirements are ambiguous or incomplete, ask the user before making assumptions
+   - Examples: "Should the coordinates be shortened to 2 or 4 decimals?", "What color should the badge be?"
+   - Better to wait for clarification than to guess and rework
+
+2. **Define the feature scope**
    - What user problem are you solving?
    - What are the acceptance criteria?
    - Does it require authentication or should it work offline?
 
-2. **Identify data requirements**
+3. **Identify data requirements**
    - What data needs to be stored?
    - Does it need server-side storage or is local storage sufficient?
    - What external APIs are needed?
 
-3. **Create/Update types**
+4. **Create/Update types**
    ```typescript
    // src/react-app/types/your-feature.ts
    export interface YourFeatureType {
@@ -30,9 +35,12 @@ This workflow guides you through adding a new feature to kikk while maintaining 
 ## 2. API Layer Development
 
 1. **Create API client functions** (if external services needed)
+
    ```typescript
    // src/react-app/api/your-feature.ts
-   export async function createYourFeature(data: YourFeatureType): Promise<YourFeatureType> {
+   export async function createYourFeature(
+     data: YourFeatureType,
+   ): Promise<YourFeatureType> {
      // API call logic - NO React imports
    }
    ```
@@ -45,7 +53,7 @@ This workflow guides you through adding a new feature to kikk while maintaining 
        mutationFn: createYourFeature,
        onSuccess: () => {
          // Invalidate related queries
-       }
+       },
      });
    }
    ```
@@ -58,15 +66,21 @@ This workflow guides you through adding a new feature to kikk while maintaining 
    - Use component state for UI-only data
 
 2. **Create Context provider** (if needed)
+
    ```typescript
    // src/react-app/context/YourFeatureContext.tsx
-   export const YourFeatureProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+   export const YourFeatureProvider: React.FC<{
+     children: React.ReactNode;
+   }> = ({ children }) => {
      // Context logic with dual-mode storage support
    };
 
    export function useYourFeature() {
      const context = useContext(YourFeatureContext);
-     if (!context) throw new Error('useYourFeature must be used within YourFeatureProvider');
+     if (!context)
+       throw new Error(
+         "useYourFeature must be used within YourFeatureProvider",
+       );
      return context;
    }
    ```
@@ -88,18 +102,34 @@ This workflow guides you through adding a new feature to kikk while maintaining 
    - Mobile-first approach
    - Test on both desktop and mobile viewports
 
-## 5. Integration & Testing
+4. **Check for overlaying UI from parent components**
+   - When adding UI to a component (e.g. Map), check parent components (e.g. App.tsx) for absolute-positioned elements that might overlap
+   - Verify z-index layering and positioning (top-left, bottom-right, etc.)
+   - Test that your new UI doesn't get hidden by existing overlays
+
+## 5. Worktree Setup (if working in a git worktree)
+
+When developing in a git worktree (e.g. `git worktree add ../kikk-my-feature -b feature/my-feature`), the `.env` file is not copied automatically since it is gitignored. Symlink it from the main worktree before running `npm run dev`:
+
+```bash
+ln -s /Users/ingeborgsteel/dev/kikk/.env /Users/ingeborgsteel/dev/kikk-my-feature/.env
+npm install
+npm run dev
+```
+
+## 6. Integration & Testing
 
 1. **Integrate with routing**
    - Add routes in `App.tsx` if needed
    - Update navigation components
 
 2. **Test dual-mode operation**
+
    ```bash
    # Test without Supabase
    unset VITE_SUPABASE_URL VITE_SUPABASE_ANON_KEY
    npm run dev
-   
+
    # Test with Supabase
    # Set environment variables and test again
    ```
@@ -138,6 +168,7 @@ npm run format    # Ensure consistent formatting
 ## Common Patterns to Follow
 
 ### Form Pattern
+
 ```typescript
 // Always use React Hook Form
 const { control, handleSubmit, formState: { errors } } = useForm<YourFormType>();
@@ -153,17 +184,19 @@ const { control, handleSubmit, formState: { errors } } = useForm<YourFormType>()
 ```
 
 ### API Error Handling Pattern
+
 ```typescript
 try {
   const result = await apiCall();
   return result;
 } catch (error) {
-  console.error('API call failed:', error);
-  throw new Error('User-friendly error message');
+  console.error("API call failed:", error);
+  throw new Error("User-friendly error message");
 }
 ```
 
 ### Dual-Mode Storage Pattern
+
 ```typescript
 const saveData = async (data: YourType) => {
   if (isSupabaseConfigured()) {
@@ -171,7 +204,7 @@ const saveData = async (data: YourType) => {
     return await saveToSupabase(data);
   } else {
     // Use localStorage
-    localStorage.setItem('kikk_your_feature', JSON.stringify(data));
+    localStorage.setItem("kikk_your_feature", JSON.stringify(data));
     return data;
   }
 };

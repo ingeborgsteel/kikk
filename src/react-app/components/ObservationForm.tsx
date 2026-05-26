@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -87,7 +87,6 @@ const ObservationForm = ({
   );
   const [geocodingFailed, setGeocodingFailed] = useState(false);
   const [currentLocation, setCurrentLocation] = useState(location);
-  const originalLocationRef = useRef(location);
   const [successMessage, setSuccessMessage] = useState("");
   const [successTimeout, setSuccessTimeout] = useState<ReturnType<
     typeof setTimeout
@@ -394,34 +393,13 @@ const ObservationForm = ({
                 <Button
                   type="button"
                   variant="secondary"
-                  disabled={
-                    (!isDirty &&
-                      Math.abs(
-                        originalLocationRef.current.lat - currentLocation.lat,
-                      ) < 0.0001 &&
-                      Math.abs(
-                        originalLocationRef.current.lng - currentLocation.lng,
-                      ) < 0.0001) ||
-                    !isValid
-                  }
+                  disabled={!isDirty || !isValid}
                   onClick={handleSubmit(saveAndAddAnother)}
                 >
                   Lagre og legg til ny
                 </Button>
               )}
-              <Button
-                type="submit"
-                disabled={
-                  (!isDirty &&
-                    Math.abs(
-                      originalLocationRef.current.lat - currentLocation.lat,
-                    ) < 0.0001 &&
-                    Math.abs(
-                      originalLocationRef.current.lng - currentLocation.lng,
-                    ) < 0.0001) ||
-                  !isValid
-                }
-              >
+              <Button type="submit" disabled={!isDirty || !isValid}>
                 Lagre
               </Button>
             </div>

@@ -117,6 +117,13 @@ npm install
 npm run dev
 ```
 
+**CRITICAL: Stay in the worktree directory**
+
+- All file edits MUST be made within the worktree directory (e.g., `/Users/ingeborgsteel/dev/kikk-my-feature/`)
+- Do NOT mix edits between the main repo and the worktree
+- Always verify `pwd` shows the worktree path before editing files
+- If you accidentally edit the main repo instead, copy those changes to the worktree and commit from there
+
 ## 6. Integration & Testing
 
 1. **Integrate with routing**

@@ -684,27 +684,6 @@ function Map({
           <span>Sentrert på din posisjon</span>
         </div>
       )}
-      {selectedLocation && (
-        <div
-          className={`absolute ${isOnline ? "top-md" : "top-[calc(1rem+26px)]"} left-1/2 -translate-x-1/2 z-[500] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-sm rounded-lg shadow-custom-xl flex items-center gap-sm text-sm md:text-base font-semibold text-bark dark:text-sand animate-[slideDown_0.3s_ease] max-w-[90%] border-2 border-moss`}
-        >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            className="text-rust shrink-0"
-          >
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-            <circle cx="12" cy="10" r="3" />
-          </svg>
-          <span>
-            {selectedLocation.lat.toFixed(4)}, {selectedLocation.lng.toFixed(4)}
-          </span>
-        </div>
-      )}
       {/* Download area button */}
       <div className="absolute bottom-md left-md z-[500]">
         {downloadProgress ? (
@@ -742,6 +721,30 @@ function Map({
         ref={mapContainer}
         className="absolute inset-0 w-full h-full border-none rounded-t-lg overflow-hidden"
       />
+
+      {/* Active medobservatør badge (above download button) */}
+      {(() => {
+        const medobs = localStorage.getItem("kikk-medobservator");
+        if (!medobs) return null;
+        return (
+          <div className="absolute bottom-[calc(1rem+44px)] left-md z-[500] bg-forest/90 text-sand text-xs font-medium px-3 py-2 rounded-lg shadow-custom-lg flex items-center gap-2">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <circle cx="12" cy="8" r="5" />
+              <path d="M20 21a8 8 0 0 0-16 0" />
+            </svg>
+            <span className="max-w-[150px] truncate" title={medobs}>
+              {medobs}
+            </span>
+          </div>
+        );
+      })()}
     </div>
   );
 }

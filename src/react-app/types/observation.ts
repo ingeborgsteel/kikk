@@ -18,7 +18,7 @@ export interface Species {
   secondHand?: boolean; // Second-hand observation
   uncertainIdentification?: boolean; // Uncertain species identification
   hide?: boolean; // Mark species to hide from Artsobservasjoner (but still export to Excel)
-  delayPublication?: string | null; // ISO date string for when to delay publication to
+  delayPublication?: string; // ISO date string for when to delay publication to
 }
 
 export interface Observation {

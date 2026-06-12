@@ -15,34 +15,36 @@ export async function generateExcelFromObservations(
 
   // Define columns
   worksheet.columns = [
-    { header: "Medobservatør", key: "observerName", width: 20 },
-    { header: "Lokalitet", key: "locationName", width: 20 },
-    { header: "nord", key: "latitude", width: 12 },
-    { header: "øst", key: "longitude", width: 12 },
-    { header: "nøyaktighet", key: "uncertainty", width: 15 },
-    { header: "Start", key: "startDate", width: 20 },
-    { header: "Slutt", key: "endDate", width: 20 },
-    { header: "Last Exported At", key: "lastExportedAt", width: 20 },
-    { header: "Art", key: "speciesNorwegian", width: 25 },
+    { header: "Artsnavn", key: "speciesName", width: 25 },
+    { header: "Lokalitetsnavn", key: "locationName", width: 20 },
+    { header: "Nord", key: "latitude", width: 12 },
+    { header: "Øst", key: "longitude", width: 12 },
+    { header: "Nøyaktighet", key: "uncertainty", width: 15 },
     { header: "Antall", key: "count", width: 10 },
     { header: "Enhet", key: "unit", width: 10 },
     { header: "Kjønn", key: "gender", width: 10 },
     { header: "Alder", key: "age", width: 15 },
     { header: "Metode", key: "method", width: 15 },
     { header: "Aktivitet", key: "activity", width: 15 },
-    { header: "kommentar (synlig for alle)", key: "comment", width: 30 },
+    { header: "Fra klokkeslett", key: "startTime", width: 20 },
+    { header: "Til klokkeslett", key: "endTime", width: 20 },
+    { header: "Fra dato", key: "startDate", width: 20 },
+    { header: "Til dato", key: "endDate", width: 20 },
+    { header: "Skjul funn til dato", key: "hide", width: 10 },
+    { header: "Kommentar (synlig for alle)", key: "comment", width: 30 },
     { header: "Privat kommentar", key: "privateComment", width: 30 },
-    { header: "Privat samling", key: "privateCollection", width: 20 },
     { header: "Ikke gjenfunnet", key: "notRediscovered", width: 10 },
     { header: "Ikke funnet", key: "notFound", width: 10 },
+    { header: "Privat samling", key: "privateCollection", width: 20 },
     { header: "Andrehånds", key: "secondHand", width: 10 },
     {
       header: "Usikker artsbestemming",
       key: "uncertainIdentification",
       width: 10,
     },
-    { header: "Skjul", key: "hide", width: 10 },
     { header: "Utsett publisering", key: "delayPublication", width: 20 },
+    { header: "Medobservatør", key: "observerName", width: 20 },
+    { header: "Sist eksportert", key: "lastExportedAt", width: 20 },
   ];
 
   // Style the header row
@@ -55,24 +57,19 @@ export async function generateExcelFromObservations(
 
   // Add data rows
   observations.forEach((obs) => {
-    worksheet.addRow({
-      observerName: obs.observerName || "",
-      locationName: obs.locationName,
-      latitude: obs.location.lat,
-      longitude: obs.location.lng,
-      uncertainty: obs.uncertaintyRadius,
-      startDate: obs.startDate
-        ? new Date(obs.startDate).toLocaleString("no-NO")
-        : "",
-      endDate: obs.endDate ? new Date(obs.endDate).toLocaleString("no-NO") : "",
-      comment: obs.comment || "",
-      lastExportedAt: obs.lastExportedAt
-        ? new Date(obs.lastExportedAt).toLocaleString("no-NO")
-        : "Never",
-    });
     obs.species.forEach((spec) => {
       worksheet.addRow({
-        speciesNorwegian: spec.species.PrefferedPopularname,
+        observerName: obs.observerName || "",
+        locationName: obs.locationName,
+        latitude: obs.location.lat.toString().replace(",", "."),
+        longitude: obs.location.lng.toString().replace(",", "."),
+        uncertainty: obs.uncertaintyRadius,
+        startDate: parseDateString(obs.startDate),
+        startTime: parseTimeString(obs.startDate, true),
+        endDate: parseDateString(obs.endDate),
+        endTime: parseTimeString(obs.endDate, true),
+        lastExportedAt: parseDateString(obs.lastExportedAt),
+        speciesName: spec.species.PrefferedPopularname,
         count: spec.count,
         unit: spec.unit || "",
         gender: spec.gender,
@@ -82,14 +79,12 @@ export async function generateExcelFromObservations(
         comment: spec.comment || "",
         privateComment: spec.privateComment || "",
         privateCollection: spec.privateCollection || "",
-        notRediscovered: spec.notRediscovered ? "Ja" : "Nei",
-        notFound: spec.notFound ? "Ja" : "Nei",
-        secondHand: spec.secondHand ? "Ja" : "Nei",
-        uncertainIdentification: spec.uncertainIdentification ? "Ja" : "Nei",
-        hide: spec.hide ? "Ja" : "Nei",
-        delayPublication: spec.delayPublication
-          ? new Date(spec.delayPublication).toLocaleString("no-NO")
-          : "",
+        notRediscovered: parseBoolean(spec.notRediscovered),
+        notFound: parseBoolean(spec.notFound),
+        secondHand: parseBoolean(spec.secondHand),
+        uncertainIdentification: parseBoolean(spec.uncertainIdentification),
+        hide: parseBoolean(spec.hide),
+        delayPublication: parseDateString(spec.delayPublication),
       });
     });
   });
@@ -233,3 +228,16 @@ export function getExportFileUrl(filePath: string): string {
   const { data } = supabase.storage.from(bucketName).getPublicUrl(filePath);
   return data.publicUrl;
 }
+
+const parseBoolean = (bool?: boolean) => {
+  return bool ? "✓" : bool === false ? "x" : "";
+};
+
+const parseDateString = (date?: string) => {
+  return date ? new Date(date).toLocaleDateString("no-NO") : "";
+};
+
+const parseTimeString = (date?: string, midnightAsNull?: boolean) => {
+  const parsed = date ? new Date(date).toLocaleTimeString("no-NO") : "";
+  return parsed === "00:00:00" && midnightAsNull ? "" : parsed;
+};

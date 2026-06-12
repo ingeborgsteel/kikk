@@ -12,6 +12,7 @@ import {
   Plus,
   Search,
   TrendingUp,
+  Users,
 } from "lucide-react";
 import { useObservations } from "../context/ObservationsContext";
 import { useLocations } from "../context/LocationsContext";
@@ -73,6 +74,11 @@ interface LocationStat {
 
 interface MonthStat {
   label: string;
+  count: number;
+}
+
+interface MedobservatorStat {
+  name: string;
   count: number;
 }
 
@@ -151,6 +157,20 @@ function countUniqueSpecies(observations: Observation[]): number {
   return seen.size;
 }
 
+function computeMedobservatorStats(
+  observations: Observation[],
+): MedobservatorStat[] {
+  const map = new Map<string, number>();
+  for (const obs of observations) {
+    if (obs.observerName) {
+      map.set(obs.observerName, (map.get(obs.observerName) || 0) + 1);
+    }
+  }
+  return Array.from(map.entries())
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count);
+}
+
 function countTotalIndividuals(observations: Observation[]): number {
   let total = 0;
   for (const obs of observations) {
@@ -223,6 +243,10 @@ export function StatsDashboard({ onBack }: StatsDashboardProps) {
   );
   const monthlyStats = useMemo(
     () => computeMonthlyStats(observations),
+    [observations],
+  );
+  const medobservatorStats = useMemo(
+    () => computeMedobservatorStats(observations),
     [observations],
   );
 
@@ -486,6 +510,37 @@ export function StatsDashboard({ onBack }: StatsDashboardProps) {
             </div>
           )}
         </div>
+
+        {/* Medobservatører */}
+        {medobservatorStats.length > 0 && (
+          <div className="bg-white dark:bg-[#2c2c2c] rounded-lg border-2 border-moss/30 p-md">
+            <h2 className="text-lg font-bold text-bark dark:text-sand mb-md flex items-center gap-sm">
+              <Users size={20} className="text-moss" />
+              Medobservatører
+            </h2>
+            <div className="space-y-sm">
+              {medobservatorStats.map((stat, i) => {
+                const maxCount = medobservatorStats[0].count;
+                return (
+                  <div key={i} className="flex items-center gap-sm">
+                    <div className="w-32 shrink-0 text-sm font-medium text-bark dark:text-sand truncate">
+                      {stat.name}
+                    </div>
+                    <div className="flex-1 bg-moss/10 dark:bg-moss/20 rounded-full h-5 overflow-hidden">
+                      <div
+                        className="bg-moss/70 dark:bg-moss/60 h-full rounded-full transition-all"
+                        style={{ width: `${(stat.count / maxCount) * 100}%` }}
+                      />
+                    </div>
+                    <div className="w-16 text-right text-sm text-bark/60 dark:text-sand/60 shrink-0">
+                      {stat.count} {stat.count === 1 ? "obs." : "obs."}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Observations over time */}
         <div className="bg-white dark:bg-[#2c2c2c] rounded-lg border-2 border-moss/30 p-md">

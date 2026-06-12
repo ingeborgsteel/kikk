@@ -183,7 +183,10 @@ const ObservationForm = ({
 
       const newLocation = { lat, lng };
       setCurrentLocation(newLocation);
-      setValue("location", newLocation);
+      setValue("location", newLocation, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
 
       // Re-fetch location name when position changes significantly (> 100m)
       const distance = Math.sqrt(
@@ -227,12 +230,23 @@ const ObservationForm = ({
     };
   }, [successTimeout]);
 
+  // Reset dirty state after mount for new observations
+  // so prefilled defaults don't trigger "unsaved changes" warning
+  useEffect(() => {
+    if (!observation) {
+      const timer = setTimeout(() => {
+        reset(getValues(), { keepValues: true });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [observation, reset, getValues]);
+
   // Fetch location name when form opens for a new observation
   useEffect(() => {
     const currentLocationName = getValues("locationName");
     // When a preset location is set, use its name
     if (presetLocation) {
-      setValue("locationName", presetLocation.name, { shouldDirty: true });
+      setValue("locationName", presetLocation.name, { shouldDirty: false });
       return;
     }
     // Only fetch if this is a new observation, locationName is not yet set
@@ -240,7 +254,7 @@ const ObservationForm = ({
       reverseGeocode(currentLocation.lat, currentLocation.lng)
         .then((name) => {
           if (name) {
-            setValue("locationName", name);
+            setValue("locationName", name, { shouldDirty: false });
             setGeocodingFailed(false);
           } else {
             setGeocodingFailed(true);
@@ -260,7 +274,7 @@ const ObservationForm = ({
   useEffect(() => {
     if (startDate && !observation) {
       // Only auto-update for new observations
-      setValue("endDate", startDate);
+      setValue("endDate", startDate, { shouldDirty: false });
     }
   }, [startDate, setValue, observation]);
 
@@ -364,12 +378,14 @@ const ObservationForm = ({
       <Modal
         isOpen={isOpen}
         onClose={() => {
-          if (
-            !isDirty ||
-            confirm(
-              "Er du sikker på at du vil lukke? Alle endringer vil gå tapt.",
-            )
-          ) {
+          if (!isDirty) {
+            onClose();
+            return;
+          }
+          const confirmed = confirm(
+            "Er du sikker på at du vil lukke? Alle endringer vil gå tapt.",
+          );
+          if (confirmed) {
             onClose();
           }
         }}

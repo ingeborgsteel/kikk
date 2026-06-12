@@ -358,6 +358,57 @@ const SpeciesItem = ({
                 Usikker artsbestemming
               </span>
             </label>
+            <label className="flex items-center gap-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={species.hide || false}
+                onChange={(e) => updateSpecies("hide", e.target.checked)}
+                className="w-4 h-4"
+              />
+              <span className="text-xs text-bark dark:text-sand">
+                Skjul fra Artsobservasjoner
+              </span>
+            </label>
+          </div>
+
+          <div>
+            <Label
+              htmlFor={`delay-publication-${key}`}
+              className="text-bark dark:text-sand text-xs"
+            >
+              Utsett publisering til
+            </Label>
+            <DemoContainer components={["DatePicker"]}>
+              <MobileDatePicker
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    sx: {
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: 10,
+                        background: "white",
+                        "& fieldset": { border: "none" },
+                        "&:hover fieldset": { border: "none" },
+                        "&.Mui-focused fieldset": { border: "none" },
+                      },
+                    },
+                  },
+                  field: { clearable: true },
+                }}
+                sx={{ background: "white" }}
+                value={
+                  species.delayPublication
+                    ? dayjs(species.delayPublication)
+                    : null
+                }
+                onChange={(newValue) =>
+                  updateSpecies(
+                    "delayPublication",
+                    newValue ? newValue.toISOString() : null,
+                  )
+                }
+              />
+            </DemoContainer>
           </div>
         </div>
       )}

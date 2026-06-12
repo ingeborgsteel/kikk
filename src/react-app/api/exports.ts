@@ -23,8 +23,6 @@ export async function generateExcelFromObservations(
     { header: "Start", key: "startDate", width: 20 },
     { header: "Slutt", key: "endDate", width: 20 },
     { header: "Last Exported At", key: "lastExportedAt", width: 20 },
-    { header: "Skjul", key: "hide", width: 10 },
-    { header: "Utsett publisering", key: "delayPublication", width: 20 },
     { header: "Art", key: "speciesNorwegian", width: 25 },
     { header: "Antall", key: "count", width: 10 },
     { header: "Enhet", key: "unit", width: 10 },
@@ -43,6 +41,8 @@ export async function generateExcelFromObservations(
       key: "uncertainIdentification",
       width: 10,
     },
+    { header: "Skjul", key: "hide", width: 10 },
+    { header: "Utsett publisering", key: "delayPublication", width: 20 },
   ];
 
   // Style the header row
@@ -69,10 +69,6 @@ export async function generateExcelFromObservations(
       lastExportedAt: obs.lastExportedAt
         ? new Date(obs.lastExportedAt).toLocaleString("no-NO")
         : "Never",
-      hide: obs.hide ? "Ja" : "Nei",
-      delayPublication: obs.delayPublication
-        ? new Date(obs.delayPublication).toLocaleString("no-NO")
-        : "",
     });
     obs.species.forEach((spec) => {
       worksheet.addRow({
@@ -90,6 +86,10 @@ export async function generateExcelFromObservations(
         notFound: spec.notFound ? "Ja" : "Nei",
         secondHand: spec.secondHand ? "Ja" : "Nei",
         uncertainIdentification: spec.uncertainIdentification ? "Ja" : "Nei",
+        hide: spec.hide ? "Ja" : "Nei",
+        delayPublication: spec.delayPublication
+          ? new Date(spec.delayPublication).toLocaleString("no-NO")
+          : "",
       });
     });
   });

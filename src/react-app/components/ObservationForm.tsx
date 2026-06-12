@@ -163,8 +163,6 @@ const ObservationForm = ({
             species: [{ species: presetSpecies }],
           }
         : {}),
-      hide: observation?.hide ?? false,
-      delayPublication: observation?.delayPublication ?? null,
     },
   });
   const uncertaintyRadius = useWatch({
@@ -484,11 +482,17 @@ const ObservationForm = ({
                   field === "notRediscovered" ||
                   field === "notFound" ||
                   field === "secondHand" ||
-                  field === "uncertainIdentification"
+                  field === "uncertainIdentification" ||
+                  field === "hide"
                 ) {
                   updated[index] = {
                     ...updated[index],
                     [field]: value as boolean,
+                  };
+                } else if (field === "delayPublication") {
+                  updated[index] = {
+                    ...updated[index],
+                    [field]: value as string | null,
                   };
                 }
                 onChange(updated);
@@ -1034,67 +1038,6 @@ const ObservationForm = ({
                   className="mt-1"
                   rows={3}
                 />
-              </div>
-            )}
-          />
-
-          <Controller
-            name={"hide"}
-            control={control}
-            render={({ field: { value, onChange } }) => (
-              <div className="flex items-center gap-sm">
-                <input
-                  type="checkbox"
-                  id="hide"
-                  checked={value || false}
-                  onChange={(e) => onChange(e.target.checked)}
-                  className="w-5 h-5 rounded border-slate-border"
-                />
-                <Label
-                  htmlFor="hide"
-                  className="text-bark dark:text-sand cursor-pointer"
-                >
-                  Skjul fra Artsobservasjoner
-                </Label>
-              </div>
-            )}
-          />
-
-          <Controller
-            name={"delayPublication"}
-            control={control}
-            render={({ field: { value, onChange } }) => (
-              <div>
-                <Label
-                  htmlFor="delayPublication"
-                  className="text-bark dark:text-sand"
-                >
-                  Utsett publisering til
-                </Label>
-                <DemoContainer components={["DatePicker"]}>
-                  <MobileDatePicker
-                    slotProps={{
-                      textField: {
-                        fullWidth: true,
-                        sx: {
-                          "& .MuiOutlinedInput-root": {
-                            borderRadius: 10,
-                            background: "white",
-                            "& fieldset": { border: "none" },
-                            "&:hover fieldset": { border: "none" },
-                            "&.Mui-focused fieldset": { border: "none" },
-                          },
-                        },
-                      },
-                      field: { clearable: true },
-                    }}
-                    sx={{ background: "white" }}
-                    value={value ? dayjs(value) : null}
-                    onChange={(newValue) =>
-                      onChange(newValue ? newValue.toISOString() : null)
-                    }
-                  />
-                </DemoContainer>
               </div>
             )}
           />

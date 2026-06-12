@@ -136,17 +136,6 @@ function ObservationItem({
                 {observation.observerName}
               </p>
             )}
-            {observation.hide && (
-              <p className="text-sm text-slate flex items-center gap-1 mt-0.5">
-                🚫 Skjult fra Artsobservasjoner
-              </p>
-            )}
-            {observation.delayPublication && (
-              <p className="text-sm text-slate flex items-center gap-1 mt-0.5">
-                📅 Utsett publisering:{" "}
-                {formatDate(observation.delayPublication)}
-              </p>
-            )}
             {isExported && observation.lastExportedAt && (
               <p className="text-xs text-slate mt-1">
                 Sist eksportert: {formatDate(observation.lastExportedAt)}
@@ -243,6 +232,11 @@ function ObservationItem({
                       Usikker artsbestemming
                     </span>
                   )}
+                  {speciesObs.hide && (
+                    <span className="text-xs bg-rust/20 text-bark dark:text-sand px-2 py-0.5 rounded-full">
+                      🚫 Skjult
+                    </span>
+                  )}
                 </div>
               </div>
               {speciesObs.comment && (
@@ -258,6 +252,12 @@ function ObservationItem({
               {speciesObs.privateCollection && (
                 <p className="text-sm text-slate flex items-center gap-1 mt-1">
                   📚 Samling: {speciesObs.privateCollection}
+                </p>
+              )}
+              {speciesObs.delayPublication && (
+                <p className="text-sm text-slate flex items-center gap-1 mt-1">
+                  📅 Utsett publisering:{" "}
+                  {formatDate(speciesObs.delayPublication)}
                 </p>
               )}
             </div>

@@ -15,7 +15,7 @@ export async function generateExcelFromObservations(
 
   // Define columns
   worksheet.columns = [
-    { header: "Observatør", key: "observerName", width: 20 },
+    { header: "Medobservatør", key: "observerName", width: 20 },
     { header: "Lokalitet", key: "locationName", width: 20 },
     { header: "Latitude", key: "latitude", width: 12 },
     { header: "Longitude", key: "longitude", width: 12 },

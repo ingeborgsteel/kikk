@@ -21,7 +21,7 @@ import {
   mapboxTopo,
 } from "./lib/mapUtils.ts";
 import {
-  createObservationIcon,
+  createObservationIconWithInitials,
   createSelectionIcon,
   createUserLocationIcon,
 } from "./lib/markerIcons.ts";
@@ -37,7 +37,6 @@ const DefaultIcon = L.icon({
 
 // Create icon instances for use in the map
 const SelectionIcon = createSelectionIcon();
-const ObservationIcon = createObservationIcon();
 const UserLocationIcon = createUserLocationIcon();
 
 L.Marker.prototype.options.icon = DefaultIcon;
@@ -461,7 +460,7 @@ function Map({
       if (map.current) {
         const marker = L.marker(
           [observation.location.lat, observation.location.lng],
-          { icon: ObservationIcon },
+          { icon: createObservationIconWithInitials(observation.observerName) },
         ).addTo(map.current);
 
         // Create popup content
@@ -473,10 +472,15 @@ function Map({
           )
           .join(", ");
 
+        const speciesCount = observation.species?.length || 0;
+        const speciesCountText =
+          speciesCount === 1 ? "1 art" : `${speciesCount} arter`;
+
         const popupContent = `
           <div style="min-width: 150px;">
+            <small style="color: #2F5D50; font-weight: 600;">${speciesCountText}</small><br/>
             <strong>${speciesList}</strong><br/>
-            ${observation.startDate ? `<small>${new Date(observation.startDate).toLocaleDateString("no-NO")}</small><br/>` : null}
+            ${observation.startDate ? `<small>${new Date(observation.startDate).toLocaleDateString("no-NO")}</small><br/>` : ""}
             <small>±${observation.uncertaintyRadius}m</small>
           </div>
         `;
@@ -499,6 +503,17 @@ function Map({
   useEffect(() => {
     if (!map.current) return;
 
+    // Count observations per location
+    const obsCountByLocation = new globalThis.Map<string, number>();
+    for (const obs of observations) {
+      if (obs.locationId) {
+        obsCountByLocation.set(
+          obs.locationId,
+          (obsCountByLocation.get(obs.locationId) || 0) + 1,
+        );
+      }
+    }
+
     // Remove existing user location markers
     userLocationsMarkersRef.current.forEach((marker) => marker.remove());
     userLocationsMarkersRef.current = [];
@@ -510,11 +525,16 @@ function Map({
           icon: UserLocationIcon,
         }).addTo(map.current);
 
-        // Create popup content
+        // Create popup content with observation count
+        const obsCount = obsCountByLocation.get(userLoc.id || "") || 0;
+        const obsCountText =
+          obsCount === 1 ? "1 observasjon" : `${obsCount} observasjoner`;
+
         const popupContent = `
           <div style="min-width: 150px;">
             <strong>${userLoc.name}</strong><br/>
             ${userLoc.description ? `<small>${userLoc.description}</small><br/>` : ""}
+            <small style="color: #7C3AED; font-weight: 500;">${obsCountText}</small><br/>
             <small>±${userLoc.uncertaintyRadius}m</small>
           </div>
         `;
@@ -531,7 +551,7 @@ function Map({
         userLocationsMarkersRef.current.push(marker);
       }
     });
-  }, [userLocations, onUserLocationClick]);
+  }, [userLocations, onUserLocationClick, observations]);
 
   // Effect to handle layer switching
   useEffect(() => {
@@ -664,27 +684,6 @@ function Map({
           <span>Sentrert på din posisjon</span>
         </div>
       )}
-      {selectedLocation && (
-        <div
-          className={`absolute ${isOnline ? "top-md" : "top-[calc(1rem+26px)]"} left-1/2 -translate-x-1/2 z-[500] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-sm rounded-lg shadow-custom-xl flex items-center gap-sm text-sm md:text-base font-semibold text-bark dark:text-sand animate-[slideDown_0.3s_ease] max-w-[90%] border-2 border-moss`}
-        >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            className="text-rust shrink-0"
-          >
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-            <circle cx="12" cy="10" r="3" />
-          </svg>
-          <span>
-            {selectedLocation.lat.toFixed(4)}, {selectedLocation.lng.toFixed(4)}
-          </span>
-        </div>
-      )}
       {/* Download area button */}
       <div className="absolute bottom-md left-md z-[500]">
         {downloadProgress ? (
@@ -722,6 +721,30 @@ function Map({
         ref={mapContainer}
         className="absolute inset-0 w-full h-full border-none rounded-t-lg overflow-hidden"
       />
+
+      {/* Active medobservatør badge (above download button) */}
+      {(() => {
+        const medobs = localStorage.getItem("kikk-medobservator");
+        if (!medobs) return null;
+        return (
+          <div className="absolute bottom-[calc(1rem+44px)] left-md z-[500] bg-forest/90 text-sand text-xs font-medium px-3 py-2 rounded-lg shadow-custom-lg flex items-center gap-2">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <circle cx="12" cy="8" r="5" />
+              <path d="M20 21a8 8 0 0 0-16 0" />
+            </svg>
+            <span className="max-w-[150px] truncate" title={medobs}>
+              {medobs}
+            </span>
+          </div>
+        );
+      })()}
     </div>
   );
 }

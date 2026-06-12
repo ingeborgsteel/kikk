@@ -444,10 +444,13 @@ const ObservationForm = ({
               const updateSpecies = (
                 index: number,
                 field: keyof Species,
-                value: string | number,
+                value: string | number | boolean | undefined,
               ) => {
                 const updated = [...species];
                 if (field === "count") {
+                  if (typeof value !== "number" && typeof value !== "string") {
+                    return;
+                  }
                   const parsedValue =
                     typeof value === "number"
                       ? value
@@ -461,12 +464,11 @@ const ObservationForm = ({
                     ...updated[index],
                     [field]: parsedValue,
                   };
-                } else if (field === "gender") {
-                  updated[index] = {
-                    ...updated[index],
-                    [field]: value as string,
-                  };
                 } else if (
+                  field === "gender" ||
+                  field === "unit" ||
+                  field === "privateComment" ||
+                  field === "privateCollection" ||
                   field === "comment" ||
                   field === "age" ||
                   field === "method" ||
@@ -475,6 +477,22 @@ const ObservationForm = ({
                   updated[index] = {
                     ...updated[index],
                     [field]: value as string,
+                  };
+                } else if (
+                  field === "notRediscovered" ||
+                  field === "notFound" ||
+                  field === "secondHand" ||
+                  field === "uncertainIdentification" ||
+                  field === "hide"
+                ) {
+                  updated[index] = {
+                    ...updated[index],
+                    [field]: value as boolean,
+                  };
+                } else if (field === "delayPublication") {
+                  updated[index] = {
+                    ...updated[index],
+                    [field]: value as string | undefined,
                   };
                 }
                 onChange(updated);
@@ -610,10 +628,9 @@ const ObservationForm = ({
                         <SpeciesItem
                           key={index}
                           species={s}
-                          updateSpecies={(
-                            field: keyof Species,
-                            value: string | number,
-                          ) => updateSpecies(index, field, value)}
+                          updateSpecies={(field, value) =>
+                            updateSpecies(index, field, value)
+                          }
                           updateTaxonGroup={(taxonGroup: string) => {
                             const updated = [...species];
                             updated[index] = {

@@ -6,10 +6,19 @@ export interface Species {
   species: TaxonRecord;
   gender?: string;
   count?: number;
+  unit?: string; // Unit for the count (e.g., "individuals", "pairs")
   age?: string; // Age of the observed species
   method?: string; // Observation method
   activity?: string; // Activity observed
-  comment?: string; // Per-species comment
+  comment?: string; // Per-species comment (visible to all)
+  privateComment?: string; // Private comment
+  notRediscovered?: boolean; // Not rediscovered
+  notFound?: boolean; // Not found
+  privateCollection?: string; // Name of collection owner
+  secondHand?: boolean; // Second-hand observation
+  uncertainIdentification?: boolean; // Uncertain species identification
+  hide?: boolean; // Mark species to hide from Artsobservasjoner (but still export to Excel)
+  delayPublication?: string; // ISO date string for when to delay publication to
 }
 
 export interface Observation {

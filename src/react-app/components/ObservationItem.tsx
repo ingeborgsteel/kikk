@@ -130,6 +130,12 @@ function ObservationItem({
                   })
                 : ""}
             </p>
+            {observation.observerName && (
+              <p className="text-sm text-slate flex items-center gap-1 mt-0.5">
+                <User size={13} />
+                {observation.observerName}
+              </p>
+            )}
             {isExported && observation.lastExportedAt && (
               <p className="text-xs text-slate mt-1">
                 Sist eksportert: {formatDate(observation.lastExportedAt)}
@@ -183,6 +189,7 @@ function ObservationItem({
                   {speciesObs.count && (
                     <span className="text-xs bg-moss/20 text-bark dark:text-sand px-2 py-0.5 rounded-full">
                       {speciesObs.count}
+                      {speciesObs.unit && ` ${speciesObs.unit}`}
                     </span>
                   )}
                   {speciesObs.gender && (
@@ -205,11 +212,52 @@ function ObservationItem({
                       {speciesObs.activity}
                     </span>
                   )}
+                  {speciesObs.notRediscovered && (
+                    <span className="text-xs bg-moss/20 text-bark dark:text-sand px-2 py-0.5 rounded-full">
+                      Ikke gjenfunnet
+                    </span>
+                  )}
+                  {speciesObs.notFound && (
+                    <span className="text-xs bg-moss/20 text-bark dark:text-sand px-2 py-0.5 rounded-full">
+                      Ikke funnet
+                    </span>
+                  )}
+                  {speciesObs.secondHand && (
+                    <span className="text-xs bg-moss/20 text-bark dark:text-sand px-2 py-0.5 rounded-full">
+                      Andrehånds
+                    </span>
+                  )}
+                  {speciesObs.uncertainIdentification && (
+                    <span className="text-xs bg-moss/20 text-bark dark:text-sand px-2 py-0.5 rounded-full">
+                      Usikker artsbestemming
+                    </span>
+                  )}
+                  {speciesObs.hide && (
+                    <span className="text-xs bg-rust/20 text-bark dark:text-sand px-2 py-0.5 rounded-full">
+                      🚫 Skjult
+                    </span>
+                  )}
                 </div>
               </div>
               {speciesObs.comment && (
                 <p className="text-sm text-bark/80 italic border-l-2 border-moss/30 pl-2 mt-1">
                   {speciesObs.comment}
+                </p>
+              )}
+              {speciesObs.privateComment && (
+                <p className="text-sm text-slate italic border-l-2 border-slate/30 pl-2 mt-1">
+                  Privat: "{speciesObs.privateComment}"
+                </p>
+              )}
+              {speciesObs.privateCollection && (
+                <p className="text-sm text-slate flex items-center gap-1 mt-1">
+                  📚 Samling: {speciesObs.privateCollection}
+                </p>
+              )}
+              {speciesObs.delayPublication && (
+                <p className="text-sm text-slate flex items-center gap-1 mt-1">
+                  📅 Utsett publisering:{" "}
+                  {formatDate(speciesObs.delayPublication)}
                 </p>
               )}
             </div>

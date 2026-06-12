@@ -95,6 +95,17 @@ function ObservationItem({
                 {observation.observerName}
               </p>
             )}
+            {observation.hide && (
+              <p className="text-sm text-slate flex items-center gap-1 mt-0.5">
+                🚫 Skjult fra Artsobservasjoner
+              </p>
+            )}
+            {observation.delayPublication && (
+              <p className="text-sm text-slate flex items-center gap-1 mt-0.5">
+                📅 Utsett publisering:{" "}
+                {formatDate(observation.delayPublication)}
+              </p>
+            )}
             {isExported && observation.lastExportedAt && (
               <p className="text-xs text-slate mt-1">
                 Sist eksportert: {formatDate(observation.lastExportedAt)}

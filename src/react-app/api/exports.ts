@@ -23,6 +23,8 @@ export async function generateExcelFromObservations(
     { header: "Start", key: "startDate", width: 20 },
     { header: "Slutt", key: "endDate", width: 20 },
     { header: "Last Exported At", key: "lastExportedAt", width: 20 },
+    { header: "Skjul", key: "hide", width: 10 },
+    { header: "Utsett publisering", key: "delayPublication", width: 20 },
     { header: "Art", key: "speciesNorwegian", width: 25 },
     { header: "Antall", key: "count", width: 10 },
     { header: "Kjønn", key: "gender", width: 10 },
@@ -56,6 +58,10 @@ export async function generateExcelFromObservations(
       lastExportedAt: obs.lastExportedAt
         ? new Date(obs.lastExportedAt).toLocaleString("no-NO")
         : "Never",
+      hide: obs.hide ? "Ja" : "Nei",
+      delayPublication: obs.delayPublication
+        ? new Date(obs.delayPublication).toLocaleString("no-NO")
+        : "",
     });
     obs.species.forEach((spec) => {
       worksheet.addRow({

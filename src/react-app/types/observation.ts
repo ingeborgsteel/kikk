@@ -30,4 +30,6 @@ export interface Observation {
   exportCount?: number; // Number of times this observation has been exported
   locationId?: string;
   observerName?: string; // Name of the observer (selected user or freetext)
+  hide?: boolean; // Mark observation to hide from Artsobservasjoner (but still export to Excel)
+  delayPublication?: string | null; // ISO date string for when to delay publication to
 }

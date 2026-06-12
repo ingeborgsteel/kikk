@@ -7,12 +7,15 @@ import { Textarea } from "./ui/textarea.tsx";
 import { useMemo, useState } from "react";
 import { Species } from "../types/observation.ts";
 import { getAgeOptionsForTaxonGroup } from "../lib/ageOptions.ts";
+import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
+import { MobileDatePicker } from "@mui/x-date-pickers/MobileDatePicker";
+import dayjs from "dayjs";
 
 interface SpeciesItemProps {
   species: Species;
   updateSpecies: (
     field: keyof Species,
-    value: string | number | boolean,
+    value?: string | number | boolean,
   ) => void;
   updateTaxonGroup: (taxonGroup: string) => void;
   removeSpecies: () => void;
@@ -399,12 +402,12 @@ const SpeciesItem = ({
                 value={
                   species.delayPublication
                     ? dayjs(species.delayPublication)
-                    : null
+                    : undefined
                 }
                 onChange={(newValue) =>
                   updateSpecies(
                     "delayPublication",
-                    newValue ? newValue.toISOString() : null,
+                    newValue ? newValue.toISOString() : undefined,
                   )
                 }
               />

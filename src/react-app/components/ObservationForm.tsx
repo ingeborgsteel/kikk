@@ -492,7 +492,7 @@ const ObservationForm = ({
                 } else if (field === "delayPublication") {
                   updated[index] = {
                     ...updated[index],
-                    [field]: value as string | null,
+                    [field]: value as string | undefined,
                   };
                 }
                 onChange(updated);

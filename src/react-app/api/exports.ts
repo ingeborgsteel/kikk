@@ -238,6 +238,11 @@ const parseDateString = (date?: string) => {
 };
 
 const parseTimeString = (date?: string, midnightAsNull?: boolean) => {
-  const parsed = date ? new Date(date).toLocaleTimeString("no-NO") : "";
+  const parsed = date
+    ? new Date(date).toLocaleTimeString("no-NO", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "";
   return parsed === "00:00:00" && midnightAsNull ? "" : parsed;
 };

@@ -444,7 +444,7 @@ const ObservationForm = ({
               const updateSpecies = (
                 index: number,
                 field: keyof Species,
-                value: string | number | boolean,
+                value: string | number | boolean | undefined,
               ) => {
                 const updated = [...species];
                 if (field === "count") {
@@ -628,10 +628,9 @@ const ObservationForm = ({
                         <SpeciesItem
                           key={index}
                           species={s}
-                          updateSpecies={(
-                            field: keyof Species,
-                            value: string | number | boolean,
-                          ) => updateSpecies(index, field, value)}
+                          updateSpecies={(field, value) =>
+                            updateSpecies(index, field, value)
+                          }
                           updateTaxonGroup={(taxonGroup: string) => {
                             const updated = [...species];
                             updated[index] = {

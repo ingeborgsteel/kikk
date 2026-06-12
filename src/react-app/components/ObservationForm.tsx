@@ -446,10 +446,13 @@ const ObservationForm = ({
               const updateSpecies = (
                 index: number,
                 field: keyof Species,
-                value: string | number,
+                value: string | number | boolean,
               ) => {
                 const updated = [...species];
                 if (field === "count") {
+                  if (typeof value !== "number" && typeof value !== "string") {
+                    return;
+                  }
                   const parsedValue =
                     typeof value === "number"
                       ? value
@@ -463,12 +466,11 @@ const ObservationForm = ({
                     ...updated[index],
                     [field]: parsedValue,
                   };
-                } else if (field === "gender") {
-                  updated[index] = {
-                    ...updated[index],
-                    [field]: value as string,
-                  };
                 } else if (
+                  field === "gender" ||
+                  field === "unit" ||
+                  field === "privateComment" ||
+                  field === "privateCollection" ||
                   field === "comment" ||
                   field === "age" ||
                   field === "method" ||
@@ -477,6 +479,16 @@ const ObservationForm = ({
                   updated[index] = {
                     ...updated[index],
                     [field]: value as string,
+                  };
+                } else if (
+                  field === "notRediscovered" ||
+                  field === "notFound" ||
+                  field === "secondHand" ||
+                  field === "uncertainIdentification"
+                ) {
+                  updated[index] = {
+                    ...updated[index],
+                    [field]: value as boolean,
                   };
                 }
                 onChange(updated);
@@ -614,7 +626,7 @@ const ObservationForm = ({
                           species={s}
                           updateSpecies={(
                             field: keyof Species,
-                            value: string | number,
+                            value: string | number | boolean,
                           ) => updateSpecies(index, field, value)}
                           updateTaxonGroup={(taxonGroup: string) => {
                             const updated = [...species];

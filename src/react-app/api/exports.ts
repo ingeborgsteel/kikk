@@ -17,9 +17,9 @@ export async function generateExcelFromObservations(
   worksheet.columns = [
     { header: "Medobservatør", key: "observerName", width: 20 },
     { header: "Lokalitet", key: "locationName", width: 20 },
-    { header: "Latitude", key: "latitude", width: 12 },
-    { header: "Longitude", key: "longitude", width: 12 },
-    { header: "Usikkerhet (m)", key: "uncertainty", width: 15 },
+    { header: "nord", key: "latitude", width: 12 },
+    { header: "øst", key: "longitude", width: 12 },
+    { header: "nøyaktighet", key: "uncertainty", width: 15 },
     { header: "Start", key: "startDate", width: 20 },
     { header: "Slutt", key: "endDate", width: 20 },
     { header: "Last Exported At", key: "lastExportedAt", width: 20 },
@@ -27,11 +27,22 @@ export async function generateExcelFromObservations(
     { header: "Utsett publisering", key: "delayPublication", width: 20 },
     { header: "Art", key: "speciesNorwegian", width: 25 },
     { header: "Antall", key: "count", width: 10 },
+    { header: "Enhet", key: "unit", width: 10 },
     { header: "Kjønn", key: "gender", width: 10 },
     { header: "Alder", key: "age", width: 15 },
     { header: "Metode", key: "method", width: 15 },
     { header: "Aktivitet", key: "activity", width: 15 },
-    { header: "Kommentar", key: "comment", width: 30 },
+    { header: "kommentar (synlig for alle)", key: "comment", width: 30 },
+    { header: "Privat kommentar", key: "privateComment", width: 30 },
+    { header: "Privat samling", key: "privateCollection", width: 20 },
+    { header: "Ikke gjenfunnet", key: "notRediscovered", width: 10 },
+    { header: "Ikke funnet", key: "notFound", width: 10 },
+    { header: "Andrehånds", key: "secondHand", width: 10 },
+    {
+      header: "Usikker artsbestemming",
+      key: "uncertainIdentification",
+      width: 10,
+    },
   ];
 
   // Style the header row
@@ -67,11 +78,18 @@ export async function generateExcelFromObservations(
       worksheet.addRow({
         speciesNorwegian: spec.species.PrefferedPopularname,
         count: spec.count,
+        unit: spec.unit || "",
         gender: spec.gender,
         age: spec.age || "",
         method: spec.method || "",
         activity: spec.activity || "",
         comment: spec.comment || "",
+        privateComment: spec.privateComment || "",
+        privateCollection: spec.privateCollection || "",
+        notRediscovered: spec.notRediscovered ? "Ja" : "Nei",
+        notFound: spec.notFound ? "Ja" : "Nei",
+        secondHand: spec.secondHand ? "Ja" : "Nei",
+        uncertainIdentification: spec.uncertainIdentification ? "Ja" : "Nei",
       });
     });
   });

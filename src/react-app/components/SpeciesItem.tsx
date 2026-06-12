@@ -10,7 +10,10 @@ import { getAgeOptionsForTaxonGroup } from "../lib/ageOptions.ts";
 
 interface SpeciesItemProps {
   species: Species;
-  updateSpecies: (field: keyof Species, value: string | number) => void;
+  updateSpecies: (
+    field: keyof Species,
+    value: string | number | boolean,
+  ) => void;
   updateTaxonGroup: (taxonGroup: string) => void;
   removeSpecies: () => void;
   key: number;
@@ -176,6 +179,23 @@ const SpeciesItem = ({
             </div>
           </div>
 
+          <div>
+            <Label
+              htmlFor={`unit-${key}`}
+              className="text-bark dark:text-sand text-xs"
+            >
+              Enhet
+            </Label>
+            <Input
+              id={`unit-${key}`}
+              type="text"
+              placeholder="f.eks. individer, par"
+              value={species.unit || ""}
+              onChange={(e) => updateSpecies("unit", e.target.value)}
+              className="mt-1"
+            />
+          </div>
+
           <div className="grid grid-cols-3 gap-sm">
             <div>
               <Label
@@ -241,7 +261,7 @@ const SpeciesItem = ({
               htmlFor={`species-comment-${key}`}
               className="text-bark dark:text-sand text-xs"
             >
-              Notat
+              Notat (synlig for alle)
             </Label>
             <Textarea
               id={`species-comment-${key}`}
@@ -251,6 +271,93 @@ const SpeciesItem = ({
               className="mt-1"
               rows={2}
             />
+          </div>
+
+          <div>
+            <Label
+              htmlFor={`private-comment-${key}`}
+              className="text-bark dark:text-sand text-xs"
+            >
+              Privat kommentar
+            </Label>
+            <Textarea
+              id={`private-comment-${key}`}
+              placeholder="Private notater..."
+              value={species.privateComment || ""}
+              onChange={(e) => updateSpecies("privateComment", e.target.value)}
+              className="mt-1"
+              rows={2}
+            />
+          </div>
+
+          <div>
+            <Label
+              htmlFor={`private-collection-${key}`}
+              className="text-bark dark:text-sand text-xs"
+            >
+              Privat samling
+            </Label>
+            <Input
+              id={`private-collection-${key}`}
+              type="text"
+              placeholder="Navn på samlingseier"
+              value={species.privateCollection || ""}
+              onChange={(e) =>
+                updateSpecies("privateCollection", e.target.value)
+              }
+              className="mt-1"
+            />
+          </div>
+
+          <div className="flex flex-wrap gap-sm">
+            <label className="flex items-center gap-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={species.notRediscovered || false}
+                onChange={(e) =>
+                  updateSpecies("notRediscovered", e.target.checked)
+                }
+                className="w-4 h-4"
+              />
+              <span className="text-xs text-bark dark:text-sand">
+                Ikke gjenfunnet
+              </span>
+            </label>
+            <label className="flex items-center gap-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={species.notFound || false}
+                onChange={(e) => updateSpecies("notFound", e.target.checked)}
+                className="w-4 h-4"
+              />
+              <span className="text-xs text-bark dark:text-sand">
+                Ikke funnet
+              </span>
+            </label>
+            <label className="flex items-center gap-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={species.secondHand || false}
+                onChange={(e) => updateSpecies("secondHand", e.target.checked)}
+                className="w-4 h-4"
+              />
+              <span className="text-xs text-bark dark:text-sand">
+                Andrehånds
+              </span>
+            </label>
+            <label className="flex items-center gap-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={species.uncertainIdentification || false}
+                onChange={(e) =>
+                  updateSpecies("uncertainIdentification", e.target.checked)
+                }
+                className="w-4 h-4"
+              />
+              <span className="text-xs text-bark dark:text-sand">
+                Usikker artsbestemming
+              </span>
+            </label>
           </div>
         </div>
       )}

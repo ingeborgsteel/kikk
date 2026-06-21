@@ -6,6 +6,23 @@ description: Systematic approach to debugging and fixing issues in kikk
 
 This workflow provides a systematic approach to identifying, debugging, and fixing issues in the kikk codebase.
 
+## 0. Branch Setup (REQUIRED)
+
+**CRITICAL: Always create a new branch before starting work**
+
+```bash
+# Create a new branch for your bug fix
+git checkout -b fix/your-bug-fix-name
+
+# Or for a worktree (if preferred)
+git worktree add ../kikk-your-fix -b fix/your-bug-fix-name
+ln -s /Users/ingeborgsteel/dev/kikk/.env /Users/ingeborgsteel/dev/kikk-your-fix/.env
+```
+
+- Never work directly on `main` or `master` branches
+- Use descriptive branch names (e.g., `fix/species-disappearing`, `fix/login-error`)
+- If using a worktree, always stay in the worktree directory for all edits
+
 ## 1. Issue Triage & Reproduction
 
 1. **Understand the problem**
@@ -14,10 +31,11 @@ This workflow provides a systematic approach to identifying, debugging, and fixi
    - Note any error messages or console logs
 
 2. **Reproduce the bug**
+
    ```bash
    # Start development server
    npm run dev
-   
+
    # Test in different environments:
    # - Desktop vs mobile viewport
    # - Light vs dark mode
@@ -39,9 +57,11 @@ This workflow provides a systematic approach to identifying, debugging, and fixi
    - Missing imports or incorrect paths?
 
 2. **Trace the data flow**
+
    ```
    User Action → Component → Context/Query → API → Storage
    ```
+
    - Where does the flow break?
    - Are there error states not being handled?
    - Is data being transformed incorrectly?
@@ -60,13 +80,13 @@ This workflow provides a systematic approach to identifying, debugging, and fixi
 
 ```javascript
 // Check localStorage
-console.log('Observations:', localStorage.getItem('kikk_observations'));
-console.log('Theme:', localStorage.getItem('kikk_theme'));
-console.log('Map Layer:', localStorage.getItem('kikk-map-layer'));
+console.log("Observations:", localStorage.getItem("kikk_observations"));
+console.log("Theme:", localStorage.getItem("kikk_theme"));
+console.log("Map Layer:", localStorage.getItem("kikk-map-layer"));
 
 // Check Supabase configuration
-console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
-console.log('Supabase configured:', isSupabaseConfigured());
+console.log("Supabase URL:", import.meta.env.VITE_SUPABASE_URL);
+console.log("Supabase configured:", isSupabaseConfigured());
 
 // Check React state
 // Add debugger statements or console.log in components
@@ -102,17 +122,18 @@ npx tsc --noEmit src/react-app/your-file.tsx
    - Maintain code style consistency
 
 3. **Add safety checks**
+
    ```typescript
    // Example: Defensive programming
-   const data = localStorage.getItem('kikk_observations');
+   const data = localStorage.getItem("kikk_observations");
    const observations = data ? JSON.parse(data) : [];
-   
+
    // Example: Error boundaries
    try {
      const result = await apiCall();
      return result;
    } catch (error) {
-     console.error('Operation failed:', error);
+     console.error("Operation failed:", error);
      return fallbackValue;
    }
    ```
@@ -148,22 +169,24 @@ npm run check     # Complete validation
 ### State Management Issues
 
 **Problem**: State not updating across components
+
 ```typescript
 // Wrong: Direct state mutation
 const [state, setState] = useState();
 state.value = newValue; // Won't trigger re-render
 
 // Correct: Immutable updates
-setState(prev => ({ ...prev, value: newValue }));
+setState((prev) => ({ ...prev, value: newValue }));
 ```
 
 **Problem**: Context not available
+
 ```typescript
 // Add proper error handling in custom hook
 export function useYourContext() {
   const context = useContext(YourContext);
   if (!context) {
-    throw new Error('useYourContext must be used within YourProvider');
+    throw new Error("useYourContext must be used within YourProvider");
   }
   return context;
 }
@@ -172,24 +195,25 @@ export function useYourContext() {
 ### API Integration Issues
 
 **Problem**: API calls failing silently
+
 ```typescript
 // Add proper error handling
 export async function yourApiFunction(params: YourParams): Promise<YourResult> {
   try {
-    const response = await fetch('/api/endpoint', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(params)
+    const response = await fetch("/api/endpoint", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(params),
     });
-    
+
     if (!response.ok) {
       throw new Error(`API error: ${response.status}`);
     }
-    
+
     return await response.json();
   } catch (error) {
-    console.error('API call failed:', error);
-    throw new Error('Failed to complete operation. Please try again.');
+    console.error("API call failed:", error);
+    throw new Error("Failed to complete operation. Please try again.");
   }
 }
 ```
@@ -197,17 +221,18 @@ export async function yourApiFunction(params: YourParams): Promise<YourResult> {
 ### Storage Issues
 
 **Problem**: localStorage data corruption
+
 ```typescript
 // Add validation and fallbacks
 export function loadObservations(): Observation[] {
   try {
-    const data = localStorage.getItem('kikk_observations');
+    const data = localStorage.getItem("kikk_observations");
     if (!data) return [];
-    
+
     const parsed = JSON.parse(data);
     return Array.isArray(parsed) ? parsed : [];
   } catch (error) {
-    console.error('Failed to load observations:', error);
+    console.error("Failed to load observations:", error);
     return [];
   }
 }
@@ -216,6 +241,7 @@ export function loadObservations(): Observation[] {
 ### Responsive Design Issues
 
 **Problem**: Mobile layout broken
+
 ```css
 /* Use responsive Tailwind classes */
 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -226,6 +252,7 @@ export function loadObservations(): Observation[] {
 ### Dark Mode Issues
 
 **Problem**: Dark mode styling missing
+
 ```tsx
 // Always include dark variants
 <button className="bg-forest text-white dark:bg-bark dark:text-sand">

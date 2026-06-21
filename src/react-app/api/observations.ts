@@ -1,5 +1,6 @@
 import { supabase } from "../lib/supabase.ts";
 import { Observation, Species } from "../types/observation.ts";
+import { logError, logInfo } from "../lib/logger.ts";
 
 export async function fetchObservations(
   userId?: string,
@@ -37,6 +38,12 @@ export async function createObservation(
 ): Promise<Observation> {
   const { species, ...observationRow } = observation;
 
+  await logInfo(`[createObservation] Creating new observation`, {
+    speciesCount: species.length,
+    userId: user?.id ?? "anonymous",
+    location: observationRow.location,
+  });
+
   const { data: insertedObs, error: obsError } = await supabase
     .from("observations")
     .insert({ ...observationRow, userId: user?.id })
@@ -48,19 +55,55 @@ export async function createObservation(
     )
     .single();
 
-  if (obsError) throw obsError;
-  if (!insertedObs) throw new Error("Failed to insert observation");
+  if (obsError) {
+    await logError(
+      `[createObservation] Failed to create observation`,
+      obsError,
+    );
+    throw obsError;
+  }
+  if (!insertedObs) {
+    await logError(`[createObservation] No data returned after insert`);
+    throw new Error("Failed to insert observation");
+  }
+
+  await logInfo(`[createObservation] Created observation ${insertedObs.id}`);
 
   // 2) insert child rows (if any)
   if (species.length > 0) {
-    const { error: childError } = await supabase
-      .from("species")
-      .insert(
-        species.map((obs) => ({ ...obs, observationId: insertedObs.id })),
-      );
+    await logInfo(
+      `[createObservation] Inserting ${species.length} species for observation ${insertedObs.id}`,
+    );
 
-    if (childError) throw childError;
+    const { error: childError } = await supabase.from("species").insert(
+      species.map((obs) => ({
+        ...obs,
+        observationId: insertedObs.id,
+        // Ensure boolean fields have default values to satisfy NOT NULL constraints
+        hide: obs.hide ?? false,
+        notRediscovered: obs.notRediscovered ?? false,
+        notFound: obs.notFound ?? false,
+        secondHand: obs.secondHand ?? false,
+        uncertainIdentification: obs.uncertainIdentification ?? false,
+      })),
+    );
+
+    if (childError) {
+      await logError(
+        `[createObservation] Failed to insert species for observation ${insertedObs.id}`,
+        childError,
+      );
+      throw childError;
+    }
+
+    await logInfo(
+      `[createObservation] Successfully inserted ${species.length} species for observation ${insertedObs.id}`,
+    );
   }
+
+  await logInfo(
+    `[createObservation] Completed creation of observation ${insertedObs.id}`,
+  );
 
   return insertedObs;
 }
@@ -73,6 +116,14 @@ export async function updateObservation(
     species,
     ...observationPatch
   } = updatedObservation;
+
+  await logInfo(
+    `[updateObservation] Starting update for observation ${observationId}`,
+    {
+      speciesCount: species?.length ?? 0,
+      hasSpecies: !!species,
+    },
+  );
 
   // 1) Update parent (only if there are fields to update)
   const { data: observation, error: parentError } = await supabase
@@ -90,19 +141,29 @@ export async function updateObservation(
     )
     .single();
 
-  if (parentError) throw parentError;
+  if (parentError) {
+    await logError(
+      `[updateObservation] Failed to update observation ${observationId}`,
+      parentError,
+    );
+    throw parentError;
+  }
+
+  await logInfo(
+    `[updateObservation] Updated parent observation ${observationId}`,
+  );
 
   // 2) Replace children if provided
   if (species) {
-    // delete existing child rows
-    const { error: delError } = await supabase
-      .from("species")
-      .delete()
-      .eq("observationId", observationId);
+    await logInfo(
+      `[updateObservation] Replacing species for observation ${observationId}`,
+      {
+        oldSpeciesCount: observation.species?.length ?? 0,
+        newSpeciesCount: species.length,
+      },
+    );
 
-    if (delError) throw delError;
-
-    // insert new child rows (if any)
+    // Insert new child rows FIRST (safer - if this fails, old data is preserved)
     if (species.length > 0) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const updatedSpecies = species.map(({ id, ...obs }) => ({
@@ -111,15 +172,54 @@ export async function updateObservation(
           ? new Date(obs.createdAt).toISOString()
           : new Date().toISOString(),
         observationId,
+        // Ensure boolean fields have default values to satisfy NOT NULL constraints
+        hide: obs.hide ?? false,
+        notRediscovered: obs.notRediscovered ?? false,
+        notFound: obs.notFound ?? false,
+        secondHand: obs.secondHand ?? false,
+        uncertainIdentification: obs.uncertainIdentification ?? false,
       }));
 
       const { error: insError } = await supabase
         .from("species")
         .insert(updatedSpecies);
 
-      if (insError) throw insError;
+      if (insError) {
+        await logError(
+          `[updateObservation] Failed to insert species for observation ${observationId}`,
+          insError,
+        );
+        throw insError;
+      }
+
+      await logInfo(
+        `[updateObservation] Inserted ${species.length} species for observation ${observationId}`,
+      );
     }
+
+    // Then delete existing child rows (after successful insert)
+    const { error: delError } = await supabase
+      .from("species")
+      .delete()
+      .eq("observationId", observationId)
+      .not("id", "in", `(${species.map((s) => s.id).join(",")})`);
+
+    if (delError) {
+      await logError(
+        `[updateObservation] Failed to delete old species for observation ${observationId}`,
+        delError,
+      );
+      throw delError;
+    }
+
+    await logInfo(
+      `[updateObservation] Deleted old species for observation ${observationId}`,
+    );
   }
+
+  await logInfo(
+    `[updateObservation] Completed update for observation ${observationId}`,
+  );
 
   return observation;
 }

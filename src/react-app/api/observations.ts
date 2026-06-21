@@ -163,7 +163,25 @@ export async function updateObservation(
       },
     );
 
-    // Insert new child rows FIRST (safer - if this fails, old data is preserved)
+    // Delete existing child rows first
+    const { error: delError } = await supabase
+      .from("species")
+      .delete()
+      .eq("observationId", observationId);
+
+    if (delError) {
+      await logError(
+        `[updateObservation] Failed to delete old species for observation ${observationId}`,
+        delError,
+      );
+      throw delError;
+    }
+
+    await logInfo(
+      `[updateObservation] Deleted old species for observation ${observationId}`,
+    );
+
+    // Insert new child rows (if any)
     if (species.length > 0) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const updatedSpecies = species.map(({ id, ...obs }) => ({
@@ -196,25 +214,6 @@ export async function updateObservation(
         `[updateObservation] Inserted ${species.length} species for observation ${observationId}`,
       );
     }
-
-    // Then delete existing child rows (after successful insert)
-    const { error: delError } = await supabase
-      .from("species")
-      .delete()
-      .eq("observationId", observationId)
-      .not("id", "in", `(${species.map((s) => s.id).join(",")})`);
-
-    if (delError) {
-      await logError(
-        `[updateObservation] Failed to delete old species for observation ${observationId}`,
-        delError,
-      );
-      throw delError;
-    }
-
-    await logInfo(
-      `[updateObservation] Deleted old species for observation ${observationId}`,
-    );
   }
 
   await logInfo(

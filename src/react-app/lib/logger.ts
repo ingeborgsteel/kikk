@@ -6,11 +6,10 @@ interface LogEntry {
 }
 
 const LOG_ENDPOINT = "/api/logs";
-const ENABLE_CLOUDFLARE_LOGGING =
-  import.meta.env.VITE_ENABLE_CLOUDFLARE_LOGGING === "true";
+const IS_PRODUCTION = import.meta.env.MODE === "production";
 
 async function sendLog(entry: LogEntry): Promise<void> {
-  if (!ENABLE_CLOUDFLARE_LOGGING) {
+  if (!IS_PRODUCTION) {
     return;
   }
 

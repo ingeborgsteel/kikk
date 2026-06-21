@@ -6,6 +6,23 @@ description: Step-by-step guide for adding new features to kikk
 
 This workflow guides you through adding a new feature to kikk while maintaining code quality and architectural consistency.
 
+## 0. Branch Setup (REQUIRED)
+
+**CRITICAL: Always create a new branch before starting work**
+
+```bash
+# Create a new branch for your feature
+git checkout -b feature/your-feature-name
+
+# Or for a worktree (if preferred)
+git worktree add ../kikk-your-feature -b feature/your-feature-name
+ln -s /Users/ingeborgsteel/dev/kikk/.env /Users/ingeborgsteel/dev/kikk-your-feature/.env
+```
+
+- Never work directly on `main` or `master` branches
+- Use descriptive branch names (e.g., `feature/add-offline-support`, `fix/species-disappearing`)
+- If using a worktree, always stay in the worktree directory for all edits
+
 ## 1. Planning & Requirements
 
 1. **Ask clarifying questions first**

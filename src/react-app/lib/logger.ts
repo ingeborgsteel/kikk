@@ -6,8 +6,14 @@ interface LogEntry {
 }
 
 const LOG_ENDPOINT = "/api/logs";
+const ENABLE_CLOUDFLARE_LOGGING =
+  import.meta.env.VITE_ENABLE_CLOUDFLARE_LOGGING === "true";
 
 async function sendLog(entry: LogEntry): Promise<void> {
+  if (!ENABLE_CLOUDFLARE_LOGGING) {
+    return;
+  }
+
   try {
     await fetch(LOG_ENDPOINT, {
       method: "POST",

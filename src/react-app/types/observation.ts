@@ -17,6 +17,8 @@ export interface Species {
   privateCollection?: string; // Name of collection owner
   secondHand?: boolean; // Second-hand observation
   uncertainIdentification?: boolean; // Uncertain species identification
+  biotope?: string;
+  biotopeDescription?: string;
   hide?: boolean; // Mark species to hide from Artsobservasjoner (but still export to Excel)
   delayPublication?: string; // ISO date string for when to delay publication to
 }
@@ -39,4 +41,5 @@ export interface Observation {
   exportCount?: number; // Number of times this observation has been exported
   locationId?: string;
   observerName?: string; // Name of the observer (selected user or freetext)
+  project?: string;
 }

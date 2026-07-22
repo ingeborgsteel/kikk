@@ -153,3 +153,32 @@ export function getMethodOptionsForTaxonGroup(
   const key = taxonGroup.toLowerCase().trim() as TaxonGroupKey;
   return TAXON_GROUP_METHOD_MAP[key] ?? DEFAULT_OPTIONS;
 }
+
+export function getTopMethodsForTaxonGroup(
+  observations: Array<{ species: Array<{ species: { TaxonGroup?: string }; method?: string }> }>,
+  taxonGroup: string,
+  topN = 6,
+): MethodOption[] {
+  const canonical = new Set(
+    getMethodOptionsForTaxonGroup(taxonGroup)
+      .map((o) => o.value)
+      .filter(Boolean),
+  );
+  const tgLower = taxonGroup.toLowerCase().trim();
+  const counts = new Map<string, number>();
+
+  for (const obs of observations) {
+    for (const s of obs.species) {
+      const sg = (s.species.TaxonGroup || "").toLowerCase().trim();
+      if (sg !== tgLower) continue;
+      const method = s.method;
+      if (!method || !canonical.has(method)) continue;
+      counts.set(method, (counts.get(method) ?? 0) + 1);
+    }
+  }
+
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, topN)
+    .map(([value]) => ({ value, label: value }));
+}

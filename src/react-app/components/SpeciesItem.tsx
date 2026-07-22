@@ -13,7 +13,7 @@ import {
   getActivityOptionsForTaxonGroup,
   getTopActivitiesForTaxonGroup,
 } from "../lib/activityOptions.ts";
-import { getMethodOptionsForTaxonGroup } from "../lib/methodOptions.ts";
+import { getMethodOptionsForTaxonGroup, getTopMethodsForTaxonGroup } from "../lib/methodOptions.ts";
 import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
 import { MobileDatePicker } from "@mui/x-date-pickers/MobileDatePicker";
 import dayjs from "dayjs";
@@ -62,6 +62,11 @@ const SpeciesItem = ({
   const methodOptions = useMemo(
     () => getMethodOptionsForTaxonGroup(species.species.TaxonGroup || ""),
     [species.species.TaxonGroup],
+  );
+
+  const topMethods = useMemo(
+    () => getTopMethodsForTaxonGroup(observations, species.species.TaxonGroup || ""),
+    [observations, species.species.TaxonGroup],
   );
 
   const genderOptions = [
@@ -283,11 +288,30 @@ const SpeciesItem = ({
                     {species.method} (egendefinert)
                   </option>
                 )}
-                {methodOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
+                {topMethods.length > 0 && (
+                  <optgroup label="Mest brukt">
+                    {topMethods.map((opt) => (
+                      <option key={`top-${opt.value}`} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+                {topMethods.length > 0 && (
+                  <optgroup label="Alle">
+                    {methodOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+                {topMethods.length === 0 &&
+                  methodOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
               </Select>
             </div>
             {showActivity && (

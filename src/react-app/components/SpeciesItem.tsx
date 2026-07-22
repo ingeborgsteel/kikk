@@ -7,6 +7,7 @@ import { Textarea } from "./ui/textarea.tsx";
 import { useMemo, useState } from "react";
 import { Species } from "../types/observation.ts";
 import { getAgeOptionsForTaxonGroup } from "../lib/ageOptions.ts";
+import { getActivityOptionsForTaxonGroup } from "../lib/activityOptions.ts";
 import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
 import { MobileDatePicker } from "@mui/x-date-pickers/MobileDatePicker";
 import dayjs from "dayjs";
@@ -38,6 +39,11 @@ const SpeciesItem = ({
     [species.species.TaxonGroup],
   );
 
+  const activityOptions = useMemo(
+    () => getActivityOptionsForTaxonGroup(species.species.TaxonGroup || ""),
+    [species.species.TaxonGroup],
+  );
+
   const genderOptions = [
     { value: "", label: "" },
     { value: "Hann", label: "Hann" },
@@ -47,9 +53,12 @@ const SpeciesItem = ({
     { value: "Arbeider", label: "Arbeider" },
   ];
 
-  // Check if the current age value exists in the options (backward compatibility)
   const currentAgeInOptions = ageOptions.some(
     (opt) => opt.value === (species.age || ""),
+  );
+
+  const currentActivityInOptions = activityOptions.some(
+    (opt) => opt.value === (species.activity || ""),
   );
 
   const currentGenderInOptions = genderOptions.some(
@@ -248,14 +257,23 @@ const SpeciesItem = ({
               >
                 Aktivitet
               </Label>
-              <Input
+              <Select
                 id={`activity-${key}`}
-                type="text"
-                placeholder="f.eks. flyr"
                 value={species.activity || ""}
                 onChange={(e) => updateSpecies("activity", e.target.value)}
                 className="mt-1"
-              />
+              >
+                {!currentActivityInOptions && species.activity && (
+                  <option value={species.activity}>
+                    {species.activity} (egendefinert)
+                  </option>
+                )}
+                {activityOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </Select>
             </div>
           </div>
 

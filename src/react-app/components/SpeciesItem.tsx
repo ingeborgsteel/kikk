@@ -8,7 +8,7 @@ import { useMemo, useState } from "react";
 import { Species } from "../types/observation.ts";
 import { useObservations } from "../context/ObservationsContext.tsx";
 import { getAgeOptionsForTaxonGroup } from "../lib/ageOptions.ts";
-import { isKnownTaxonGroup, TAXON_GROUP_PICKER_OPTIONS } from "../lib/taxonGroups.ts";
+import { TAXON_GROUP_PICKER_OPTIONS } from "../lib/taxonGroups.ts";
 import {
   getActivityOptionsForTaxonGroup,
   getTopActivitiesForTaxonGroup,
@@ -37,7 +37,6 @@ const SpeciesItem = ({
   key,
 }: SpeciesItemProps) => {
   const { observations } = useObservations();
-  const isFreeText = species.species.Id == null;
   const [isExpanded, setIsExpanded] = useState(false);
   const [countInput, setCountInput] = useState(String(species.count));
 
@@ -83,7 +82,6 @@ const SpeciesItem = ({
   );
 
   const taxonGroup = (species.species.TaxonGroup || "").toLowerCase().trim();
-  const showTaxonGroupPicker = isFreeText || (!!taxonGroup && !isKnownTaxonGroup(taxonGroup));
   const showUnit = taxonGroup !== "fugler";
   const showActivity = ![
     "karplanter",
@@ -142,32 +140,25 @@ const SpeciesItem = ({
                 {species.species.ValidScientificName}
               </div>
             )}
-            {showTaxonGroupPicker && (
-              <div className="mt-1">
-                <Label
-                  htmlFor={`taxon-group-${key}`}
-                  className="text-bark dark:text-sand text-xs"
-                >
-                  Artsgruppe
-                </Label>
-                {!isFreeText && (
-                  <p className="text-xs text-slate mt-0.5 mb-1">
-                    Ukjent artsgruppe «{species.species.TaxonGroup}» — velg nærmeste:
-                  </p>
-                )}
-                <Select
-                  id={`taxon-group-${key}`}
-                  value={species.species.TaxonGroup || ""}
-                  onChange={(e) => updateTaxonGroup(e.target.value)}
-                  className="mt-1"
-                >
-                  <option value="">—</option>
-                  {TAXON_GROUP_PICKER_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </Select>
-              </div>
-            )}
+            <div className="mt-1">
+              <Label
+                htmlFor={`taxon-group-${key}`}
+                className="text-bark dark:text-sand text-xs"
+              >
+                Artsgruppe
+              </Label>
+              <Select
+                id={`taxon-group-${key}`}
+                value={species.species.TaxonGroup || ""}
+                onChange={(e) => updateTaxonGroup(e.target.value)}
+                className="mt-1"
+              >
+                <option value="">—</option>
+                {TAXON_GROUP_PICKER_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </Select>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-sm">

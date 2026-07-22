@@ -42,6 +42,9 @@ export async function generateExcelFromObservations(
       key: "uncertainIdentification",
       width: 10,
     },
+    { header: "Biotop", key: "biotope", width: 20 },
+    { header: "Beskrivelse av biotop", key: "biotopeDescription", width: 30 },
+    { header: "Prosjekt", key: "project", width: 20 },
     { header: "Utsett publisering", key: "delayPublication", width: 20 },
     { header: "Medobservatør", key: "observerName", width: 20 },
     { header: "Sist eksportert", key: "lastExportedAt", width: 20 },
@@ -59,7 +62,7 @@ export async function generateExcelFromObservations(
   observations.forEach((obs) => {
     obs.species.forEach((spec) => {
       worksheet.addRow({
-        observerName: obs.observerName || "",
+        observerName: obs.observerName || undefined,
         locationName: obs.locationName,
         latitude: obs.location.lat.toString().replace(",", "."),
         longitude: obs.location.lng.toString().replace(",", "."),
@@ -71,18 +74,21 @@ export async function generateExcelFromObservations(
         lastExportedAt: parseDateString(obs.lastExportedAt),
         speciesName: spec.species.PrefferedPopularname,
         count: spec.count,
-        unit: spec.unit || "",
-        gender: spec.gender,
-        age: spec.age || "",
-        method: spec.method || "",
-        activity: spec.activity || "",
-        comment: spec.comment || "",
-        privateComment: spec.privateComment || "",
-        privateCollection: spec.privateCollection || "",
+        unit: spec.unit || undefined,
+        gender: spec.gender || undefined,
+        age: spec.age || undefined,
+        method: spec.method || undefined,
+        activity: spec.activity || undefined,
+        comment: spec.comment || undefined,
+        privateComment: spec.privateComment || undefined,
+        privateCollection: spec.privateCollection || undefined,
         notRediscovered: parseBoolean(spec.notRediscovered),
         notFound: parseBoolean(spec.notFound),
         secondHand: parseBoolean(spec.secondHand),
         uncertainIdentification: parseBoolean(spec.uncertainIdentification),
+        biotope: spec.biotope || undefined,
+        biotopeDescription: spec.biotopeDescription || undefined,
+        project: obs.project || undefined,
         hide: parseBoolean(spec.hide),
         delayPublication: parseDateString(spec.delayPublication),
       });
@@ -230,19 +236,18 @@ export function getExportFileUrl(filePath: string): string {
 }
 
 const parseBoolean = (bool?: boolean) => {
-  return bool ? "✓" : bool === false ? "x" : "";
+  return bool ? "✓" : bool === false ? "x" : undefined;
 };
 
 const parseDateString = (date?: string) => {
-  return date ? new Date(date).toLocaleDateString("no-NO") : "";
+  return date ? new Date(date).toLocaleDateString("no-NO") : undefined;
 };
 
 const parseTimeString = (date?: string, midnightAsNull?: boolean) => {
-  const parsed = date
-    ? new Date(date).toLocaleTimeString("no-NO", {
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    : "";
-  return parsed === "00:00:00" && midnightAsNull ? "" : parsed;
+  if (!date) return undefined;
+  const parsed = new Date(date).toLocaleTimeString("no-NO", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  return parsed === "00:00" && midnightAsNull ? undefined : parsed;
 };

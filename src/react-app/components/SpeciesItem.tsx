@@ -8,7 +8,11 @@ import { useMemo, useState } from "react";
 import { Species } from "../types/observation.ts";
 import { useObservations } from "../context/ObservationsContext.tsx";
 import { getAgeOptionsForTaxonGroup } from "../lib/ageOptions.ts";
-import { getActivityOptionsForTaxonGroup, getTopActivitiesForTaxonGroup } from "../lib/activityOptions.ts";
+import { isKnownTaxonGroup, TAXON_GROUP_PICKER_OPTIONS } from "../lib/taxonGroups.ts";
+import {
+  getActivityOptionsForTaxonGroup,
+  getTopActivitiesForTaxonGroup,
+} from "../lib/activityOptions.ts";
 import { getMethodOptionsForTaxonGroup } from "../lib/methodOptions.ts";
 import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
 import { MobileDatePicker } from "@mui/x-date-pickers/MobileDatePicker";
@@ -48,7 +52,11 @@ const SpeciesItem = ({
   );
 
   const topActivities = useMemo(
-    () => getTopActivitiesForTaxonGroup(observations, species.species.TaxonGroup || ""),
+    () =>
+      getTopActivitiesForTaxonGroup(
+        observations,
+        species.species.TaxonGroup || "",
+      ),
     [observations, species.species.TaxonGroup],
   );
 
@@ -75,8 +83,18 @@ const SpeciesItem = ({
   );
 
   const taxonGroup = (species.species.TaxonGroup || "").toLowerCase().trim();
+  const showTaxonGroupPicker = isFreeText || (!!taxonGroup && !isKnownTaxonGroup(taxonGroup));
   const showUnit = taxonGroup !== "fugler";
-  const showActivity = !["karplanter", "moser", "bladmoser", "levermoser", "sopper", "storsopper", "småsopper", "laver"].includes(taxonGroup);
+  const showActivity = ![
+    "karplanter",
+    "moser",
+    "bladmoser",
+    "levermoser",
+    "sopper",
+    "storsopper",
+    "småsopper",
+    "lav",
+  ].includes(taxonGroup);
 
   const currentMethodInOptions = methodOptions.some(
     (opt) => opt.value === (species.method || ""),
@@ -124,7 +142,7 @@ const SpeciesItem = ({
                 {species.species.ValidScientificName}
               </div>
             )}
-            {isFreeText && (
+            {showTaxonGroupPicker && (
               <div className="mt-1">
                 <Label
                   htmlFor={`taxon-group-${key}`}
@@ -132,6 +150,11 @@ const SpeciesItem = ({
                 >
                   Artsgruppe
                 </Label>
+                {!isFreeText && (
+                  <p className="text-xs text-slate mt-0.5 mb-1">
+                    Ukjent artsgruppe «{species.species.TaxonGroup}» — velg nærmeste:
+                  </p>
+                )}
                 <Select
                   id={`taxon-group-${key}`}
                   value={species.species.TaxonGroup || ""}
@@ -139,18 +162,9 @@ const SpeciesItem = ({
                   className="mt-1"
                 >
                   <option value="">—</option>
-                  <option value="fugler">Fugler</option>
-                  <option value="pattedyr">Pattedyr</option>
-                  <option value="amfibier">Amfibier</option>
-                  <option value="reptiler">Reptiler</option>
-                  <option value="fisker">Fisker</option>
-                  <option value="insekter">Insekter</option>
-                  <option value="sommerfugler">Sommerfugler</option>
-                  <option value="edderkopper">Edderkopper</option>
-                  <option value="karplanter">Karplanter</option>
-                  <option value="moser">Moser</option>
-                  <option value="sopper">Sopper</option>
-                  <option value="laver">Laver</option>
+                  {TAXON_GROUP_PICKER_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
                 </Select>
               </div>
             )}

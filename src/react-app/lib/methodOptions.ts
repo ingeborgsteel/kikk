@@ -117,19 +117,18 @@ const MAMMAL_OPTIONS: MethodOption[] = [
   o("Transponder"),
 ];
 
+import { TaxonGroupKey } from "./taxonGroups.ts";
+
 const DEFAULT_OPTIONS: MethodOption[] = [UNKNOWN, o("Observasjon")];
 
-const TAXON_GROUP_METHOD_MAP: Record<string, MethodOption[]> = {
+const TAXON_GROUP_METHOD_MAP: Partial<Record<TaxonGroupKey, MethodOption[]>> = {
   pattedyr: MAMMAL_OPTIONS,
-
   amfibier: AMPHIBIAN_REPTILE_OPTIONS,
   reptiler: AMPHIBIAN_REPTILE_OPTIONS,
-
   fisker: FISH_OPTIONS,
   ferskvannsfisker: FISH_OPTIONS,
   saltvannsfisker: FISH_OPTIONS,
   rundmunner: FISH_OPTIONS,
-
   insekter: INVERTEBRATE_OPTIONS,
   sommerfugler: INVERTEBRATE_OPTIONS,
   biller: INVERTEBRATE_OPTIONS,
@@ -143,7 +142,7 @@ const TAXON_GROUP_METHOD_MAP: Record<string, MethodOption[]> = {
   nebbmunner: INVERTEBRATE_OPTIONS,
   edderkopper: INVERTEBRATE_OPTIONS,
   midd: INVERTEBRATE_OPTIONS,
-
+  "døgnfluer, øyenstikkere, steinfluer, vårfluer": INVERTEBRATE_OPTIONS,
   alger: ALGAE_OPTIONS,
   makroalger: ALGAE_OPTIONS,
 };
@@ -151,6 +150,6 @@ const TAXON_GROUP_METHOD_MAP: Record<string, MethodOption[]> = {
 export function getMethodOptionsForTaxonGroup(
   taxonGroup: string,
 ): MethodOption[] {
-  const key = taxonGroup.toLowerCase().trim();
+  const key = taxonGroup.toLowerCase().trim() as TaxonGroupKey;
   return TAXON_GROUP_METHOD_MAP[key] ?? DEFAULT_OPTIONS;
 }

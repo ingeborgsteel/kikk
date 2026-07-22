@@ -94,6 +94,12 @@ const FUNGI_OPTIONS: AgeOption[] = [
   { value: "Teleomorf (perfekt)", label: "Teleomorf (perfekt)" },
 ];
 
+const ALGAE_OPTIONS: AgeOption[] = [
+  UNKNOWN,
+  { value: "Med hunnorgan", label: "Med hunnorgan" },
+  { value: "Med hannorgan", label: "Med hannorgan" },
+];
+
 const LICHEN_OPTIONS: AgeOption[] = [
   UNKNOWN,
   { value: "Med apothecier", label: "Med apothecier" },
@@ -103,26 +109,20 @@ const LICHEN_OPTIONS: AgeOption[] = [
   { value: "Med schistisidier", label: "Med schistisidier" },
 ];
 
+import { TaxonGroupKey } from "./taxonGroups.ts";
+
 /** Default options for taxon groups without a verified category mapping */
 const DEFAULT_OPTIONS: AgeOption[] = [UNKNOWN, ...MAMMAL_OPTIONS];
 
-const TAXON_GROUP_AGE_MAP: Record<string, AgeOption[]> = {
-  // Birds
+const TAXON_GROUP_AGE_MAP: Record<TaxonGroupKey, AgeOption[]> = {
   fugler: BIRD_OPTIONS,
-
-  // Mammals
   pattedyr: MAMMAL_OPTIONS,
-
   amfibier: REPTILE_OPTIONS,
   reptiler: REPTILE_OPTIONS,
-
-  // Fish
   fisker: FISH_OPTIONS,
   ferskvannsfisker: FISH_OPTIONS,
   saltvannsfisker: FISH_OPTIONS,
   rundmunner: FISH_OPTIONS,
-
-  // Insects and related arthropods
   insekter: INSECT_OPTIONS,
   sommerfugler: INSECT_OPTIONS,
   biller: INSECT_OPTIONS,
@@ -136,29 +136,20 @@ const TAXON_GROUP_AGE_MAP: Record<string, AgeOption[]> = {
   nebbmunner: INSECT_OPTIONS,
   edderkopper: INSECT_OPTIONS,
   midd: INSECT_OPTIONS,
-
-  // Vascular plants
+  "døgnfluer, øyenstikkere, steinfluer, vårfluer": INSECT_OPTIONS,
   karplanter: PLANT_OPTIONS,
-
-  // Mosses
   moser: MOSS_OPTIONS,
   bladmoser: MOSS_OPTIONS,
   levermoser: MOSS_OPTIONS,
-
-  // Fungi
   sopper: FUNGI_OPTIONS,
   storsopper: FUNGI_OPTIONS,
   småsopper: FUNGI_OPTIONS,
-
-  // Lichens
   laver: LICHEN_OPTIONS,
+  alger: ALGAE_OPTIONS,
+  makroalger: ALGAE_OPTIONS,
 };
 
-/**
- * Get age/life stage options for a given TaxonGroup string.
- * Falls back to a generic default if the group is not specifically mapped.
- */
 export function getAgeOptionsForTaxonGroup(taxonGroup: string): AgeOption[] {
-  const key = taxonGroup.toLowerCase().trim();
+  const key = taxonGroup.toLowerCase().trim() as TaxonGroupKey;
   return TAXON_GROUP_AGE_MAP[key] ?? DEFAULT_OPTIONS;
 }

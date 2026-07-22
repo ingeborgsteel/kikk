@@ -181,21 +181,21 @@ const MAMMAL_OPTIONS: ActivityOption[] = [
   o("Død - kollisjon med vindturbin"),
 ];
 
+import { TaxonGroupKey } from "./taxonGroups.ts";
+
 const DEFAULT_OPTIONS: ActivityOption[] = [UNKNOWN];
 
-const TAXON_GROUP_ACTIVITY_MAP: Record<string, ActivityOption[]> = {
+const TAXON_GROUP_ACTIVITY_MAP: Partial<
+  Record<TaxonGroupKey, ActivityOption[]>
+> = {
   fugler: BIRD_OPTIONS,
-
   pattedyr: MAMMAL_OPTIONS,
-
   amfibier: AMPHIBIAN_REPTILE_OPTIONS,
   reptiler: AMPHIBIAN_REPTILE_OPTIONS,
-
   fisker: FISH_OPTIONS,
   ferskvannsfisker: FISH_OPTIONS,
   saltvannsfisker: FISH_OPTIONS,
   rundmunner: FISH_OPTIONS,
-
   insekter: INVERTEBRATE_OPTIONS,
   sommerfugler: INVERTEBRATE_OPTIONS,
   biller: INVERTEBRATE_OPTIONS,
@@ -209,12 +209,13 @@ const TAXON_GROUP_ACTIVITY_MAP: Record<string, ActivityOption[]> = {
   nebbmunner: INVERTEBRATE_OPTIONS,
   edderkopper: INVERTEBRATE_OPTIONS,
   midd: INVERTEBRATE_OPTIONS,
+  "døgnfluer, øyenstikkere, steinfluer, vårfluer": INVERTEBRATE_OPTIONS,
 };
 
 export function getActivityOptionsForTaxonGroup(
   taxonGroup: string,
 ): ActivityOption[] {
-  const key = taxonGroup.toLowerCase().trim();
+  const key = taxonGroup.toLowerCase().trim() as TaxonGroupKey;
   return TAXON_GROUP_ACTIVITY_MAP[key] ?? DEFAULT_OPTIONS;
 }
 

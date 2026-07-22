@@ -66,7 +66,7 @@ export async function generateExcelFromObservations(
         locationName: obs.locationName,
         latitude: obs.location.lat.toString().replace(",", "."),
         longitude: obs.location.lng.toString().replace(",", "."),
-        uncertainty: obs.uncertaintyRadius,
+        uncertainty: obs.uncertaintyRadius ? `${obs.uncertaintyRadius} m` : "",
         startDate: parseDateString(obs.startDate),
         startTime: parseTimeString(obs.startDate, true),
         endDate: parseDateString(obs.endDate),

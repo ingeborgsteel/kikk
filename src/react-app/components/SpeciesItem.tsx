@@ -149,17 +149,14 @@ const SpeciesItem = ({
               </Label>
               <Select
                 id={`taxon-group-${key}`}
-                value={species.species.TaxonGroup || ""}
-                onChange={(e) => updateTaxonGroup(e.target.value)}
+                value={taxonGroup}
+                onChange={(e) => updateTaxonGroup(e.target.value.toLowerCase().trim())}
                 className="mt-1"
               >
                 <option value="">—</option>
-                {species.species.TaxonGroup &&
-                  !TAXON_GROUP_PICKER_OPTIONS.some((o) => o.value === species.species.TaxonGroup) && (
-                    <option value={species.species.TaxonGroup}>
-                      {species.species.TaxonGroup}
-                    </option>
-                  )}
+                {taxonGroup && !TAXON_GROUP_PICKER_OPTIONS.some((o) => o.value === taxonGroup) && (
+                  <option value={taxonGroup}>{taxonGroup}</option>
+                )}
                 {TAXON_GROUP_PICKER_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}

@@ -146,12 +146,12 @@ const TAXON_GROUP_AGE_MAP: Record<string, AgeOption[]> = {
   levermoser: MOSS_OPTIONS,
 
   // Fungi
-  sopp: FUNGI_OPTIONS,
-  storsopp: FUNGI_OPTIONS,
-  småsopp: FUNGI_OPTIONS,
+  sopper: FUNGI_OPTIONS,
+  storsopper: FUNGI_OPTIONS,
+  småsopper: FUNGI_OPTIONS,
 
   // Lichens
-  lav: LICHEN_OPTIONS,
+  laver: LICHEN_OPTIONS,
 };
 
 /**

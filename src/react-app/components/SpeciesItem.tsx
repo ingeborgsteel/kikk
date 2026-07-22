@@ -76,7 +76,7 @@ const SpeciesItem = ({
 
   const taxonGroup = (species.species.TaxonGroup || "").toLowerCase().trim();
   const showUnit = taxonGroup !== "fugler";
-  const showActivity = !["karplanter", "moser", "bladmoser", "levermoser", "sopp", "storsopp", "småsopp", "lav"].includes(taxonGroup);
+  const showActivity = !["karplanter", "moser", "bladmoser", "levermoser", "sopper", "storsopper", "småsopper", "laver"].includes(taxonGroup);
 
   const currentMethodInOptions = methodOptions.some(
     (opt) => opt.value === (species.method || ""),
@@ -149,8 +149,8 @@ const SpeciesItem = ({
                   <option value="edderkopper">Edderkopper</option>
                   <option value="karplanter">Karplanter</option>
                   <option value="moser">Moser</option>
-                  <option value="sopp">Sopp</option>
-                  <option value="lav">Lav</option>
+                  <option value="sopper">Sopper</option>
+                  <option value="laver">Laver</option>
                 </Select>
               </div>
             )}

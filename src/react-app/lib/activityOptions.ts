@@ -209,6 +209,10 @@ const TAXON_GROUP_ACTIVITY_MAP: Record<string, ActivityOption[]> = {
   nebbmunner: INVERTEBRATE_OPTIONS,
   edderkopper: INVERTEBRATE_OPTIONS,
   midd: INVERTEBRATE_OPTIONS,
+
+  ferskvannsfisker: FISH_OPTIONS,
+  saltvannsfisker: FISH_OPTIONS,
+  rundmunner: FISH_OPTIONS,
 };
 
 export function getActivityOptionsForTaxonGroup(

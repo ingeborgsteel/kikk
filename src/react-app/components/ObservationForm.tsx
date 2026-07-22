@@ -511,23 +511,35 @@ const ObservationForm = ({
                     >
                       Søk etter art
                     </Label>
-                    {recentSpecies.length > 0 && (
+                    {recentSpecies.some(
+                        (s) => !species.some(
+                          (added) => (added.species.Id ?? added.species.PrefferedPopularname) === (s.Id ?? s.PrefferedPopularname),
+                        )
+                      ) && (
                       <div className="mt-2 mb-3">
                         <div className="text-xs text-slate mb-2">
                           Nylig observerte arter:
                         </div>
                         <div className="flex flex-wrap gap-1.5">
-                          {visibleRecentSpecies.map((species) => (
+                          {visibleRecentSpecies
+                            .filter((s) => {
+                              const id = s.Id ?? s.PrefferedPopularname;
+                              return !species.some(
+                                (added) =>
+                                  (added.species.Id ?? added.species.PrefferedPopularname) === id,
+                              );
+                            })
+                            .map((s) => (
                             <button
-                              key={species.Id ?? species.PrefferedPopularname}
+                              key={s.Id ?? s.PrefferedPopularname}
                               type="button"
-                              onClick={() => addSpecies(species)}
+                              onClick={() => addSpecies(s)}
                               className="px-2 py-1 bg-moss/10 hover:bg-moss/20 dark:bg-moss/20 dark:hover:bg-moss/30 text-bark dark:text-sand text-xs rounded-md border border-moss/30 dark:border-moss/40 transition-colors flex items-center gap-1"
-                              title={species.ValidScientificName}
+                              title={s.ValidScientificName}
                             >
                               <span className="font-medium">
-                                {species.PrefferedPopularname ??
-                                  species.ValidScientificName}
+                                {s.PrefferedPopularname ??
+                                  s.ValidScientificName}
                               </span>
                             </button>
                           ))}

@@ -753,10 +753,18 @@ const ObservationForm = ({
                 >
                   Nøyaktighet (meter)
                 </Label>
+                <datalist id="uncertainty-options">
+                  {[1, 5, 10, 25, 50, 75, 100, 125, 150, 200, 250, 300, 400, 500, 750, 1000, 1500, 2000, 2500, 3000, 5000].map(
+                    (n) => (
+                      <option key={n} value={n} />
+                    ),
+                  )}
+                </datalist>
                 <Input
                   id="uncertainty"
                   type="number"
                   min="0"
+                  list="uncertainty-options"
                   value={value}
                   onChange={(e) =>
                     onChange(

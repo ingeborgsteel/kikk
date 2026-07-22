@@ -739,10 +739,10 @@ const ObservationForm = ({
             name={"uncertaintyRadius"}
             control={control}
             rules={{
-              required: "Usikkerhetsradius er påkrevd",
+              required: "Nøyaktighet er påkrevd",
               min: {
                 value: 0,
-                message: "Usikkerhetsradius kan ikke være negativ",
+                message: "Nøyaktighet kan ikke være negativ",
               },
             }}
             render={({ field: { value, onChange } }) => (
@@ -751,7 +751,7 @@ const ObservationForm = ({
                   htmlFor="uncertainty"
                   className="text-bark dark:text-sand"
                 >
-                  Usikkerhetsradius (meter)
+                  Nøyaktighet (meter)
                 </Label>
                 <Input
                   id="uncertainty"

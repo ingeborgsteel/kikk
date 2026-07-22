@@ -348,8 +348,8 @@ function App() {
                 size="icon"
                 variant={showUncertaintyOverlay ? "secondary" : "outline"}
                 className="h-10 w-10 box-border shadow-custom-xl hover:shadow-custom-2xl hover:translate-y-0 active:translate-y-0"
-                aria-label="Veksle usikkerhetsradius"
-                title="Usikkerhet"
+                aria-label="Veksle nøyaktighet"
+                title="Nøyaktighet"
               >
                 <CircleDashed size={20} />
               </Button>

@@ -10,7 +10,7 @@ const BIRD_OPTIONS: AgeOption[] = [
   UNKNOWN,
   { value: "Egg", label: "Egg" },
   { value: "Pulli", label: "Pulli" },
-  { value: "Voksen", label: "Voksen" },
+  { value: "Adult", label: "Adult" },
   { value: "1K", label: "1K" },
   { value: "1K+", label: "1K+" },
   { value: "2K", label: "2K" },
@@ -63,7 +63,7 @@ const INSECT_OPTIONS: AgeOption[] = [
   { value: "Puppe", label: "Puppe" },
   { value: "Ung", label: "Ung" },
   { value: "Voksen", label: "Voksen" },
-  { value: "Imago/Voksen", label: "Imago/Voksen" },
+  { value: "Imago/Adult", label: "Imago/Adult" },
 ];
 
 const PLANT_OPTIONS: AgeOption[] = [

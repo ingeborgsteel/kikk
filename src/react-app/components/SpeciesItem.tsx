@@ -6,8 +6,9 @@ import { Input } from "./ui/input.tsx";
 import { Textarea } from "./ui/textarea.tsx";
 import { useMemo, useState } from "react";
 import { Species } from "../types/observation.ts";
+import { useObservations } from "../context/ObservationsContext.tsx";
 import { getAgeOptionsForTaxonGroup } from "../lib/ageOptions.ts";
-import { getActivityOptionsForTaxonGroup } from "../lib/activityOptions.ts";
+import { getActivityOptionsForTaxonGroup, getTopActivitiesForTaxonGroup } from "../lib/activityOptions.ts";
 import { getMethodOptionsForTaxonGroup } from "../lib/methodOptions.ts";
 import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
 import { MobileDatePicker } from "@mui/x-date-pickers/MobileDatePicker";
@@ -31,6 +32,7 @@ const SpeciesItem = ({
   removeSpecies,
   key,
 }: SpeciesItemProps) => {
+  const { observations } = useObservations();
   const isFreeText = species.species.Id == null;
   const [isExpanded, setIsExpanded] = useState(false);
   const [countInput, setCountInput] = useState(String(species.count));
@@ -43,6 +45,11 @@ const SpeciesItem = ({
   const activityOptions = useMemo(
     () => getActivityOptionsForTaxonGroup(species.species.TaxonGroup || ""),
     [species.species.TaxonGroup],
+  );
+
+  const topActivities = useMemo(
+    () => getTopActivitiesForTaxonGroup(observations, species.species.TaxonGroup || ""),
+    [observations, species.species.TaxonGroup],
   );
 
   const methodOptions = useMemo(
@@ -294,11 +301,30 @@ const SpeciesItem = ({
                       {species.activity} (egendefinert)
                     </option>
                   )}
-                  {activityOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
+                  {topActivities.length > 0 && (
+                    <optgroup label="Mest brukt">
+                      {topActivities.map((opt) => (
+                        <option key={`top-${opt.value}`} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {topActivities.length > 0 && (
+                    <optgroup label="Alle">
+                      {activityOptions.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {topActivities.length === 0 &&
+                    activityOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
                 </Select>
               </div>
             )}

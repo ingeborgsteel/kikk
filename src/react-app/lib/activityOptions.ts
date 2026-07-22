@@ -217,3 +217,37 @@ export function getActivityOptionsForTaxonGroup(
   const key = taxonGroup.toLowerCase().trim();
   return TAXON_GROUP_ACTIVITY_MAP[key] ?? DEFAULT_OPTIONS;
 }
+
+/**
+ * Returns the top-N most frequently used activity values for the given taxon
+ * group, derived from past observations. Only values present in the canonical
+ * options list are counted (ignores legacy free-text entries).
+ */
+export function getTopActivitiesForTaxonGroup(
+  observations: Array<{ species: Array<{ species: { TaxonGroup?: string }; activity?: string }> }>,
+  taxonGroup: string,
+  topN = 6,
+): ActivityOption[] {
+  const canonical = new Set(
+    getActivityOptionsForTaxonGroup(taxonGroup)
+      .map((o) => o.value)
+      .filter(Boolean),
+  );
+  const tgLower = taxonGroup.toLowerCase().trim();
+  const counts = new Map<string, number>();
+
+  for (const obs of observations) {
+    for (const s of obs.species) {
+      const sg = (s.species.TaxonGroup || "").toLowerCase().trim();
+      if (sg !== tgLower) continue;
+      const act = s.activity;
+      if (!act || !canonical.has(act)) continue;
+      counts.set(act, (counts.get(act) ?? 0) + 1);
+    }
+  }
+
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, topN)
+    .map(([value]) => ({ value, label: value }));
+}

@@ -154,6 +154,12 @@ const SpeciesItem = ({
                 className="mt-1"
               >
                 <option value="">—</option>
+                {species.species.TaxonGroup &&
+                  !TAXON_GROUP_PICKER_OPTIONS.some((o) => o.value === species.species.TaxonGroup) && (
+                    <option value={species.species.TaxonGroup}>
+                      {species.species.TaxonGroup}
+                    </option>
+                  )}
                 {TAXON_GROUP_PICKER_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}

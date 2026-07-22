@@ -67,6 +67,10 @@ const SpeciesItem = ({
     (opt) => opt.value === (species.activity || ""),
   );
 
+  const taxonGroup = (species.species.TaxonGroup || "").toLowerCase().trim();
+  const showUnit = taxonGroup !== "fugler";
+  const showActivity = !["karplanter", "moser", "bladmoser", "levermoser", "sopp", "storsopp", "småsopp", "lav"].includes(taxonGroup);
+
   const currentMethodInOptions = methodOptions.some(
     (opt) => opt.value === (species.method || ""),
   );
@@ -201,22 +205,24 @@ const SpeciesItem = ({
             </div>
           </div>
 
-          <div>
-            <Label
-              htmlFor={`unit-${key}`}
-              className="text-bark dark:text-sand text-xs"
-            >
-              Enhet
-            </Label>
-            <Input
-              id={`unit-${key}`}
-              type="text"
-              placeholder="f.eks. individer, par"
-              value={species.unit || ""}
-              onChange={(e) => updateSpecies("unit", e.target.value)}
-              className="mt-1"
-            />
-          </div>
+          {showUnit && (
+            <div>
+              <Label
+                htmlFor={`unit-${key}`}
+                className="text-bark dark:text-sand text-xs"
+              >
+                Enhet
+              </Label>
+              <Input
+                id={`unit-${key}`}
+                type="text"
+                placeholder="f.eks. individer, par"
+                value={species.unit || ""}
+                onChange={(e) => updateSpecies("unit", e.target.value)}
+                className="mt-1"
+              />
+            </div>
+          )}
 
           <div className="grid grid-cols-3 gap-sm">
             <div>
@@ -269,31 +275,33 @@ const SpeciesItem = ({
                 ))}
               </Select>
             </div>
-            <div>
-              <Label
-                htmlFor={`activity-${key}`}
-                className="text-bark dark:text-sand text-xs"
-              >
-                Aktivitet
-              </Label>
-              <Select
-                id={`activity-${key}`}
-                value={species.activity || ""}
-                onChange={(e) => updateSpecies("activity", e.target.value)}
-                className="mt-1"
-              >
-                {!currentActivityInOptions && species.activity && (
-                  <option value={species.activity}>
-                    {species.activity} (egendefinert)
-                  </option>
-                )}
-                {activityOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </Select>
-            </div>
+            {showActivity && (
+              <div>
+                <Label
+                  htmlFor={`activity-${key}`}
+                  className="text-bark dark:text-sand text-xs"
+                >
+                  Aktivitet
+                </Label>
+                <Select
+                  id={`activity-${key}`}
+                  value={species.activity || ""}
+                  onChange={(e) => updateSpecies("activity", e.target.value)}
+                  className="mt-1"
+                >
+                  {!currentActivityInOptions && species.activity && (
+                    <option value={species.activity}>
+                      {species.activity} (egendefinert)
+                    </option>
+                  )}
+                  {activityOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+            )}
           </div>
 
           <div>

@@ -8,6 +8,7 @@ import { useMemo, useState } from "react";
 import { Species } from "../types/observation.ts";
 import { getAgeOptionsForTaxonGroup } from "../lib/ageOptions.ts";
 import { getActivityOptionsForTaxonGroup } from "../lib/activityOptions.ts";
+import { getMethodOptionsForTaxonGroup } from "../lib/methodOptions.ts";
 import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
 import { MobileDatePicker } from "@mui/x-date-pickers/MobileDatePicker";
 import dayjs from "dayjs";
@@ -44,6 +45,11 @@ const SpeciesItem = ({
     [species.species.TaxonGroup],
   );
 
+  const methodOptions = useMemo(
+    () => getMethodOptionsForTaxonGroup(species.species.TaxonGroup || ""),
+    [species.species.TaxonGroup],
+  );
+
   const genderOptions = [
     { value: "", label: "" },
     { value: "Hann", label: "Hann" },
@@ -59,6 +65,10 @@ const SpeciesItem = ({
 
   const currentActivityInOptions = activityOptions.some(
     (opt) => opt.value === (species.activity || ""),
+  );
+
+  const currentMethodInOptions = methodOptions.some(
+    (opt) => opt.value === (species.method || ""),
   );
 
   const currentGenderInOptions = genderOptions.some(
@@ -241,14 +251,23 @@ const SpeciesItem = ({
               >
                 Metode
               </Label>
-              <Input
+              <Select
                 id={`method-${key}`}
-                type="text"
-                placeholder="f.eks. sett"
                 value={species.method || ""}
                 onChange={(e) => updateSpecies("method", e.target.value)}
                 className="mt-1"
-              />
+              >
+                {!currentMethodInOptions && species.method && (
+                  <option value={species.method}>
+                    {species.method} (egendefinert)
+                  </option>
+                )}
+                {methodOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </Select>
             </div>
             <div>
               <Label

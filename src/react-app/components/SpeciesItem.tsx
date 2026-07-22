@@ -245,7 +245,7 @@ const SpeciesItem = ({
             </div>
           )}
 
-          <div className="grid grid-cols-3 gap-sm">
+          <div className={`grid gap-sm ${showActivity ? "grid-cols-3" : "grid-cols-2"}`}>
             <div>
               <Label
                 htmlFor={`age-${key}`}

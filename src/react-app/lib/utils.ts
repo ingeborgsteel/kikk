@@ -14,21 +14,19 @@ export function cn(...inputs: ClassValue[]) {
 export function getRecentSpecies(
   observations: Observation[],
   limit = 5,
+  excludeIds: Set<number | string> = new Set(),
 ): TaxonRecord[] {
-  // Create a map to track the most recent observation for each species
   const speciesMap = new Map<
     number | string,
     { species: TaxonRecord; date: string }
   >();
 
-  // Iterate through all observations
   for (const obs of observations) {
     for (const speciesObs of obs.species) {
       const speciesId =
         speciesObs.species.Id ?? speciesObs.species.PrefferedPopularname;
       const existingEntry = speciesMap.get(speciesId);
 
-      // Keep the species with the most recent observation date
       if (!existingEntry || obs.updatedAt > existingEntry.date) {
         speciesMap.set(speciesId, {
           species: speciesObs.species,
@@ -38,9 +36,14 @@ export function getRecentSpecies(
     }
   }
 
-  // Sort by date (most recent first) and take the top limit
   return Array.from(speciesMap.values())
     .sort((a, b) => b.date.localeCompare(a.date))
+    .filter(
+      (entry) =>
+        !excludeIds.has(
+          entry.species.Id ?? entry.species.PrefferedPopularname ?? "",
+        ),
+    )
     .slice(0, limit)
     .map((entry) => entry.species);
 }

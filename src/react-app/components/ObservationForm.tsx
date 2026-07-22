@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
+import { Select } from "./ui/select";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { useObservations } from "../context/ObservationsContext";
@@ -753,26 +754,22 @@ const ObservationForm = ({
                 >
                   Nøyaktighet (meter)
                 </Label>
-                <datalist id="uncertainty-options">
-                  {[1, 5, 10, 25, 50, 75, 100, 125, 150, 200, 250, 300, 400, 500, 750, 1000, 1500, 2000, 2500, 3000, 5000].map(
-                    (n) => (
-                      <option key={n} value={n} />
-                    ),
-                  )}
-                </datalist>
-                <Input
+                <Select
                   id="uncertainty"
-                  type="number"
-                  min="0"
-                  list="uncertainty-options"
-                  value={value}
+                  value={String(value ?? "")}
                   onChange={(e) =>
                     onChange(
                       e.target.value === "" ? null : Number(e.target.value),
                     )
                   }
                   className="mt-1"
-                />
+                >
+                  {[1, 5, 10, 25, 50, 75, 100, 125, 150, 200, 250, 300, 400, 500, 750, 1000, 1500, 2000, 2500, 3000, 5000].map(
+                    (n) => (
+                      <option key={n} value={n}>{n} m</option>
+                    ),
+                  )}
+                </Select>
               </div>
             )}
           />

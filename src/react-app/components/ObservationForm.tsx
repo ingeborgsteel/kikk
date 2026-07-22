@@ -38,6 +38,63 @@ const hasTime = (value?: string) => {
   return d.isValid() && (d.hour() !== 0 || d.minute() !== 0);
 };
 
+interface RecentSpeciesPickerProps {
+  observations: Observation[];
+  currentSpecies: CreateSpecies[];
+  visibleCount: number;
+  onAdd: (taxon: TaxonRecord) => void;
+  onShowMore: () => void;
+}
+
+const RecentSpeciesPicker = ({
+  observations,
+  currentSpecies,
+  visibleCount,
+  onAdd,
+  onShowMore,
+}: RecentSpeciesPickerProps) => {
+  const excludeIds = new Set<number | string>(
+    currentSpecies.map(
+      (added) => added.species.Id ?? added.species.PrefferedPopularname ?? "",
+    ),
+  );
+  const recentSpecies = getRecentSpecies(observations, 30, excludeIds);
+  if (recentSpecies.length === 0) return null;
+
+  const visible = recentSpecies.slice(0, visibleCount);
+  const canShowMore = visibleCount < recentSpecies.length;
+
+  return (
+    <div className="mt-2 mb-3">
+      <div className="text-xs text-slate mb-2">Nylig observerte arter:</div>
+      <div className="flex flex-wrap gap-1.5">
+        {visible.map((s) => (
+          <button
+            key={s.Id ?? s.PrefferedPopularname}
+            type="button"
+            onClick={() => onAdd(s)}
+            className="px-2 py-1 bg-moss/10 hover:bg-moss/20 dark:bg-moss/20 dark:hover:bg-moss/30 text-bark dark:text-sand text-xs rounded-md border border-moss/30 dark:border-moss/40 transition-colors flex items-center gap-1"
+            title={s.ValidScientificName}
+          >
+            <span className="font-medium">
+              {s.PrefferedPopularname ?? s.ValidScientificName}
+            </span>
+          </button>
+        ))}
+      </div>
+      {canShowMore && (
+        <button
+          type="button"
+          onClick={onShowMore}
+          className="mt-2 text-xs text-slate hover:text-bark dark:hover:text-sand transition-colors"
+        >
+          Vis flere...
+        </button>
+      )}
+    </div>
+  );
+};
+
 interface ObservationFormProps {
   observation?: Observation;
   onClose: () => void;
@@ -93,6 +150,7 @@ const ObservationForm = ({
   > | null>(null);
   const [visibleRecentSpeciesCount, setVisibleRecentSpeciesCount] =
     useState(10);
+
   const [startTimeEnabled, setStartTimeEnabled] = useState(
     !observation || hasTime(observation.startDate),
   );
@@ -106,19 +164,6 @@ const ObservationForm = ({
 
   const { data: searchResults = [], isLoading } = useSpeciesSearch(searchTerm);
 
-  // Get up to 30 most recent unique species from all observations
-  const recentSpecies = useMemo(
-    () => getRecentSpecies(observations, 30),
-    [observations],
-  );
-
-  const visibleRecentSpecies = useMemo(
-    () => recentSpecies.slice(0, visibleRecentSpeciesCount),
-    [recentSpecies, visibleRecentSpeciesCount],
-  );
-
-  const canShowMoreRecentSpecies =
-    visibleRecentSpeciesCount < Math.min(recentSpecies.length, 30);
 
   // Build set of previously observed species IDs for ranking boost
   const previouslyObservedIds = useMemo(() => {
@@ -511,42 +556,17 @@ const ObservationForm = ({
                     >
                       Søk etter art
                     </Label>
-                    {recentSpecies.length > 0 && (
-                      <div className="mt-2 mb-3">
-                        <div className="text-xs text-slate mb-2">
-                          Nylig observerte arter:
-                        </div>
-                        <div className="flex flex-wrap gap-1.5">
-                          {visibleRecentSpecies.map((species) => (
-                            <button
-                              key={species.Id ?? species.PrefferedPopularname}
-                              type="button"
-                              onClick={() => addSpecies(species)}
-                              className="px-2 py-1 bg-moss/10 hover:bg-moss/20 dark:bg-moss/20 dark:hover:bg-moss/30 text-bark dark:text-sand text-xs rounded-md border border-moss/30 dark:border-moss/40 transition-colors flex items-center gap-1"
-                              title={species.ValidScientificName}
-                            >
-                              <span className="font-medium">
-                                {species.PrefferedPopularname ??
-                                  species.ValidScientificName}
-                              </span>
-                            </button>
-                          ))}
-                        </div>
-                        {canShowMoreRecentSpecies && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setVisibleRecentSpeciesCount((prev) =>
-                                Math.min(prev + 10, 30),
-                              )
-                            }
-                            className="mt-2 text-xs text-slate hover:text-bark dark:hover:text-sand transition-colors"
-                          >
-                            Vis flere...
-                          </button>
-                        )}
-                      </div>
-                    )}
+                    <RecentSpeciesPicker
+                      observations={observations}
+                      currentSpecies={species}
+                      visibleCount={visibleRecentSpeciesCount}
+                      onAdd={addSpecies}
+                      onShowMore={() =>
+                        setVisibleRecentSpeciesCount((prev) =>
+                          Math.min(prev + 10, 30),
+                        )
+                      }
+                    />
 
                     <div className="relative mt-1">
                       <Input

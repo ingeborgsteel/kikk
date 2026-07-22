@@ -209,10 +209,6 @@ const TAXON_GROUP_ACTIVITY_MAP: Record<string, ActivityOption[]> = {
   nebbmunner: INVERTEBRATE_OPTIONS,
   edderkopper: INVERTEBRATE_OPTIONS,
   midd: INVERTEBRATE_OPTIONS,
-
-  ferskvannsfisker: FISH_OPTIONS,
-  saltvannsfisker: FISH_OPTIONS,
-  rundmunner: FISH_OPTIONS,
 };
 
 export function getActivityOptionsForTaxonGroup(
@@ -228,7 +224,9 @@ export function getActivityOptionsForTaxonGroup(
  * options list are counted (ignores legacy free-text entries).
  */
 export function getTopActivitiesForTaxonGroup(
-  observations: Array<{ species: Array<{ species: { TaxonGroup?: string }; activity?: string }> }>,
+  observations: Array<{
+    species: Array<{ species: { TaxonGroup?: string }; activity?: string }>;
+  }>,
   taxonGroup: string,
   topN = 6,
 ): ActivityOption[] {

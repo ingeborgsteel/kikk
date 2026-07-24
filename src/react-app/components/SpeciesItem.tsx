@@ -104,6 +104,7 @@ const SpeciesItem = ({
     "laver",
     "lav",
   ].includes(taxonGroup);
+  const showMethod = showActivity && showUnit;
 
   const currentMethodInOptions = methodOptions.some(
     (opt) => opt.value === (species.method || ""),
@@ -303,52 +304,54 @@ const SpeciesItem = ({
           </div>
 
           <div
-            className={`grid gap-sm ${showActivity ? "grid-cols-2" : "grid-cols-1"}`}
+            className={`grid gap-sm ${showActivity && showMethod ? "grid-cols-2" : "grid-cols-1"}`}
           >
-            <div>
-              <Label
-                htmlFor={`method-${key}`}
-                className="text-bark dark:text-sand text-xs"
-              >
-                Metode
-              </Label>
-              <Select
-                id={`method-${key}`}
-                value={species.method || ""}
-                onChange={(e) => updateSpecies("method", e.target.value)}
-                className="mt-1"
-              >
-                {!currentMethodInOptions && species.method && (
-                  <option value={species.method}>
-                    {species.method} (egendefinert)
-                  </option>
-                )}
-                {topMethods.length > 0 && (
-                  <optgroup label="Mest brukt">
-                    {topMethods.map((opt) => (
-                      <option key={`top-${opt.value}`} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
-                {topMethods.length > 0 && (
-                  <optgroup label="Alle">
-                    {methodOptions.map((opt) => (
+            {showMethod && (
+              <div>
+                <Label
+                  htmlFor={`method-${key}`}
+                  className="text-bark dark:text-sand text-xs"
+                >
+                  Metode
+                </Label>
+                <Select
+                  id={`method-${key}`}
+                  value={species.method || ""}
+                  onChange={(e) => updateSpecies("method", e.target.value)}
+                  className="mt-1"
+                >
+                  {!currentMethodInOptions && species.method && (
+                    <option value={species.method}>
+                      {species.method} (egendefinert)
+                    </option>
+                  )}
+                  {topMethods.length > 0 && (
+                    <optgroup label="Mest brukt">
+                      {topMethods.map((opt) => (
+                        <option key={`top-${opt.value}`} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {topMethods.length > 0 && (
+                    <optgroup label="Alle">
+                      {methodOptions.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {topMethods.length === 0 &&
+                    methodOptions.map((opt) => (
                       <option key={opt.value} value={opt.value}>
                         {opt.label}
                       </option>
                     ))}
-                  </optgroup>
-                )}
-                {topMethods.length === 0 &&
-                  methodOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-              </Select>
-            </div>
+                </Select>
+              </div>
+            )}
             {showActivity && (
               <div>
                 <Label

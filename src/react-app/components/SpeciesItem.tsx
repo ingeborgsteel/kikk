@@ -13,7 +13,10 @@ import {
   getActivityOptionsForTaxonGroup,
   getTopActivitiesForTaxonGroup,
 } from "../lib/activityOptions.ts";
-import { getMethodOptionsForTaxonGroup, getTopMethodsForTaxonGroup } from "../lib/methodOptions.ts";
+import {
+  getMethodOptionsForTaxonGroup,
+  getTopMethodsForTaxonGroup,
+} from "../lib/methodOptions.ts";
 import { getGenderOptionsForTaxonGroup } from "../lib/genderOptions.ts";
 import { getUnitOptionsForTaxonGroup } from "../lib/unitOptions.ts";
 import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
@@ -67,7 +70,11 @@ const SpeciesItem = ({
   );
 
   const topMethods = useMemo(
-    () => getTopMethodsForTaxonGroup(observations, species.species.TaxonGroup || ""),
+    () =>
+      getTopMethodsForTaxonGroup(
+        observations,
+        species.species.TaxonGroup || "",
+      ),
     [observations, species.species.TaxonGroup],
   );
 
@@ -94,6 +101,7 @@ const SpeciesItem = ({
     "sopper",
     "storsopper",
     "småsopper",
+    "laver",
     "lav",
   ].includes(taxonGroup);
 
@@ -162,15 +170,20 @@ const SpeciesItem = ({
               <Select
                 id={`taxon-group-${key}`}
                 value={taxonGroup}
-                onChange={(e) => updateTaxonGroup(e.target.value.toLowerCase().trim())}
+                onChange={(e) =>
+                  updateTaxonGroup(e.target.value.toLowerCase().trim())
+                }
                 className="mt-1"
               >
                 <option value="">—</option>
-                {taxonGroup && !TAXON_GROUP_PICKER_OPTIONS.some((o) => o.value === taxonGroup) && (
-                  <option value={taxonGroup}>{taxonGroup}</option>
-                )}
+                {taxonGroup &&
+                  !TAXON_GROUP_PICKER_OPTIONS.some(
+                    (o) => o.value === taxonGroup,
+                  ) && <option value={taxonGroup}>{taxonGroup}</option>}
                 {TAXON_GROUP_PICKER_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
                 ))}
               </Select>
             </div>
@@ -202,9 +215,36 @@ const SpeciesItem = ({
                 ))}
               </Select>
             </div>
+            <div>
+              <Label
+                htmlFor={`age-${key}`}
+                className="text-bark dark:text-sand text-xs"
+              >
+                Alder
+              </Label>
+              <Select
+                id={`age-${key}`}
+                value={species.age || ""}
+                onChange={(e) => updateSpecies("age", e.target.value)}
+                className="mt-1"
+              >
+                {!currentAgeInOptions && species.age && (
+                  <option value={species.age}>
+                    {species.age} (egendefinert)
+                  </option>
+                )}
+                {ageOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </Select>
+            </div>
           </div>
 
-          <div className={`grid gap-sm ${showUnit ? "grid-cols-2" : "grid-cols-1"}`}>
+          <div
+            className={`grid gap-sm ${showUnit ? "grid-cols-2" : "grid-cols-1"}`}
+          >
             <div>
               <Label
                 htmlFor={`count-${key}`}
@@ -262,32 +302,9 @@ const SpeciesItem = ({
             )}
           </div>
 
-          <div className={`grid gap-sm ${showActivity ? "grid-cols-3" : "grid-cols-2"}`}>
-            <div>
-              <Label
-                htmlFor={`age-${key}`}
-                className="text-bark dark:text-sand text-xs"
-              >
-                Alder
-              </Label>
-              <Select
-                id={`age-${key}`}
-                value={species.age || ""}
-                onChange={(e) => updateSpecies("age", e.target.value)}
-                className="mt-1"
-              >
-                {!currentAgeInOptions && species.age && (
-                  <option value={species.age}>
-                    {species.age} (egendefinert)
-                  </option>
-                )}
-                {ageOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </Select>
-            </div>
+          <div
+            className={`grid gap-sm ${showActivity ? "grid-cols-2" : "grid-cols-1"}`}
+          >
             <div>
               <Label
                 htmlFor={`method-${key}`}

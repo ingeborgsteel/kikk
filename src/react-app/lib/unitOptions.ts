@@ -120,6 +120,7 @@ const TAXON_GROUP_UNIT_MAP: Partial<Record<TaxonGroupKey, UnitOption[]>> = {
   storsopper: FUNGI_OPTIONS,
   småsopper: FUNGI_OPTIONS,
   laver: LICHEN_OPTIONS,
+  lav: LICHEN_OPTIONS,
   alger: ALGAE_OPTIONS,
   makroalger: ALGAE_OPTIONS,
 };

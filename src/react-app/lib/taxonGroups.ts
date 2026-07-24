@@ -46,6 +46,7 @@ export const TAXON_GROUP_KEYS = [
 
   // Lichens
   "laver",
+  "lav",
 
   // Algae
   "alger",

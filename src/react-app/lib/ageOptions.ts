@@ -145,6 +145,7 @@ const TAXON_GROUP_AGE_MAP: Record<TaxonGroupKey, AgeOption[]> = {
   storsopper: FUNGI_OPTIONS,
   småsopper: FUNGI_OPTIONS,
   laver: LICHEN_OPTIONS,
+  lav: LICHEN_OPTIONS,
   alger: ALGAE_OPTIONS,
   makroalger: ALGAE_OPTIONS,
 };

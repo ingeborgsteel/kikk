@@ -15,6 +15,7 @@ import {
 } from "../lib/activityOptions.ts";
 import { getMethodOptionsForTaxonGroup, getTopMethodsForTaxonGroup } from "../lib/methodOptions.ts";
 import { getGenderOptionsForTaxonGroup } from "../lib/genderOptions.ts";
+import { getUnitOptionsForTaxonGroup } from "../lib/unitOptions.ts";
 import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
 import { MobileDatePicker } from "@mui/x-date-pickers/MobileDatePicker";
 import dayjs from "dayjs";
@@ -102,6 +103,15 @@ const SpeciesItem = ({
 
   const currentGenderInOptions = genderOptions.some(
     (opt) => opt.value === (species.gender || ""),
+  );
+
+  const unitOptions = useMemo(
+    () => getUnitOptionsForTaxonGroup(species.species.TaxonGroup || ""),
+    [species.species.TaxonGroup],
+  );
+
+  const currentUnitInOptions = unitOptions.some(
+    (opt) => opt.value === (species.unit || ""),
   );
 
   return (
@@ -192,6 +202,9 @@ const SpeciesItem = ({
                 ))}
               </Select>
             </div>
+          </div>
+
+          <div className={`grid gap-sm ${showUnit ? "grid-cols-2" : "grid-cols-1"}`}>
             <div>
               <Label
                 htmlFor={`count-${key}`}
@@ -220,26 +233,34 @@ const SpeciesItem = ({
                 className="mt-1"
               />
             </div>
+            {showUnit && (
+              <div>
+                <Label
+                  htmlFor={`unit-${key}`}
+                  className="text-bark dark:text-sand text-xs"
+                >
+                  Enhet
+                </Label>
+                <Select
+                  id={`unit-${key}`}
+                  value={species.unit || ""}
+                  onChange={(e) => updateSpecies("unit", e.target.value)}
+                  className="mt-1"
+                >
+                  {!currentUnitInOptions && species.unit && (
+                    <option value={species.unit}>
+                      {species.unit} (egendefinert)
+                    </option>
+                  )}
+                  {unitOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+            )}
           </div>
-
-          {showUnit && (
-            <div>
-              <Label
-                htmlFor={`unit-${key}`}
-                className="text-bark dark:text-sand text-xs"
-              >
-                Enhet
-              </Label>
-              <Input
-                id={`unit-${key}`}
-                type="text"
-                placeholder="f.eks. individer, par"
-                value={species.unit || ""}
-                onChange={(e) => updateSpecies("unit", e.target.value)}
-                className="mt-1"
-              />
-            </div>
-          )}
 
           <div className={`grid gap-sm ${showActivity ? "grid-cols-3" : "grid-cols-2"}`}>
             <div>

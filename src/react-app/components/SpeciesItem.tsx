@@ -6,7 +6,19 @@ import { Input } from "./ui/input.tsx";
 import { Textarea } from "./ui/textarea.tsx";
 import { useMemo, useState } from "react";
 import { Species } from "../types/observation.ts";
+import { useObservations } from "../context/ObservationsContext.tsx";
 import { getAgeOptionsForTaxonGroup } from "../lib/ageOptions.ts";
+import { TAXON_GROUP_PICKER_OPTIONS } from "../lib/taxonGroups.ts";
+import {
+  getActivityOptionsForTaxonGroup,
+  getTopActivitiesForTaxonGroup,
+} from "../lib/activityOptions.ts";
+import {
+  getMethodOptionsForTaxonGroup,
+  getTopMethodsForTaxonGroup,
+} from "../lib/methodOptions.ts";
+import { getGenderOptionsForTaxonGroup } from "../lib/genderOptions.ts";
+import { getUnitOptionsForTaxonGroup } from "../lib/unitOptions.ts";
 import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
 import { MobileDatePicker } from "@mui/x-date-pickers/MobileDatePicker";
 import dayjs from "dayjs";
@@ -29,7 +41,7 @@ const SpeciesItem = ({
   removeSpecies,
   key,
 }: SpeciesItemProps) => {
-  const isFreeText = species.species.Id == null;
+  const { observations } = useObservations();
   const [isExpanded, setIsExpanded] = useState(false);
   const [countInput, setCountInput] = useState(String(species.count));
 
@@ -38,22 +50,77 @@ const SpeciesItem = ({
     [species.species.TaxonGroup],
   );
 
-  const genderOptions = [
-    { value: "", label: "" },
-    { value: "Hann", label: "Hann" },
-    { value: "Hunn", label: "Hunn" },
-    { value: "Hunnfarget", label: "Hunnfarget" },
-    { value: "I par", label: "I par" },
-    { value: "Arbeider", label: "Arbeider" },
-  ];
+  const activityOptions = useMemo(
+    () => getActivityOptionsForTaxonGroup(species.species.TaxonGroup || ""),
+    [species.species.TaxonGroup],
+  );
 
-  // Check if the current age value exists in the options (backward compatibility)
+  const topActivities = useMemo(
+    () =>
+      getTopActivitiesForTaxonGroup(
+        observations,
+        species.species.TaxonGroup || "",
+      ),
+    [observations, species.species.TaxonGroup],
+  );
+
+  const methodOptions = useMemo(
+    () => getMethodOptionsForTaxonGroup(species.species.TaxonGroup || ""),
+    [species.species.TaxonGroup],
+  );
+
+  const topMethods = useMemo(
+    () =>
+      getTopMethodsForTaxonGroup(
+        observations,
+        species.species.TaxonGroup || "",
+      ),
+    [observations, species.species.TaxonGroup],
+  );
+
+  const genderOptions = useMemo(
+    () => getGenderOptionsForTaxonGroup(species.species.TaxonGroup || ""),
+    [species.species.TaxonGroup],
+  );
+
   const currentAgeInOptions = ageOptions.some(
     (opt) => opt.value === (species.age || ""),
   );
 
+  const currentActivityInOptions = activityOptions.some(
+    (opt) => opt.value === (species.activity || ""),
+  );
+
+  const taxonGroup = (species.species.TaxonGroup || "").toLowerCase().trim();
+  const showUnit = taxonGroup !== "fugler";
+  const showActivity = ![
+    "karplanter",
+    "moser",
+    "bladmoser",
+    "levermoser",
+    "sopper",
+    "storsopper",
+    "småsopper",
+    "laver",
+    "lav",
+  ].includes(taxonGroup);
+  const showMethod = showActivity && showUnit;
+
+  const currentMethodInOptions = methodOptions.some(
+    (opt) => opt.value === (species.method || ""),
+  );
+
   const currentGenderInOptions = genderOptions.some(
     (opt) => opt.value === (species.gender || ""),
+  );
+
+  const unitOptions = useMemo(
+    () => getUnitOptionsForTaxonGroup(species.species.TaxonGroup || ""),
+    [species.species.TaxonGroup],
+  );
+
+  const currentUnitInOptions = unitOptions.some(
+    (opt) => opt.value === (species.unit || ""),
   );
 
   return (
@@ -94,36 +161,33 @@ const SpeciesItem = ({
                 {species.species.ValidScientificName}
               </div>
             )}
-            {isFreeText && (
-              <div className="mt-1">
-                <Label
-                  htmlFor={`taxon-group-${key}`}
-                  className="text-bark dark:text-sand text-xs"
-                >
-                  Artsgruppe
-                </Label>
-                <Select
-                  id={`taxon-group-${key}`}
-                  value={species.species.TaxonGroup || ""}
-                  onChange={(e) => updateTaxonGroup(e.target.value)}
-                  className="mt-1"
-                >
-                  <option value="">—</option>
-                  <option value="fugler">Fugler</option>
-                  <option value="pattedyr">Pattedyr</option>
-                  <option value="amfibier">Amfibier</option>
-                  <option value="reptiler">Reptiler</option>
-                  <option value="fisker">Fisker</option>
-                  <option value="insekter">Insekter</option>
-                  <option value="sommerfugler">Sommerfugler</option>
-                  <option value="edderkopper">Edderkopper</option>
-                  <option value="karplanter">Karplanter</option>
-                  <option value="moser">Moser</option>
-                  <option value="sopp">Sopp</option>
-                  <option value="lav">Lav</option>
-                </Select>
-              </div>
-            )}
+            <div className="mt-1">
+              <Label
+                htmlFor={`taxon-group-${key}`}
+                className="text-bark dark:text-sand text-xs"
+              >
+                Artsgruppe
+              </Label>
+              <Select
+                id={`taxon-group-${key}`}
+                value={taxonGroup}
+                onChange={(e) =>
+                  updateTaxonGroup(e.target.value.toLowerCase().trim())
+                }
+                className="mt-1"
+              >
+                <option value="">—</option>
+                {taxonGroup &&
+                  !TAXON_GROUP_PICKER_OPTIONS.some(
+                    (o) => o.value === taxonGroup,
+                  ) && <option value={taxonGroup}>{taxonGroup}</option>}
+                {TAXON_GROUP_PICKER_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </Select>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-sm">
@@ -154,6 +218,36 @@ const SpeciesItem = ({
             </div>
             <div>
               <Label
+                htmlFor={`age-${key}`}
+                className="text-bark dark:text-sand text-xs"
+              >
+                Alder
+              </Label>
+              <Select
+                id={`age-${key}`}
+                value={species.age || ""}
+                onChange={(e) => updateSpecies("age", e.target.value)}
+                className="mt-1"
+              >
+                {!currentAgeInOptions && species.age && (
+                  <option value={species.age}>
+                    {species.age} (egendefinert)
+                  </option>
+                )}
+                {ageOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </Select>
+            </div>
+          </div>
+
+          <div
+            className={`grid gap-sm ${showUnit ? "grid-cols-2" : "grid-cols-1"}`}
+          >
+            <div>
+              <Label
                 htmlFor={`count-${key}`}
                 className="text-bark dark:text-sand text-xs"
               >
@@ -180,83 +274,130 @@ const SpeciesItem = ({
                 className="mt-1"
               />
             </div>
+            {showUnit && (
+              <div>
+                <Label
+                  htmlFor={`unit-${key}`}
+                  className="text-bark dark:text-sand text-xs"
+                >
+                  Enhet
+                </Label>
+                <Select
+                  id={`unit-${key}`}
+                  value={species.unit || ""}
+                  onChange={(e) => updateSpecies("unit", e.target.value)}
+                  className="mt-1"
+                >
+                  {!currentUnitInOptions && species.unit && (
+                    <option value={species.unit}>
+                      {species.unit} (egendefinert)
+                    </option>
+                  )}
+                  {unitOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+            )}
           </div>
 
-          <div>
-            <Label
-              htmlFor={`unit-${key}`}
-              className="text-bark dark:text-sand text-xs"
-            >
-              Enhet
-            </Label>
-            <Input
-              id={`unit-${key}`}
-              type="text"
-              placeholder="f.eks. individer, par"
-              value={species.unit || ""}
-              onChange={(e) => updateSpecies("unit", e.target.value)}
-              className="mt-1"
-            />
-          </div>
-
-          <div className="grid grid-cols-3 gap-sm">
-            <div>
-              <Label
-                htmlFor={`age-${key}`}
-                className="text-bark dark:text-sand text-xs"
-              >
-                Alder
-              </Label>
-              <Select
-                id={`age-${key}`}
-                value={species.age || ""}
-                onChange={(e) => updateSpecies("age", e.target.value)}
-                className="mt-1"
-              >
-                {!currentAgeInOptions && species.age && (
-                  <option value={species.age}>
-                    {species.age} (egendefinert)
-                  </option>
-                )}
-                {ageOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </Select>
-            </div>
-            <div>
-              <Label
-                htmlFor={`method-${key}`}
-                className="text-bark dark:text-sand text-xs"
-              >
-                Metode
-              </Label>
-              <Input
-                id={`method-${key}`}
-                type="text"
-                placeholder="f.eks. sett"
-                value={species.method || ""}
-                onChange={(e) => updateSpecies("method", e.target.value)}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label
-                htmlFor={`activity-${key}`}
-                className="text-bark dark:text-sand text-xs"
-              >
-                Aktivitet
-              </Label>
-              <Input
-                id={`activity-${key}`}
-                type="text"
-                placeholder="f.eks. flyr"
-                value={species.activity || ""}
-                onChange={(e) => updateSpecies("activity", e.target.value)}
-                className="mt-1"
-              />
-            </div>
+          <div
+            className={`grid gap-sm ${showActivity && showMethod ? "grid-cols-2" : "grid-cols-1"}`}
+          >
+            {showMethod && (
+              <div>
+                <Label
+                  htmlFor={`method-${key}`}
+                  className="text-bark dark:text-sand text-xs"
+                >
+                  Metode
+                </Label>
+                <Select
+                  id={`method-${key}`}
+                  value={species.method || ""}
+                  onChange={(e) => updateSpecies("method", e.target.value)}
+                  className="mt-1"
+                >
+                  {!currentMethodInOptions && species.method && (
+                    <option value={species.method}>
+                      {species.method} (egendefinert)
+                    </option>
+                  )}
+                  {topMethods.length > 0 && (
+                    <optgroup label="Mest brukt">
+                      {topMethods.map((opt) => (
+                        <option key={`top-${opt.value}`} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {topMethods.length > 0 && (
+                    <optgroup label="Alle">
+                      {methodOptions.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {topMethods.length === 0 &&
+                    methodOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                </Select>
+              </div>
+            )}
+            {showActivity && (
+              <div>
+                <Label
+                  htmlFor={`activity-${key}`}
+                  className="text-bark dark:text-sand text-xs"
+                >
+                  Aktivitet
+                </Label>
+                <Select
+                  id={`activity-${key}`}
+                  value={species.activity || ""}
+                  onChange={(e) => updateSpecies("activity", e.target.value)}
+                  className="mt-1"
+                >
+                  {!currentActivityInOptions && species.activity && (
+                    <option value={species.activity}>
+                      {species.activity} (egendefinert)
+                    </option>
+                  )}
+                  {topActivities.length > 0 && (
+                    <optgroup label="Mest brukt">
+                      {topActivities.map((opt) => (
+                        <option key={`top-${opt.value}`} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {topActivities.length > 0 && (
+                    <optgroup label="Alle">
+                      {activityOptions.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {topActivities.length === 0 &&
+                    activityOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                </Select>
+              </div>
+            )}
           </div>
 
           <div>

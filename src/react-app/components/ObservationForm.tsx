@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
+import { Select } from "./ui/select";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { useObservations } from "../context/ObservationsContext";
@@ -739,10 +740,10 @@ const ObservationForm = ({
             name={"uncertaintyRadius"}
             control={control}
             rules={{
-              required: "Usikkerhetsradius er påkrevd",
+              required: "Nøyaktighet er påkrevd",
               min: {
                 value: 0,
-                message: "Usikkerhetsradius kan ikke være negativ",
+                message: "Nøyaktighet kan ikke være negativ",
               },
             }}
             render={({ field: { value, onChange } }) => (
@@ -751,20 +752,24 @@ const ObservationForm = ({
                   htmlFor="uncertainty"
                   className="text-bark dark:text-sand"
                 >
-                  Usikkerhetsradius (meter)
+                  Nøyaktighet (meter)
                 </Label>
-                <Input
+                <Select
                   id="uncertainty"
-                  type="number"
-                  min="0"
-                  value={value}
+                  value={String(value ?? "")}
                   onChange={(e) =>
                     onChange(
                       e.target.value === "" ? null : Number(e.target.value),
                     )
                   }
                   className="mt-1"
-                />
+                >
+                  {[1, 5, 10, 25, 50, 75, 100, 125, 150, 200, 250, 300, 400, 500, 750, 1000, 1500, 2000, 2500, 3000, 5000].map(
+                    (n) => (
+                      <option key={n} value={n}>{n} m</option>
+                    ),
+                  )}
+                </Select>
               </div>
             )}
           />

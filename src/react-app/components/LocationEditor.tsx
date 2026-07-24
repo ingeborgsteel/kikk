@@ -196,7 +196,7 @@ export const LocationEditor = ({
       </p>
       {typeof uncertaintyRadius === "number" && uncertaintyRadius > 0 && (
         <p className="text-sm text-slate mt-1 mb-2">
-          Usikkerhetsradius: approx. {uncertaintyRadius} m
+          Nøyaktighet: approx. {uncertaintyRadius} m
         </p>
       )}
       <div

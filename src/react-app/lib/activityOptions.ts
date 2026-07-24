@@ -34,7 +34,7 @@ const BIRD_OPTIONS: ActivityOption[] = [
   o("Stasjonær"),
   o("Overflygende"),
   o("Næringssøkende"),
-  o("Ved føring"),
+  o("Ved fôring"),
   o("Sang/spill, ikke hekking"),
   o("Lokkelyd, øvrige lyder"),
   o("Revir, ikke hekking"),
@@ -104,11 +104,6 @@ const FISH_OPTIONS: ActivityOption[] = [
   o("Paring (eller seremonier)"),
   o("Gyting"),
   o("Vandrende"),
-  o("Svømmende"),
-  o("Trekkende"),
-  o("Dvale"),
-  o("Trafikkdrept"),
-  o("Fragment"),
 ];
 
 const INVERTEBRATE_OPTIONS: ActivityOption[] = [

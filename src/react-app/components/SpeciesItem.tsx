@@ -14,6 +14,7 @@ import {
   getTopActivitiesForTaxonGroup,
 } from "../lib/activityOptions.ts";
 import { getMethodOptionsForTaxonGroup, getTopMethodsForTaxonGroup } from "../lib/methodOptions.ts";
+import { getGenderOptionsForTaxonGroup } from "../lib/genderOptions.ts";
 import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
 import { MobileDatePicker } from "@mui/x-date-pickers/MobileDatePicker";
 import dayjs from "dayjs";
@@ -69,14 +70,10 @@ const SpeciesItem = ({
     [observations, species.species.TaxonGroup],
   );
 
-  const genderOptions = [
-    { value: "", label: "" },
-    { value: "Hann", label: "Hann" },
-    { value: "Hunn", label: "Hunn" },
-    { value: "Hunnfarget", label: "Hunnfarget" },
-    { value: "I par", label: "I par" },
-    { value: "Arbeider", label: "Arbeider" },
-  ];
+  const genderOptions = useMemo(
+    () => getGenderOptionsForTaxonGroup(species.species.TaxonGroup || ""),
+    [species.species.TaxonGroup],
+  );
 
   const currentAgeInOptions = ageOptions.some(
     (opt) => opt.value === (species.age || ""),

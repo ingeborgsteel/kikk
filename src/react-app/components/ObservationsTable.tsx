@@ -6,7 +6,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPinned, Trash2 } from "lucide-react";
 import { Observation, Species } from "../types/observation.ts";
 import { useObservations } from "../context/ObservationsContext.tsx";
 import { Input } from "./ui/input.tsx";
@@ -291,7 +291,17 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
           const { observation, rowId } = row.original;
           return textCell(
             `${rowId}-locationName`,
-            observation.locationName,
+            observation.locationName && (
+              <span className="flex items-center gap-1.5 truncate">
+                {observation.locationId && (
+                  <MapPinned
+                    size={14}
+                    className="shrink-0 text-violet-600 dark:text-violet-400"
+                  />
+                )}
+                <span className="truncate">{observation.locationName}</span>
+              </span>
+            ),
             <AutoFocusInput
               defaultValue={observation.locationName || ""}
               onBlur={(e) => {

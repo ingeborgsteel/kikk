@@ -167,7 +167,6 @@ const ObservationForm = ({
 
   const { data: searchResults = [], isLoading } = useSpeciesSearch(searchTerm);
 
-
   // Build set of previously observed species IDs for ranking boost
   const previouslyObservedIds = useMemo(() => {
     const ids = new Set<number>();
@@ -608,7 +607,7 @@ const ObservationForm = ({
 
                       {/* Search Results Dropdown */}
                       {showResults && searchTerm.length >= 2 && (
-                        <div className="absolute z-10 w-full mt-1 bg-white dark:bg-bark border-2 border-slate-border dark:border-slate rounded-md shadow-custom-lg max-h-60 overflow-y-auto">
+                        <div className="absolute z-[1100] w-full mt-1 bg-white dark:bg-bark border-2 border-slate-border dark:border-slate rounded-md shadow-custom-lg max-h-60 overflow-y-auto">
                           {rankedResults.map((species) => (
                             <button
                               key={species.Id ?? species.PrefferedPopularname}
@@ -794,11 +793,14 @@ const ObservationForm = ({
                   }
                   className="mt-1"
                 >
-                  {[1, 5, 10, 25, 50, 75, 100, 125, 150, 200, 250, 300, 400, 500, 750, 1000, 1500, 2000, 2500, 3000, 5000].map(
-                    (n) => (
-                      <option key={n} value={n}>{n} m</option>
-                    ),
-                  )}
+                  {[
+                    1, 5, 10, 25, 50, 75, 100, 125, 150, 200, 250, 300, 400,
+                    500, 750, 1000, 1500, 2000, 2500, 3000, 5000,
+                  ].map((n) => (
+                    <option key={n} value={n}>
+                      {n} m
+                    </option>
+                  ))}
                 </Select>
               </div>
             )}

@@ -331,10 +331,12 @@ const ObservationForm = ({
         toStorageDateTimeValue(data.startDate, startTimeEnabled) ||
         dayjs().format(DATE_TIME_STORAGE_FORMAT);
       const endDate = toStorageDateTimeValue(data.endDate, endTimeEnabled);
+      const species = sortSpeciesByTaxonGroupAndName(data.species);
 
       if (data.id) {
         updateObservation({
           ...data,
+          species,
           locationId: presetLocation?.id ?? data.locationId,
           startDate,
           endDate,
@@ -343,6 +345,7 @@ const ObservationForm = ({
         if (data.observerName) sessionObserverName = data.observerName;
         addObservation({
           ...data,
+          species,
           locationId: presetLocation?.id,
           startDate,
           endDate,
@@ -376,6 +379,7 @@ const ObservationForm = ({
       if (data.observerName) sessionObserverName = data.observerName;
       addObservation({
         ...data,
+        species: sortSpeciesByTaxonGroupAndName(data.species),
         locationId: presetLocation?.id,
         startDate,
         endDate,

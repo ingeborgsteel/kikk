@@ -19,8 +19,7 @@ import {
 } from "../lib/methodOptions.ts";
 import { getGenderOptionsForTaxonGroup } from "../lib/genderOptions.ts";
 import { getUnitOptionsForTaxonGroup } from "../lib/unitOptions.ts";
-import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
-import { MobileDatePicker } from "@mui/x-date-pickers/MobileDatePicker";
+import { DatePicker } from "./ui/date-picker.tsx";
 import dayjs from "dayjs";
 
 interface SpeciesItemProps {
@@ -429,28 +428,13 @@ const SpeciesItem = ({
             >
               Utsett publisering til
             </Label>
-            <DemoContainer components={["DatePicker"]}>
-              <MobileDatePicker
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    sx: {
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: 10,
-                        background: "white",
-                        "& fieldset": { border: "none" },
-                        "&:hover fieldset": { border: "none" },
-                        "&.Mui-focused fieldset": { border: "none" },
-                      },
-                    },
-                  },
-                  field: { clearable: true },
-                }}
-                sx={{ background: "white" }}
+            <div className="mt-1">
+              <DatePicker
+                id={`delay-publication-${key}`}
                 value={
                   species.delayPublication
                     ? dayjs(species.delayPublication)
-                    : undefined
+                    : null
                 }
                 onChange={(newValue) =>
                   updateSpecies(
@@ -458,8 +442,9 @@ const SpeciesItem = ({
                     newValue ? newValue.toISOString() : undefined,
                   )
                 }
+                onClear={() => updateSpecies("delayPublication", undefined)}
               />
-            </DemoContainer>
+            </div>
           </div>
         </div>
       )}

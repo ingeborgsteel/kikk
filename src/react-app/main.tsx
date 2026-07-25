@@ -13,9 +13,6 @@ import { AuthProvider } from "./context/AuthContext.tsx";
 import { LocationsProvider } from "./context/LocationsContext.tsx";
 import { MapPreferencesProvider } from "./context/MapPreferencesContext.tsx";
 import { GeolocationProvider } from "./context/GeolocationContext.tsx";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { nbNO } from "@mui/x-date-pickers/locales";
 import "dayjs/locale/nb";
 
 const queryClient = new QueryClient({
@@ -40,21 +37,19 @@ createRoot(document.getElementById("root")!).render(
       persistOptions={{ persister, maxAge: 1000 * 60 * 60 * 24 * 7 }}
     >
       <AuthProvider>
-        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="nb" localeText={nbNO.components.MuiLocalizationProvider.defaultProps.localeText}>
-          <ThemeProvider>
-            <GeolocationProvider>
-              <MapPreferencesProvider>
-                <LocationsProvider>
-                  <ObservationsProvider>
-                    <BrowserRouter>
-                      <App />
-                    </BrowserRouter>
-                  </ObservationsProvider>
-                </LocationsProvider>
-              </MapPreferencesProvider>
-            </GeolocationProvider>
-          </ThemeProvider>
-        </LocalizationProvider>
+        <ThemeProvider>
+          <GeolocationProvider>
+            <MapPreferencesProvider>
+              <LocationsProvider>
+                <ObservationsProvider>
+                  <BrowserRouter>
+                    <App />
+                  </BrowserRouter>
+                </ObservationsProvider>
+              </LocationsProvider>
+            </MapPreferencesProvider>
+          </GeolocationProvider>
+        </ThemeProvider>
       </AuthProvider>
     </PersistQueryClientProvider>
   </StrictMode>,

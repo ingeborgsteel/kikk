@@ -26,9 +26,8 @@ import SpeciesItem from "./SpeciesItem.tsx";
 import { Check, MapPin, MapPinned, Search, User } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 import dayjs from "dayjs";
-import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
-import { MobileDatePicker } from "@mui/x-date-pickers/MobileDatePicker";
-import { MobileTimePicker } from "@mui/x-date-pickers/MobileTimePicker";
+import { DatePicker } from "./ui/date-picker.tsx";
+import { TimePicker } from "./ui/time-picker.tsx";
 
 const DATE_TIME_STORAGE_FORMAT = "YYYY-MM-DDTHH:mm:ssZ";
 
@@ -831,64 +830,30 @@ const ObservationForm = ({
                   >
                     Startdato
                   </Label>
-                  <DemoContainer components={["DatePicker"]}>
-                    <MobileDatePicker
-                      slotProps={{
-                        textField: {
-                          fullWidth: true,
-                          sx: {
-                            "& .MuiOutlinedInput-root": {
-                              borderRadius: 10,
-                              background: "white",
-                              "& fieldset": { border: "none" },
-                              "&:hover fieldset": { border: "none" },
-                              "&.Mui-focused fieldset": { border: "none" },
-                            },
-                          },
-                        },
-                      }}
-                      sx={{ background: "white" }}
+                  <div className="mt-1">
+                    <DatePicker
+                      id="startDate"
                       value={value ? dayjs(value) : null}
                       onChange={(newValue) =>
                         newValue && onChange(newValue.toISOString())
                       }
                     />
-                  </DemoContainer>
+                  </div>
                   {startTimeEnabled ? (
                     <div className="mt-2 flex items-center gap-2">
-                      <DemoContainer components={["TimePicker"]}>
-                        <MobileTimePicker
-                          slotProps={{
-                            textField: {
-                              fullWidth: true,
-                              sx: {
-                                "& .MuiOutlinedInput-root": {
-                                  borderRadius: 10,
-                                  background: "white",
-                                  "& fieldset": { border: "none" },
-                                  "&:hover fieldset": { border: "none" },
-                                  "&.Mui-focused fieldset": { border: "none" },
-                                },
-                              },
-                            },
-                          }}
-                          sx={{ background: "white" }}
-                          ampm={false}
-                          value={value ? dayjs(value) : null}
-                          onChange={(newValue) => {
-                            if (newValue) {
-                              const base = value ? dayjs(value) : dayjs();
-                              onChange(
-                                base
-                                  .hour(newValue.hour())
-                                  .minute(newValue.minute())
-                                  .second(0)
-                                  .toISOString(),
-                              );
-                            }
-                          }}
-                        />
-                      </DemoContainer>
+                      <TimePicker
+                        value={value ? dayjs(value) : null}
+                        onChange={(hour, minute) => {
+                          const base = value ? dayjs(value) : dayjs();
+                          onChange(
+                            base
+                              .hour(hour)
+                              .minute(minute)
+                              .second(0)
+                              .toISOString(),
+                          );
+                        }}
+                      />
                       <button
                         type="button"
                         onClick={() => setStartTimeEnabled(false)}
@@ -918,65 +883,30 @@ const ObservationForm = ({
                   <Label htmlFor="endDate" className="text-bark dark:text-sand">
                     Sluttdato
                   </Label>
-                  <DemoContainer components={["DatePicker"]}>
-                    <MobileDatePicker
-                      slotProps={{
-                        textField: {
-                          fullWidth: true,
-                          sx: {
-                            "& .MuiOutlinedInput-root": {
-                              borderRadius: 5,
-                              background: "white",
-                              "& fieldset": { border: "none" },
-                              "&:hover fieldset": { border: "none" },
-                              "&.Mui-focused fieldset": { border: "none" },
-                            },
-                          },
-                        },
-                        field: { clearable: true },
-                      }}
-                      sx={{ background: "white" }}
+                  <div className="mt-1">
+                    <DatePicker
+                      id="endDate"
                       value={value ? dayjs(value) : null}
                       onChange={(newValue) =>
                         onChange(newValue ? newValue.toISOString() : null)
                       }
                     />
-                  </DemoContainer>
+                  </div>
                   {endTimeEnabled ? (
                     <div className="mt-2 flex items-center gap-2">
-                      <DemoContainer components={["TimePicker"]}>
-                        <MobileTimePicker
-                          slotProps={{
-                            textField: {
-                              fullWidth: true,
-                              sx: {
-                                "& .MuiOutlinedInput-root": {
-                                  borderRadius: 5,
-                                  background: "white",
-                                  "& fieldset": { border: "none" },
-                                  "&:hover fieldset": { border: "none" },
-                                  "&.Mui-focused fieldset": { border: "none" },
-                                },
-                              },
-                            },
-                          }}
-                          sx={{ background: "white" }}
-                          ampm={false}
-                          value={value ? dayjs(value) : null}
-                          onChange={(newValue) => {
-                            if (newValue) {
-                              const base = value ? dayjs(value) : dayjs();
-                              onChange(
-                                base
-                                  .hour(newValue.hour())
-                                  .minute(newValue.minute())
-                                  .second(0)
-                                  .toISOString(),
-                              );
-                            }
-                          }}
-                        />
-                      </DemoContainer>
+                      <TimePicker
+                        value={value ? dayjs(value) : null}
+                        onChange={(hour, minute) => {
+                          const base = value ? dayjs(value) : dayjs();
+                          onChange(
+                            base
+                              .hour(hour)
+                              .minute(minute)
+                              .second(0)
+                              .toISOString(),
+                          );
+                        }}
+                      />
                       <button
                         type="button"
                         onClick={() => setEndTimeEnabled(false)}

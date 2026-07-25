@@ -33,7 +33,7 @@ const Combobox = ({
   value,
   onChange,
   options,
-  placeholder = "Velg...",
+  placeholder = "",
   searchPlaceholder = "Søk...",
   emptyText = "Ingen treff",
   customEntryLabel = (input) => `Bruk "${input}"`,

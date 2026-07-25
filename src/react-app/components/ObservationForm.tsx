@@ -609,24 +609,12 @@ const ObservationForm = ({
                       {/* Search Results Dropdown */}
                       {showResults && searchTerm.length >= 2 && (
                         <div className="absolute z-10 w-full mt-1 bg-white dark:bg-bark border-2 border-slate-border dark:border-slate rounded-md shadow-custom-lg max-h-60 overflow-y-auto">
-                          <button
-                            type="button"
-                            onClick={() => addFreeTextSpecies(searchTerm)}
-                            className="w-full text-left px-3 py-2 hover:bg-sand dark:hover:bg-forest transition-colors border-b border-slate-border dark:border-slate"
-                          >
-                            <div className="font-medium text-bark dark:text-sand">
-                              {searchTerm}
-                            </div>
-                            <div className="text-xs text-slate">
-                              Legg til egendefinert art
-                            </div>
-                          </button>
                           {rankedResults.map((species) => (
                             <button
                               key={species.Id ?? species.PrefferedPopularname}
                               type="button"
                               onClick={() => addSpecies(species)}
-                              className="w-full text-left px-3 py-2 hover:bg-sand dark:hover:bg-forest transition-colors border-b border-slate-border dark:border-slate last:border-b-0"
+                              className="w-full text-left px-3 py-2 hover:bg-sand dark:hover:bg-forest transition-colors border-b border-slate-border dark:border-slate"
                             >
                               <div className="font-medium text-bark dark:text-sand">
                                 {species.PrefferedPopularname}
@@ -636,6 +624,18 @@ const ObservationForm = ({
                               </div>
                             </button>
                           ))}
+                          <button
+                            type="button"
+                            onClick={() => addFreeTextSpecies(searchTerm)}
+                            className="w-full text-left px-3 py-2 hover:bg-sand dark:hover:bg-forest transition-colors border-b border-slate-border dark:border-slate last:border-b-0"
+                          >
+                            <div className="font-medium text-bark dark:text-sand">
+                              {searchTerm}
+                            </div>
+                            <div className="text-xs text-slate">
+                              Legg til egendefinert art
+                            </div>
+                          </button>
                         </div>
                       )}
                     </div>

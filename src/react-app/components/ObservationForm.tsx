@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { Select } from "./ui/select";
+import { Combobox } from "./ui/combobox";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { useObservations } from "../context/ObservationsContext";
@@ -23,7 +23,7 @@ import { Modal } from "./ui/Modal.tsx";
 import { TaxonRecord } from "../types/artsdatabanken.ts";
 import { CreateSpecies } from "../api/observations.ts";
 import SpeciesItem from "./SpeciesItem.tsx";
-import { Check, MapPin, MapPinned, User } from "lucide-react";
+import { Check, MapPin, MapPinned, Search, User } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 import dayjs from "dayjs";
 import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
@@ -590,11 +590,16 @@ const ObservationForm = ({
                     />
 
                     <div className="relative mt-1">
+                      <Search
+                        size={16}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate pointer-events-none"
+                      />
                       <Input
                         id="species-search"
                         type="text"
                         placeholder="Skriv for å søke..."
                         value={searchTerm}
+                        className="pl-8"
                         onChange={(e) => {
                           setSearchTerm(e.target.value);
                           setShowResults(true);
@@ -615,41 +620,43 @@ const ObservationForm = ({
                         }}
                       />
                       {isLoading && (
-                        <div className="absolute right-3 top-3">
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
                           <div className="w-4 h-4 border-2 border-slate-border border-t-rust rounded-full animate-spin"></div>
                         </div>
                       )}
 
                       {/* Search Results Dropdown */}
                       {showResults && searchTerm.length >= 2 && (
-                        <div className="absolute z-[1100] w-full mt-1 bg-white dark:bg-bark border-2 border-slate-border dark:border-slate rounded-md shadow-custom-lg max-h-60 overflow-y-auto">
-                          {rankedResults.map((species) => (
+                        <div className="absolute z-[1100] w-full mt-1 bg-white dark:bg-bark border-2 border-slate-border dark:border-slate rounded-md shadow-custom-lg overflow-hidden">
+                          <div className="max-h-60 overflow-y-auto p-1">
+                            {rankedResults.map((species) => (
+                              <button
+                                key={species.Id ?? species.PrefferedPopularname}
+                                type="button"
+                                onClick={() => addSpecies(species)}
+                                className="w-full text-left px-2 py-2 rounded-md hover:bg-sand dark:hover:bg-forest transition-colors"
+                              >
+                                <div className="font-medium text-sm text-bark dark:text-sand">
+                                  {species.PrefferedPopularname}
+                                </div>
+                                <div className="text-sm text-slate italic">
+                                  {species.ValidScientificName}
+                                </div>
+                              </button>
+                            ))}
                             <button
-                              key={species.Id ?? species.PrefferedPopularname}
                               type="button"
-                              onClick={() => addSpecies(species)}
-                              className="w-full text-left px-3 py-2 hover:bg-sand dark:hover:bg-forest transition-colors border-b border-slate-border dark:border-slate"
+                              onClick={() => addFreeTextSpecies(searchTerm)}
+                              className="w-full text-left px-2 py-2 rounded-md hover:bg-sand dark:hover:bg-forest transition-colors"
                             >
-                              <div className="font-medium text-bark dark:text-sand">
-                                {species.PrefferedPopularname}
+                              <div className="font-medium text-sm text-bark dark:text-sand">
+                                {searchTerm}
                               </div>
-                              <div className="text-sm text-slate italic">
-                                {species.ValidScientificName}
+                              <div className="text-xs text-slate">
+                                Legg til egendefinert art
                               </div>
                             </button>
-                          ))}
-                          <button
-                            type="button"
-                            onClick={() => addFreeTextSpecies(searchTerm)}
-                            className="w-full text-left px-3 py-2 hover:bg-sand dark:hover:bg-forest transition-colors border-b border-slate-border dark:border-slate last:border-b-0"
-                          >
-                            <div className="font-medium text-bark dark:text-sand">
-                              {searchTerm}
-                            </div>
-                            <div className="text-xs text-slate">
-                              Legg til egendefinert art
-                            </div>
-                          </button>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -798,25 +805,16 @@ const ObservationForm = ({
                 >
                   Nøyaktighet (meter)
                 </Label>
-                <Select
+                <Combobox
                   id="uncertainty"
                   value={String(value ?? "")}
-                  onChange={(e) =>
-                    onChange(
-                      e.target.value === "" ? null : Number(e.target.value),
-                    )
-                  }
-                  className="mt-1"
-                >
-                  {[
+                  onChange={(v) => onChange(v === "" ? null : Number(v))}
+                  options={[
                     1, 5, 10, 25, 50, 75, 100, 125, 150, 200, 250, 300, 400,
                     500, 750, 1000, 1500, 2000, 2500, 3000, 5000,
-                  ].map((n) => (
-                    <option key={n} value={n}>
-                      {n} m
-                    </option>
-                  ))}
-                </Select>
+                  ].map((n) => ({ value: String(n), label: `${n} m` }))}
+                  className="mt-1"
+                />
               </div>
             )}
           />

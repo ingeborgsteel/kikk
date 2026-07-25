@@ -1,7 +1,7 @@
 import { Button } from "./ui/button.tsx";
 import { X } from "lucide-react";
 import { Label } from "./ui/label.tsx";
-import { Select } from "./ui/select.tsx";
+import { Combobox } from "./ui/combobox.tsx";
 import { Input } from "./ui/input.tsx";
 import { Textarea } from "./ui/textarea.tsx";
 import { useMemo, useState } from "react";
@@ -83,14 +83,6 @@ const SpeciesItem = ({
     [species.species.TaxonGroup],
   );
 
-  const currentAgeInOptions = ageOptions.some(
-    (opt) => opt.value === (species.age || ""),
-  );
-
-  const currentActivityInOptions = activityOptions.some(
-    (opt) => opt.value === (species.activity || ""),
-  );
-
   const taxonGroup = (species.species.TaxonGroup || "").toLowerCase().trim();
   const showUnit = taxonGroup !== "fugler";
   const showActivity = ![
@@ -106,27 +98,15 @@ const SpeciesItem = ({
   ].includes(taxonGroup);
   const showMethod = showActivity && showUnit;
 
-  const currentMethodInOptions = methodOptions.some(
-    (opt) => opt.value === (species.method || ""),
-  );
-
-  const currentGenderInOptions = genderOptions.some(
-    (opt) => opt.value === (species.gender || ""),
-  );
-
   const unitOptions = useMemo(
     () => getUnitOptionsForTaxonGroup(species.species.TaxonGroup || ""),
     [species.species.TaxonGroup],
   );
 
-  const currentUnitInOptions = unitOptions.some(
-    (opt) => opt.value === (species.unit || ""),
-  );
-
   return (
-    <div className="bg-white dark:bg-forest rounded-md border-2 border-moss hover:bg-sand/50 dark:hover:bg-bark/50 transition-colors">
+    <div className="bg-white dark:bg-forest rounded-md border-2 border-moss transition-colors">
       <div
-        className="flex items-center justify-between p-sm cursor-pointer"
+        className="flex items-center justify-between p-sm cursor-pointer hover:bg-moss/10 dark:hover:bg-sand/10"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex-1 min-w-0">
@@ -168,25 +148,14 @@ const SpeciesItem = ({
               >
                 Artsgruppe
               </Label>
-              <Select
+              <Combobox
                 id={`taxon-group-${key}`}
                 value={taxonGroup}
-                onChange={(e) =>
-                  updateTaxonGroup(e.target.value.toLowerCase().trim())
-                }
+                onChange={(v) => updateTaxonGroup(v.toLowerCase().trim())}
+                options={TAXON_GROUP_PICKER_OPTIONS}
+                placeholder="—"
                 className="mt-1"
-              >
-                <option value="">—</option>
-                {taxonGroup &&
-                  !TAXON_GROUP_PICKER_OPTIONS.some(
-                    (o) => o.value === taxonGroup,
-                  ) && <option value={taxonGroup}>{taxonGroup}</option>}
-                {TAXON_GROUP_PICKER_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </Select>
+              />
             </div>
           </div>
 
@@ -198,23 +167,13 @@ const SpeciesItem = ({
               >
                 Kjønn
               </Label>
-              <Select
+              <Combobox
                 id={`gender-${key}`}
-                value={species.gender}
-                onChange={(e) => updateSpecies("gender", e.target.value)}
+                value={species.gender || ""}
+                onChange={(v) => updateSpecies("gender", v)}
+                options={genderOptions}
                 className="mt-1"
-              >
-                {!currentGenderInOptions && species.gender && (
-                  <option value={species.gender}>
-                    {species.gender} (egendefinert)
-                  </option>
-                )}
-                {genderOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </Select>
+              />
             </div>
             <div>
               <Label
@@ -223,23 +182,13 @@ const SpeciesItem = ({
               >
                 Alder
               </Label>
-              <Select
+              <Combobox
                 id={`age-${key}`}
                 value={species.age || ""}
-                onChange={(e) => updateSpecies("age", e.target.value)}
+                onChange={(v) => updateSpecies("age", v)}
+                options={ageOptions}
                 className="mt-1"
-              >
-                {!currentAgeInOptions && species.age && (
-                  <option value={species.age}>
-                    {species.age} (egendefinert)
-                  </option>
-                )}
-                {ageOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </Select>
+              />
             </div>
           </div>
 
@@ -282,23 +231,13 @@ const SpeciesItem = ({
                 >
                   Enhet
                 </Label>
-                <Select
+                <Combobox
                   id={`unit-${key}`}
                   value={species.unit || ""}
-                  onChange={(e) => updateSpecies("unit", e.target.value)}
+                  onChange={(v) => updateSpecies("unit", v)}
+                  options={unitOptions}
                   className="mt-1"
-                >
-                  {!currentUnitInOptions && species.unit && (
-                    <option value={species.unit}>
-                      {species.unit} (egendefinert)
-                    </option>
-                  )}
-                  {unitOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </Select>
+                />
               </div>
             )}
           </div>
@@ -314,42 +253,26 @@ const SpeciesItem = ({
                 >
                   Metode
                 </Label>
-                <Select
+                <Combobox
                   id={`method-${key}`}
                   value={species.method || ""}
-                  onChange={(e) => updateSpecies("method", e.target.value)}
+                  onChange={(v) => updateSpecies("method", v)}
+                  options={
+                    topMethods.length > 0
+                      ? [
+                          ...topMethods.map((opt) => ({
+                            ...opt,
+                            group: "Mest brukt",
+                          })),
+                          ...methodOptions.map((opt) => ({
+                            ...opt,
+                            group: "Alle",
+                          })),
+                        ]
+                      : methodOptions
+                  }
                   className="mt-1"
-                >
-                  {!currentMethodInOptions && species.method && (
-                    <option value={species.method}>
-                      {species.method} (egendefinert)
-                    </option>
-                  )}
-                  {topMethods.length > 0 && (
-                    <optgroup label="Mest brukt">
-                      {topMethods.map((opt) => (
-                        <option key={`top-${opt.value}`} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </optgroup>
-                  )}
-                  {topMethods.length > 0 && (
-                    <optgroup label="Alle">
-                      {methodOptions.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </optgroup>
-                  )}
-                  {topMethods.length === 0 &&
-                    methodOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                </Select>
+                />
               </div>
             )}
             {showActivity && (
@@ -360,42 +283,26 @@ const SpeciesItem = ({
                 >
                   Aktivitet
                 </Label>
-                <Select
+                <Combobox
                   id={`activity-${key}`}
                   value={species.activity || ""}
-                  onChange={(e) => updateSpecies("activity", e.target.value)}
+                  onChange={(v) => updateSpecies("activity", v)}
+                  options={
+                    topActivities.length > 0
+                      ? [
+                          ...topActivities.map((opt) => ({
+                            ...opt,
+                            group: "Mest brukt",
+                          })),
+                          ...activityOptions.map((opt) => ({
+                            ...opt,
+                            group: "Alle",
+                          })),
+                        ]
+                      : activityOptions
+                  }
                   className="mt-1"
-                >
-                  {!currentActivityInOptions && species.activity && (
-                    <option value={species.activity}>
-                      {species.activity} (egendefinert)
-                    </option>
-                  )}
-                  {topActivities.length > 0 && (
-                    <optgroup label="Mest brukt">
-                      {topActivities.map((opt) => (
-                        <option key={`top-${opt.value}`} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </optgroup>
-                  )}
-                  {topActivities.length > 0 && (
-                    <optgroup label="Alle">
-                      {activityOptions.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </optgroup>
-                  )}
-                  {topActivities.length === 0 &&
-                    activityOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                </Select>
+                />
               </div>
             )}
           </div>

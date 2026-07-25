@@ -237,6 +237,7 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
       columnHelper.display({
         id: "remove",
         header: "",
+        size: 44,
         cell: ({ row }) => {
           const { observation, speciesIndex } = row.original;
           return (
@@ -254,6 +255,7 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
       columnHelper.display({
         id: "speciesName",
         header: "Artsnavn",
+        size: 200,
         cell: ({ row }) => {
           const { observation, species, speciesIndex, rowId } = row.original;
           return textCell(
@@ -284,6 +286,7 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
       columnHelper.display({
         id: "locationName",
         header: "Lokalitetsnavn",
+        size: 180,
         cell: ({ row }) => {
           const { observation, rowId } = row.original;
           return textCell(
@@ -306,6 +309,7 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
       columnHelper.display({
         id: "uncertaintyRadius",
         header: "Nøyaktighet",
+        size: 130,
         cell: ({ row }) => {
           const { observation, rowId } = row.original;
           return textCell(
@@ -334,6 +338,7 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
       columnHelper.display({
         id: "count",
         header: "Antall",
+        size: 100,
         cell: ({ row }) => {
           const { observation, species, speciesIndex, rowId } = row.original;
           return textCell(
@@ -361,6 +366,7 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
       columnHelper.display({
         id: "unit",
         header: "Enhet",
+        size: 150,
         cell: ({ row }) => {
           const { observation, species, speciesIndex, rowId } = row.original;
           const taxonGroup = species.species.TaxonGroup || "";
@@ -380,6 +386,7 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
       columnHelper.display({
         id: "gender",
         header: "Kjønn",
+        size: 150,
         cell: ({ row }) => {
           const { observation, species, speciesIndex, rowId } = row.original;
           const taxonGroup = species.species.TaxonGroup || "";
@@ -401,6 +408,7 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
       columnHelper.display({
         id: "age",
         header: "Alder",
+        size: 150,
         cell: ({ row }) => {
           const { observation, species, speciesIndex, rowId } = row.original;
           const taxonGroup = species.species.TaxonGroup || "";
@@ -420,6 +428,7 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
       columnHelper.display({
         id: "method",
         header: "Metode",
+        size: 180,
         cell: ({ row }) => {
           const { observation, species, speciesIndex, rowId } = row.original;
           const taxonGroup = species.species.TaxonGroup || "";
@@ -441,6 +450,7 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
       columnHelper.display({
         id: "activity",
         header: "Aktivitet",
+        size: 180,
         cell: ({ row }) => {
           const { observation, species, speciesIndex, rowId } = row.original;
           const taxonGroup = species.species.TaxonGroup || "";
@@ -462,6 +472,7 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
       columnHelper.display({
         id: "startDateDate",
         header: "Fra dato",
+        size: 140,
         cell: ({ row }) => {
           const { observation, rowId } = row.original;
           const cellKey = `${rowId}-startDateDate`;
@@ -491,6 +502,7 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
       columnHelper.display({
         id: "startDateTime",
         header: "Fra klokkeslett",
+        size: 130,
         cell: ({ row }) => {
           const { observation, rowId } = row.original;
           return textCell(
@@ -519,6 +531,7 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
       columnHelper.display({
         id: "endDateDate",
         header: "Til dato",
+        size: 140,
         cell: ({ row }) => {
           const { observation, rowId } = row.original;
           const cellKey = `${rowId}-endDateDate`;
@@ -554,6 +567,7 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
       columnHelper.display({
         id: "endDateTime",
         header: "Til klokkeslett",
+        size: 130,
         cell: ({ row }) => {
           const { observation, rowId } = row.original;
           return textCell(
@@ -581,6 +595,7 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
       columnHelper.display({
         id: "speciesComment",
         header: "Kommentar",
+        size: 220,
         cell: ({ row }) => {
           const { observation, species, speciesIndex, rowId } = row.original;
           return textCell(
@@ -603,6 +618,7 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
       columnHelper.display({
         id: "privateComment",
         header: "Privat kommentar",
+        size: 220,
         cell: ({ row }) => {
           const { observation, species, speciesIndex, rowId } = row.original;
           return textCell(
@@ -630,6 +646,7 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
       columnHelper.display({
         id: "observerName",
         header: "Medobservatør",
+        size: 170,
         cell: ({ row }) => {
           const { observation, rowId } = row.original;
           return textCell(
@@ -652,6 +669,7 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
       columnHelper.display({
         id: "project",
         header: "Prosjekt",
+        size: 150,
         cell: ({ row }) => {
           const { observation, rowId } = row.original;
           return textCell(
@@ -674,6 +692,7 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
       columnHelper.display({
         id: "notRediscovered",
         header: "Ikke gjenfunnet",
+        size: 130,
         cell: ({ row }) => {
           const { observation, species, speciesIndex } = row.original;
           return toggleCell(species.notRediscovered, () =>
@@ -689,6 +708,7 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
       columnHelper.display({
         id: "notFound",
         header: "Ikke funnet",
+        size: 120,
         cell: ({ row }) => {
           const { observation, species, speciesIndex } = row.original;
           return toggleCell(species.notFound, () =>
@@ -704,6 +724,7 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
       columnHelper.display({
         id: "secondHand",
         header: "Andrehånds",
+        size: 120,
         cell: ({ row }) => {
           const { observation, species, speciesIndex } = row.original;
           return toggleCell(species.secondHand, () =>
@@ -719,6 +740,7 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
       columnHelper.display({
         id: "uncertainIdentification",
         header: "Usikker artsbestemming",
+        size: 160,
         cell: ({ row }) => {
           const { observation, species, speciesIndex } = row.original;
           return toggleCell(species.uncertainIdentification, () =>
@@ -734,6 +756,7 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
       columnHelper.display({
         id: "hide",
         header: "Skjul",
+        size: 100,
         cell: ({ row }) => {
           const { observation, species, speciesIndex } = row.original;
           return toggleCell(species.hide, () =>
@@ -756,7 +779,15 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
   return (
     <div className="border-2 border-moss/40 rounded-md overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="border-collapse w-full">
+        <table className="border-collapse table-fixed">
+          <colgroup>
+            {table.getFlatHeaders().map((header) => (
+              <col
+                key={header.id}
+                style={{ width: header.getSize() }}
+              />
+            ))}
+          </colgroup>
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>

@@ -20,6 +20,12 @@ interface ComboboxProps {
   emptyText?: string;
   customEntryLabel?: (input: string) => string;
   className?: string;
+  /** Render without the boxy trigger chrome, for use inside dense contexts like table cells. */
+  variant?: "default" | "ghost";
+  /** Open the popover as soon as this mounts, e.g. for click-to-edit table cells. */
+  defaultOpen?: boolean;
+  /** Fires whenever the popover opens/closes, so a caller can e.g. exit edit mode on close. */
+  onOpenChange?: (open: boolean) => void;
 }
 
 const Combobox = ({
@@ -32,9 +38,18 @@ const Combobox = ({
   emptyText = "Ingen treff",
   customEntryLabel = (input) => `Bruk "${input}"`,
   className,
+  variant = "default",
+  defaultOpen = false,
+  onOpenChange,
 }: ComboboxProps) => {
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = React.useState(defaultOpen);
   const [search, setSearch] = React.useState("");
+
+  const handleOpenChange = (next: boolean) => {
+    setOpen(next);
+    if (!next) setSearch("");
+    onOpenChange?.(next);
+  };
 
   const selectedOption = options.find((opt) => opt.value === value);
   const displayLabel = selectedOption?.label ?? value;
@@ -60,16 +75,11 @@ const Combobox = ({
     onChange(next);
     setSearch("");
     setOpen(false);
+    onOpenChange?.(false);
   };
 
   return (
-    <PopoverPrimitive.Root
-      open={open}
-      onOpenChange={(next) => {
-        setOpen(next);
-        if (!next) setSearch("");
-      }}
-    >
+    <PopoverPrimitive.Root open={open} onOpenChange={handleOpenChange}>
       <PopoverPrimitive.Trigger asChild>
         <button
           id={id}
@@ -77,7 +87,9 @@ const Combobox = ({
           role="combobox"
           aria-expanded={open}
           className={cn(
-            "flex h-10 w-full items-center justify-between rounded-md border-2 border-slate-border bg-white dark:bg-bark dark:border-slate text-bark dark:text-sand px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-moss focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+            variant === "ghost"
+              ? "flex h-full w-full items-center justify-between gap-1 rounded-none bg-transparent px-2 py-1.5 text-sm text-bark dark:text-sand outline-none focus-visible:outline-none focus-visible:ring-0"
+              : "flex h-10 w-full items-center justify-between rounded-md border-2 border-slate-border bg-white dark:bg-bark dark:border-slate text-bark dark:text-sand px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-moss focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
             className,
           )}
         >
@@ -86,7 +98,9 @@ const Combobox = ({
           >
             {displayLabel || placeholder}
           </span>
-          <ChevronDown size={16} className="shrink-0 opacity-50 ml-2" />
+          {variant !== "ghost" && (
+            <ChevronDown size={16} className="shrink-0 opacity-50 ml-2" />
+          )}
         </button>
       </PopoverPrimitive.Trigger>
       <PopoverPrimitive.Portal>

@@ -52,8 +52,15 @@ const headerClass =
 
 const formatDate = (value?: string) =>
   value && dayjs(value).isValid() ? dayjs(value).format("DD.MM.YYYY") : "";
-const formatTime = (value?: string) =>
-  value && dayjs(value).isValid() ? dayjs(value).format("HH:mm") : "";
+const formatTime = (value?: string) => {
+  if (!value) return "";
+  const parsed = dayjs(value);
+  if (!parsed.isValid()) return "";
+  // 00:00 means no time was ever set on this observation — show blank
+  // rather than a misleading midnight timestamp.
+  if (parsed.hour() === 0 && parsed.minute() === 0) return "";
+  return parsed.format("HH:mm");
+};
 
 const columnHelper = createColumnHelper<FlatRow>();
 

@@ -31,6 +31,10 @@ import { twMerge } from "tailwind-merge";
 
 const ROWS_PER_PAGE = 20;
 
+// Pin the first three columns (actions, species name, locality name) so
+// they stay visible while scrolling horizontally through the rest of the table.
+const STICKY_COLUMN_IDS = ["actions", "speciesName", "locationName"];
+
 interface ObservationsTableProps {
   observations: Observation[];
   onEdit: (id: string) => void;
@@ -906,6 +910,25 @@ const ObservationsTable = ({
     getRowId: (row) => row.rowId,
   });
 
+  const stickyLeftOffsets = useMemo(() => {
+    const offsets: Record<string, number> = {};
+    let left = 0;
+    for (const header of table.getFlatHeaders()) {
+      if (!STICKY_COLUMN_IDS.includes(header.column.id)) continue;
+      offsets[header.column.id] = left;
+      left += header.getSize();
+    }
+    return offsets;
+  }, [table]);
+
+  const getStickyStyle = (columnId: string): React.CSSProperties | undefined =>
+    columnId in stickyLeftOffsets
+      ? { position: "sticky", left: stickyLeftOffsets[columnId], zIndex: 5 }
+      : undefined;
+
+  const lastStickyColumnId =
+    STICKY_COLUMN_IDS[STICKY_COLUMN_IDS.length - 1];
+
   return (
     <div className="border-2 border-moss/40 rounded-sm overflow-hidden">
       <div className="overflow-x-auto">
@@ -919,7 +942,17 @@ const ObservationsTable = ({
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <th key={header.id} className={headerClass}>
+                  <th
+                    key={header.id}
+                    className={twMerge(
+                      headerClass,
+                      header.column.id in stickyLeftOffsets &&
+                        "z-20 bg-sand dark:bg-forest",
+                      header.column.id === lastStickyColumnId &&
+                        "border-r-2 border-moss/40",
+                    )}
+                    style={getStickyStyle(header.column.id)}
+                  >
                     {flexRender(
                       header.column.columnDef.header,
                       header.getContext(),
@@ -933,15 +966,21 @@ const ObservationsTable = ({
             {table.getRowModel().rows.map((row) => {
               const { isNewGroup, groupParity } = row.original;
               return (
-                <tr
-                  key={row.id}
-                  className={twMerge(
-                    groupParity ? "bg-moss/5 dark:bg-moss/10" : "",
-                    isNewGroup ? "border-t-2 border-moss/40" : "",
-                  )}
-                >
+                <tr key={row.id}>
                   {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className={cellClass}>
+                    <td
+                      key={cell.id}
+                      className={twMerge(
+                        cellClass,
+                        groupParity
+                          ? "bg-sand dark:bg-forest-dark"
+                          : "bg-white dark:bg-bark",
+                        cell.column.id === lastStickyColumnId &&
+                          "border-r-2 border-moss/40",
+                        isNewGroup && "border-t-2 border-moss/40",
+                      )}
+                      style={getStickyStyle(cell.column.id)}
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext(),

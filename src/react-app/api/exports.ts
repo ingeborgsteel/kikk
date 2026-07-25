@@ -15,6 +15,7 @@ export async function generateExcelFromObservations(
 
   // Define columns
   worksheet.columns = [
+    { header: "Skjul", key: "hide", width: 10 },
     { header: "Artsnavn", key: "speciesName", width: 25 },
     { header: "Lokalitetsnavn", key: "locationName", width: 20 },
     { header: "Nord", key: "latitude", width: 12 },
@@ -30,7 +31,7 @@ export async function generateExcelFromObservations(
     { header: "Til klokkeslett", key: "endTime", width: 20 },
     { header: "Fra dato", key: "startDate", width: 20 },
     { header: "Til dato", key: "endDate", width: 20 },
-    { header: "Skjul funn til dato", key: "hide", width: 10 },
+    { header: "Utsett publisering", key: "delayPublication", width: 20 },
     { header: "Kommentar (synlig for alle)", key: "comment", width: 30 },
     { header: "Privat kommentar", key: "privateComment", width: 30 },
     { header: "Ikke gjenfunnet", key: "notRediscovered", width: 10 },
@@ -45,7 +46,6 @@ export async function generateExcelFromObservations(
     { header: "Biotop", key: "biotope", width: 20 },
     { header: "Beskrivelse av biotop", key: "biotopeDescription", width: 30 },
     { header: "Prosjekt", key: "project", width: 20 },
-    { header: "Utsett publisering", key: "delayPublication", width: 20 },
     { header: "Medobservatør", key: "observerName", width: 20 },
     { header: "Sist eksportert", key: "lastExportedAt", width: 20 },
   ];
@@ -236,7 +236,7 @@ export function getExportFileUrl(filePath: string): string {
 }
 
 const parseBoolean = (bool?: boolean) => {
-  return bool ? "✓" : bool === false ? "x" : undefined;
+  return bool ? "x" : undefined;
 };
 
 const parseDateString = (date?: string) => {

@@ -1,7 +1,7 @@
 import { Button } from "./ui/button.tsx";
 import { X } from "lucide-react";
 import { Label } from "./ui/label.tsx";
-import { Select } from "./ui/select.tsx";
+import { Combobox } from "./ui/combobox.tsx";
 import { Input } from "./ui/input.tsx";
 import { Textarea } from "./ui/textarea.tsx";
 import { useMemo, useState } from "react";
@@ -19,9 +19,9 @@ import {
 } from "../lib/methodOptions.ts";
 import { getGenderOptionsForTaxonGroup } from "../lib/genderOptions.ts";
 import { getUnitOptionsForTaxonGroup } from "../lib/unitOptions.ts";
-import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
-import { MobileDatePicker } from "@mui/x-date-pickers/MobileDatePicker";
+import { DatePicker } from "./ui/date-picker.tsx";
 import dayjs from "dayjs";
+import { twMerge } from "tailwind-merge";
 
 interface SpeciesItemProps {
   species: Species;
@@ -31,7 +31,7 @@ interface SpeciesItemProps {
   ) => void;
   updateTaxonGroup: (taxonGroup: string) => void;
   removeSpecies: () => void;
-  key: number;
+  itemKey: number;
 }
 
 const SpeciesItem = ({
@@ -39,7 +39,7 @@ const SpeciesItem = ({
   updateSpecies,
   updateTaxonGroup,
   removeSpecies,
-  key,
+  itemKey,
 }: SpeciesItemProps) => {
   const { observations } = useObservations();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -83,14 +83,6 @@ const SpeciesItem = ({
     [species.species.TaxonGroup],
   );
 
-  const currentAgeInOptions = ageOptions.some(
-    (opt) => opt.value === (species.age || ""),
-  );
-
-  const currentActivityInOptions = activityOptions.some(
-    (opt) => opt.value === (species.activity || ""),
-  );
-
   const taxonGroup = (species.species.TaxonGroup || "").toLowerCase().trim();
   const showUnit = taxonGroup !== "fugler";
   const showActivity = ![
@@ -106,27 +98,15 @@ const SpeciesItem = ({
   ].includes(taxonGroup);
   const showMethod = showActivity && showUnit;
 
-  const currentMethodInOptions = methodOptions.some(
-    (opt) => opt.value === (species.method || ""),
-  );
-
-  const currentGenderInOptions = genderOptions.some(
-    (opt) => opt.value === (species.gender || ""),
-  );
-
   const unitOptions = useMemo(
     () => getUnitOptionsForTaxonGroup(species.species.TaxonGroup || ""),
     [species.species.TaxonGroup],
   );
 
-  const currentUnitInOptions = unitOptions.some(
-    (opt) => opt.value === (species.unit || ""),
-  );
-
   return (
-    <div className="bg-white dark:bg-forest rounded-md border-2 border-moss hover:bg-sand/50 dark:hover:bg-bark/50 transition-colors">
+    <div className="bg-white dark:bg-forest rounded-md border-2 border-moss transition-colors">
       <div
-        className="flex items-center justify-between p-sm cursor-pointer"
+        className="flex items-center justify-between p-sm cursor-pointer hover:bg-moss/10 dark:hover:bg-sand/10"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex-1 min-w-0">
@@ -163,83 +143,52 @@ const SpeciesItem = ({
             )}
             <div className="mt-1">
               <Label
-                htmlFor={`taxon-group-${key}`}
+                htmlFor={`taxon-group-${itemKey}`}
                 className="text-bark dark:text-sand text-xs"
               >
                 Artsgruppe
               </Label>
-              <Select
-                id={`taxon-group-${key}`}
+              <Combobox
+                id={`taxon-group-${itemKey}`}
                 value={taxonGroup}
-                onChange={(e) =>
-                  updateTaxonGroup(e.target.value.toLowerCase().trim())
-                }
+                onChange={(v) => updateTaxonGroup(v.toLowerCase().trim())}
+                options={TAXON_GROUP_PICKER_OPTIONS}
+                placeholder="—"
                 className="mt-1"
-              >
-                <option value="">—</option>
-                {taxonGroup &&
-                  !TAXON_GROUP_PICKER_OPTIONS.some(
-                    (o) => o.value === taxonGroup,
-                  ) && <option value={taxonGroup}>{taxonGroup}</option>}
-                {TAXON_GROUP_PICKER_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </Select>
+              />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-sm">
             <div>
               <Label
-                htmlFor={`gender-${key}`}
+                htmlFor={`gender-${itemKey}`}
                 className="text-bark dark:text-sand text-xs"
               >
                 Kjønn
               </Label>
-              <Select
-                id={`gender-${key}`}
-                value={species.gender}
-                onChange={(e) => updateSpecies("gender", e.target.value)}
+              <Combobox
+                id={`gender-${itemKey}`}
+                value={species.gender || ""}
+                onChange={(v) => updateSpecies("gender", v)}
+                options={genderOptions}
                 className="mt-1"
-              >
-                {!currentGenderInOptions && species.gender && (
-                  <option value={species.gender}>
-                    {species.gender} (egendefinert)
-                  </option>
-                )}
-                {genderOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </Select>
+              />
             </div>
             <div>
               <Label
-                htmlFor={`age-${key}`}
+                htmlFor={`age-${itemKey}`}
                 className="text-bark dark:text-sand text-xs"
               >
                 Alder
               </Label>
-              <Select
-                id={`age-${key}`}
+              <Combobox
+                id={`age-${itemKey}`}
                 value={species.age || ""}
-                onChange={(e) => updateSpecies("age", e.target.value)}
+                onChange={(v) => updateSpecies("age", v)}
+                options={ageOptions}
                 className="mt-1"
-              >
-                {!currentAgeInOptions && species.age && (
-                  <option value={species.age}>
-                    {species.age} (egendefinert)
-                  </option>
-                )}
-                {ageOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </Select>
+              />
             </div>
           </div>
 
@@ -248,13 +197,13 @@ const SpeciesItem = ({
           >
             <div>
               <Label
-                htmlFor={`count-${key}`}
+                htmlFor={`count-${itemKey}`}
                 className="text-bark dark:text-sand text-xs"
               >
                 Antall
               </Label>
               <Input
-                id={`count-${key}`}
+                id={`count-${itemKey}`}
                 type="number"
                 min="1"
                 value={countInput}
@@ -277,28 +226,18 @@ const SpeciesItem = ({
             {showUnit && (
               <div>
                 <Label
-                  htmlFor={`unit-${key}`}
+                  htmlFor={`unit-${itemKey}`}
                   className="text-bark dark:text-sand text-xs"
                 >
                   Enhet
                 </Label>
-                <Select
-                  id={`unit-${key}`}
+                <Combobox
+                  id={`unit-${itemKey}`}
                   value={species.unit || ""}
-                  onChange={(e) => updateSpecies("unit", e.target.value)}
+                  onChange={(v) => updateSpecies("unit", v)}
+                  options={unitOptions}
                   className="mt-1"
-                >
-                  {!currentUnitInOptions && species.unit && (
-                    <option value={species.unit}>
-                      {species.unit} (egendefinert)
-                    </option>
-                  )}
-                  {unitOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </Select>
+                />
               </div>
             )}
           </div>
@@ -309,106 +248,74 @@ const SpeciesItem = ({
             {showMethod && (
               <div>
                 <Label
-                  htmlFor={`method-${key}`}
+                  htmlFor={`method-${itemKey}`}
                   className="text-bark dark:text-sand text-xs"
                 >
                   Metode
                 </Label>
-                <Select
-                  id={`method-${key}`}
+                <Combobox
+                  id={`method-${itemKey}`}
                   value={species.method || ""}
-                  onChange={(e) => updateSpecies("method", e.target.value)}
+                  onChange={(v) => updateSpecies("method", v)}
+                  options={
+                    topMethods.length > 0
+                      ? [
+                          ...topMethods.map((opt) => ({
+                            ...opt,
+                            group: "Mest brukt",
+                          })),
+                          ...methodOptions.map((opt) => ({
+                            ...opt,
+                            group: "Alle",
+                          })),
+                        ]
+                      : methodOptions
+                  }
                   className="mt-1"
-                >
-                  {!currentMethodInOptions && species.method && (
-                    <option value={species.method}>
-                      {species.method} (egendefinert)
-                    </option>
-                  )}
-                  {topMethods.length > 0 && (
-                    <optgroup label="Mest brukt">
-                      {topMethods.map((opt) => (
-                        <option key={`top-${opt.value}`} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </optgroup>
-                  )}
-                  {topMethods.length > 0 && (
-                    <optgroup label="Alle">
-                      {methodOptions.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </optgroup>
-                  )}
-                  {topMethods.length === 0 &&
-                    methodOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                </Select>
+                />
               </div>
             )}
             {showActivity && (
               <div>
                 <Label
-                  htmlFor={`activity-${key}`}
+                  htmlFor={`activity-${itemKey}`}
                   className="text-bark dark:text-sand text-xs"
                 >
                   Aktivitet
                 </Label>
-                <Select
-                  id={`activity-${key}`}
+                <Combobox
+                  id={`activity-${itemKey}`}
                   value={species.activity || ""}
-                  onChange={(e) => updateSpecies("activity", e.target.value)}
+                  onChange={(v) => updateSpecies("activity", v)}
+                  options={
+                    topActivities.length > 0
+                      ? [
+                          ...topActivities.map((opt) => ({
+                            ...opt,
+                            group: "Mest brukt",
+                          })),
+                          ...activityOptions.map((opt) => ({
+                            ...opt,
+                            group: "Alle",
+                          })),
+                        ]
+                      : activityOptions
+                  }
                   className="mt-1"
-                >
-                  {!currentActivityInOptions && species.activity && (
-                    <option value={species.activity}>
-                      {species.activity} (egendefinert)
-                    </option>
-                  )}
-                  {topActivities.length > 0 && (
-                    <optgroup label="Mest brukt">
-                      {topActivities.map((opt) => (
-                        <option key={`top-${opt.value}`} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </optgroup>
-                  )}
-                  {topActivities.length > 0 && (
-                    <optgroup label="Alle">
-                      {activityOptions.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </optgroup>
-                  )}
-                  {topActivities.length === 0 &&
-                    activityOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                </Select>
+                />
               </div>
             )}
           </div>
 
           <div>
             <Label
-              htmlFor={`species-comment-${key}`}
+              htmlFor={`species-comment-${itemKey}`}
               className="text-bark dark:text-sand text-xs"
             >
               Notat (synlig for alle)
             </Label>
             <Textarea
-              id={`species-comment-${key}`}
+              id={`species-comment-${itemKey}`}
               placeholder="Notater om denne spesifikke observasjonen..."
               value={species.comment}
               onChange={(e) => updateSpecies("comment", e.target.value)}
@@ -419,13 +326,13 @@ const SpeciesItem = ({
 
           <div>
             <Label
-              htmlFor={`private-comment-${key}`}
+              htmlFor={`private-comment-${itemKey}`}
               className="text-bark dark:text-sand text-xs"
             >
               Privat kommentar
             </Label>
             <Textarea
-              id={`private-comment-${key}`}
+              id={`private-comment-${itemKey}`}
               placeholder="Private notater..."
               value={species.privateComment || ""}
               onChange={(e) => updateSpecies("privateComment", e.target.value)}
@@ -436,13 +343,13 @@ const SpeciesItem = ({
 
           <div>
             <Label
-              htmlFor={`private-collection-${key}`}
+              htmlFor={`private-collection-${itemKey}`}
               className="text-bark dark:text-sand text-xs"
             >
               Privat samling
             </Label>
             <Input
-              id={`private-collection-${key}`}
+              id={`private-collection-${itemKey}`}
               type="text"
               placeholder="Navn på samlingseier"
               value={species.privateCollection || ""}
@@ -453,97 +360,50 @@ const SpeciesItem = ({
             />
           </div>
 
-          <div className="flex flex-wrap gap-sm">
-            <label className="flex items-center gap-sm cursor-pointer">
-              <input
-                type="checkbox"
-                checked={species.notRediscovered || false}
-                onChange={(e) =>
-                  updateSpecies("notRediscovered", e.target.checked)
-                }
-                className="w-4 h-4"
-              />
-              <span className="text-xs text-bark dark:text-sand">
-                Ikke gjenfunnet
-              </span>
-            </label>
-            <label className="flex items-center gap-sm cursor-pointer">
-              <input
-                type="checkbox"
-                checked={species.notFound || false}
-                onChange={(e) => updateSpecies("notFound", e.target.checked)}
-                className="w-4 h-4"
-              />
-              <span className="text-xs text-bark dark:text-sand">
-                Ikke funnet
-              </span>
-            </label>
-            <label className="flex items-center gap-sm cursor-pointer">
-              <input
-                type="checkbox"
-                checked={species.secondHand || false}
-                onChange={(e) => updateSpecies("secondHand", e.target.checked)}
-                className="w-4 h-4"
-              />
-              <span className="text-xs text-bark dark:text-sand">
-                Andrehånds
-              </span>
-            </label>
-            <label className="flex items-center gap-sm cursor-pointer">
-              <input
-                type="checkbox"
-                checked={species.uncertainIdentification || false}
-                onChange={(e) =>
-                  updateSpecies("uncertainIdentification", e.target.checked)
-                }
-                className="w-4 h-4"
-              />
-              <span className="text-xs text-bark dark:text-sand">
-                Usikker artsbestemming
-              </span>
-            </label>
-            <label className="flex items-center gap-sm cursor-pointer">
-              <input
-                type="checkbox"
-                checked={species.hide || false}
-                onChange={(e) => updateSpecies("hide", e.target.checked)}
-                className="w-4 h-4"
-              />
-              <span className="text-xs text-bark dark:text-sand">
-                Skjul fra Artsobservasjoner
-              </span>
-            </label>
+          <div className="flex flex-wrap gap-1.5">
+            {(
+              [
+                ["notRediscovered", "Ikke gjenfunnet"],
+                ["notFound", "Ikke funnet"],
+                ["secondHand", "Andrehånds"],
+                ["uncertainIdentification", "Usikker artsbestemming"],
+                ["hide", "Skjul fra Artsobservasjoner"],
+              ] as const
+            ).map(([field, label]) => {
+              const active = species[field] || false;
+              return (
+                <button
+                  key={field}
+                  type="button"
+                  onClick={() => updateSpecies(field, !active)}
+                  aria-pressed={active}
+                  className={twMerge(
+                    "px-3 py-2 rounded-md border text-xs transition-colors",
+                    active
+                      ? "bg-moss text-white border-moss"
+                      : "bg-white dark:bg-bark text-bark dark:text-sand border-slate-border dark:border-slate hover:bg-sand dark:hover:bg-forest",
+                  )}
+                >
+                  {label}
+                </button>
+              );
+            })}
           </div>
 
           <div>
             <Label
-              htmlFor={`delay-publication-${key}`}
+              htmlFor={`delay-publication-${itemKey}`}
               className="text-bark dark:text-sand text-xs"
             >
               Utsett publisering til
             </Label>
-            <DemoContainer components={["DatePicker"]}>
-              <MobileDatePicker
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    sx: {
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: 10,
-                        background: "white",
-                        "& fieldset": { border: "none" },
-                        "&:hover fieldset": { border: "none" },
-                        "&.Mui-focused fieldset": { border: "none" },
-                      },
-                    },
-                  },
-                  field: { clearable: true },
-                }}
-                sx={{ background: "white" }}
+            <div className="mt-1">
+              <DatePicker
+                id={`delay-publication-${itemKey}`}
                 value={
                   species.delayPublication
                     ? dayjs(species.delayPublication)
-                    : undefined
+                    : null
                 }
                 onChange={(newValue) =>
                   updateSpecies(
@@ -551,8 +411,9 @@ const SpeciesItem = ({
                     newValue ? newValue.toISOString() : undefined,
                   )
                 }
+                onClear={() => updateSpecies("delayPublication", undefined)}
               />
-            </DemoContainer>
+            </div>
           </div>
         </div>
       )}

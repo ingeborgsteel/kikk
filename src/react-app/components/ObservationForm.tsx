@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { Select } from "./ui/select";
+import { Combobox } from "./ui/combobox";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { useObservations } from "../context/ObservationsContext";
@@ -23,12 +23,11 @@ import { Modal } from "./ui/Modal.tsx";
 import { TaxonRecord } from "../types/artsdatabanken.ts";
 import { CreateSpecies } from "../api/observations.ts";
 import SpeciesItem from "./SpeciesItem.tsx";
-import { Check, MapPin, MapPinned, User } from "lucide-react";
+import { Check, MapPin, MapPinned, Search, User } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 import dayjs from "dayjs";
-import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
-import { MobileDatePicker } from "@mui/x-date-pickers/MobileDatePicker";
-import { MobileTimePicker } from "@mui/x-date-pickers/MobileTimePicker";
+import { DatePicker } from "./ui/date-picker.tsx";
+import { TimePicker } from "./ui/time-picker.tsx";
 
 const DATE_TIME_STORAGE_FORMAT = "YYYY-MM-DDTHH:mm:ssZ";
 
@@ -590,11 +589,16 @@ const ObservationForm = ({
                     />
 
                     <div className="relative mt-1">
+                      <Search
+                        size={16}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate pointer-events-none"
+                      />
                       <Input
                         id="species-search"
                         type="text"
                         placeholder="Skriv for å søke..."
                         value={searchTerm}
+                        className="pl-8"
                         onChange={(e) => {
                           setSearchTerm(e.target.value);
                           setShowResults(true);
@@ -615,41 +619,43 @@ const ObservationForm = ({
                         }}
                       />
                       {isLoading && (
-                        <div className="absolute right-3 top-3">
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
                           <div className="w-4 h-4 border-2 border-slate-border border-t-rust rounded-full animate-spin"></div>
                         </div>
                       )}
 
                       {/* Search Results Dropdown */}
                       {showResults && searchTerm.length >= 2 && (
-                        <div className="absolute z-[1100] w-full mt-1 bg-white dark:bg-bark border-2 border-slate-border dark:border-slate rounded-md shadow-custom-lg max-h-60 overflow-y-auto">
-                          {rankedResults.map((species) => (
+                        <div className="absolute z-[1100] w-full mt-1 bg-white dark:bg-bark border-2 border-slate-border dark:border-slate rounded-md shadow-custom-lg overflow-hidden">
+                          <div className="max-h-60 overflow-y-auto p-1">
+                            {rankedResults.map((species) => (
+                              <button
+                                key={species.Id ?? species.PrefferedPopularname}
+                                type="button"
+                                onClick={() => addSpecies(species)}
+                                className="w-full text-left px-2 py-2 rounded-md hover:bg-sand dark:hover:bg-forest transition-colors"
+                              >
+                                <div className="font-medium text-sm text-bark dark:text-sand">
+                                  {species.PrefferedPopularname}
+                                </div>
+                                <div className="text-sm text-slate italic">
+                                  {species.ValidScientificName}
+                                </div>
+                              </button>
+                            ))}
                             <button
-                              key={species.Id ?? species.PrefferedPopularname}
                               type="button"
-                              onClick={() => addSpecies(species)}
-                              className="w-full text-left px-3 py-2 hover:bg-sand dark:hover:bg-forest transition-colors border-b border-slate-border dark:border-slate"
+                              onClick={() => addFreeTextSpecies(searchTerm)}
+                              className="w-full text-left px-2 py-2 rounded-md hover:bg-sand dark:hover:bg-forest transition-colors"
                             >
-                              <div className="font-medium text-bark dark:text-sand">
-                                {species.PrefferedPopularname}
+                              <div className="font-medium text-sm text-bark dark:text-sand">
+                                {searchTerm}
                               </div>
-                              <div className="text-sm text-slate italic">
-                                {species.ValidScientificName}
+                              <div className="text-xs text-slate">
+                                Legg til egendefinert art
                               </div>
                             </button>
-                          ))}
-                          <button
-                            type="button"
-                            onClick={() => addFreeTextSpecies(searchTerm)}
-                            className="w-full text-left px-3 py-2 hover:bg-sand dark:hover:bg-forest transition-colors border-b border-slate-border dark:border-slate last:border-b-0"
-                          >
-                            <div className="font-medium text-bark dark:text-sand">
-                              {searchTerm}
-                            </div>
-                            <div className="text-xs text-slate">
-                              Legg til egendefinert art
-                            </div>
-                          </button>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -692,6 +698,7 @@ const ObservationForm = ({
                       {species.map((s, index) => (
                         <SpeciesItem
                           key={index}
+                          itemKey={index}
                           species={s}
                           updateSpecies={(field, value) =>
                             updateSpecies(index, field, value)
@@ -798,30 +805,21 @@ const ObservationForm = ({
                 >
                   Nøyaktighet (meter)
                 </Label>
-                <Select
+                <Combobox
                   id="uncertainty"
                   value={String(value ?? "")}
-                  onChange={(e) =>
-                    onChange(
-                      e.target.value === "" ? null : Number(e.target.value),
-                    )
-                  }
-                  className="mt-1"
-                >
-                  {[
+                  onChange={(v) => onChange(v === "" ? null : Number(v))}
+                  options={[
                     1, 5, 10, 25, 50, 75, 100, 125, 150, 200, 250, 300, 400,
                     500, 750, 1000, 1500, 2000, 2500, 3000, 5000,
-                  ].map((n) => (
-                    <option key={n} value={n}>
-                      {n} m
-                    </option>
-                  ))}
-                </Select>
+                  ].map((n) => ({ value: String(n), label: `${n} m` }))}
+                  className="mt-1"
+                />
               </div>
             )}
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+          <div className="flex flex-col gap-md">
             <Controller
               name={"startDate"}
               control={control}
@@ -833,73 +831,42 @@ const ObservationForm = ({
                   >
                     Startdato
                   </Label>
-                  <DemoContainer components={["DatePicker"]}>
-                    <MobileDatePicker
-                      slotProps={{
-                        textField: {
-                          fullWidth: true,
-                          sx: {
-                            "& .MuiOutlinedInput-root": {
-                              borderRadius: 10,
-                              background: "white",
-                              "& fieldset": { border: "none" },
-                              "&:hover fieldset": { border: "none" },
-                              "&.Mui-focused fieldset": { border: "none" },
-                            },
-                          },
-                        },
-                      }}
-                      sx={{ background: "white" }}
+                  <div className="mt-1 flex items-center gap-2">
+                    <DatePicker
+                      id="startDate"
+                      className="flex-1"
                       value={value ? dayjs(value) : null}
                       onChange={(newValue) =>
                         newValue && onChange(newValue.toISOString())
                       }
                     />
-                  </DemoContainer>
-                  {startTimeEnabled ? (
-                    <div className="mt-2 flex items-center gap-2">
-                      <DemoContainer components={["TimePicker"]}>
-                        <MobileTimePicker
-                          slotProps={{
-                            textField: {
-                              fullWidth: true,
-                              sx: {
-                                "& .MuiOutlinedInput-root": {
-                                  borderRadius: 10,
-                                  background: "white",
-                                  "& fieldset": { border: "none" },
-                                  "&:hover fieldset": { border: "none" },
-                                  "&.Mui-focused fieldset": { border: "none" },
-                                },
-                              },
-                            },
-                          }}
-                          sx={{ background: "white" }}
-                          ampm={false}
+                    {startTimeEnabled && (
+                      <>
+                        <TimePicker
+                          className="flex-1"
                           value={value ? dayjs(value) : null}
-                          onChange={(newValue) => {
-                            if (newValue) {
-                              const base = value ? dayjs(value) : dayjs();
-                              onChange(
-                                base
-                                  .hour(newValue.hour())
-                                  .minute(newValue.minute())
-                                  .second(0)
-                                  .toISOString(),
-                              );
-                            }
+                          onChange={(hour, minute) => {
+                            const base = value ? dayjs(value) : dayjs();
+                            onChange(
+                              base
+                                .hour(hour)
+                                .minute(minute)
+                                .second(0)
+                                .toISOString(),
+                            );
                           }}
                         />
-                      </DemoContainer>
-                      <button
-                        type="button"
-                        onClick={() => setStartTimeEnabled(false)}
-                        className="text-xs text-gray-400 hover:text-gray-600 whitespace-nowrap"
-                      >
-                        Fjern tid
-                      </button>
-                    </div>
-                  ) : (
+                        <button
+                          type="button"
+                          onClick={() => setStartTimeEnabled(false)}
+                          className="text-xs text-gray-400 hover:text-gray-600 whitespace-nowrap"
+                        >
+                          Fjern tid
+                        </button>
+                      </>
+                    )}
+                  </div>
+                  {!startTimeEnabled && (
                     <button
                       type="button"
                       onClick={() => setStartTimeEnabled(true)}
@@ -920,74 +887,42 @@ const ObservationForm = ({
                   <Label htmlFor="endDate" className="text-bark dark:text-sand">
                     Sluttdato
                   </Label>
-                  <DemoContainer components={["DatePicker"]}>
-                    <MobileDatePicker
-                      slotProps={{
-                        textField: {
-                          fullWidth: true,
-                          sx: {
-                            "& .MuiOutlinedInput-root": {
-                              borderRadius: 5,
-                              background: "white",
-                              "& fieldset": { border: "none" },
-                              "&:hover fieldset": { border: "none" },
-                              "&.Mui-focused fieldset": { border: "none" },
-                            },
-                          },
-                        },
-                        field: { clearable: true },
-                      }}
-                      sx={{ background: "white" }}
+                  <div className="mt-1 flex items-center gap-2">
+                    <DatePicker
+                      id="endDate"
+                      className="flex-1"
                       value={value ? dayjs(value) : null}
                       onChange={(newValue) =>
                         onChange(newValue ? newValue.toISOString() : null)
                       }
                     />
-                  </DemoContainer>
-                  {endTimeEnabled ? (
-                    <div className="mt-2 flex items-center gap-2">
-                      <DemoContainer components={["TimePicker"]}>
-                        <MobileTimePicker
-                          slotProps={{
-                            textField: {
-                              fullWidth: true,
-                              sx: {
-                                "& .MuiOutlinedInput-root": {
-                                  borderRadius: 5,
-                                  background: "white",
-                                  "& fieldset": { border: "none" },
-                                  "&:hover fieldset": { border: "none" },
-                                  "&.Mui-focused fieldset": { border: "none" },
-                                },
-                              },
-                            },
-                          }}
-                          sx={{ background: "white" }}
-                          ampm={false}
+                    {endTimeEnabled && (
+                      <>
+                        <TimePicker
+                          className="flex-1"
                           value={value ? dayjs(value) : null}
-                          onChange={(newValue) => {
-                            if (newValue) {
-                              const base = value ? dayjs(value) : dayjs();
-                              onChange(
-                                base
-                                  .hour(newValue.hour())
-                                  .minute(newValue.minute())
-                                  .second(0)
-                                  .toISOString(),
-                              );
-                            }
+                          onChange={(hour, minute) => {
+                            const base = value ? dayjs(value) : dayjs();
+                            onChange(
+                              base
+                                .hour(hour)
+                                .minute(minute)
+                                .second(0)
+                                .toISOString(),
+                            );
                           }}
                         />
-                      </DemoContainer>
-                      <button
-                        type="button"
-                        onClick={() => setEndTimeEnabled(false)}
-                        className="text-xs text-gray-400 hover:text-gray-600 whitespace-nowrap"
-                      >
-                        Fjern tid
-                      </button>
-                    </div>
-                  ) : (
+                        <button
+                          type="button"
+                          onClick={() => setEndTimeEnabled(false)}
+                          className="text-xs text-gray-400 hover:text-gray-600 whitespace-nowrap"
+                        >
+                          Fjern tid
+                        </button>
+                      </>
+                    )}
+                  </div>
+                  {!endTimeEnabled && (
                     <button
                       type="button"
                       onClick={() => setEndTimeEnabled(true)}
@@ -1016,7 +951,7 @@ const ObservationForm = ({
                   : [];
 
               return (
-                <div>
+                <div className="relative">
                   <Label
                     htmlFor="observerName"
                     className="text-bark dark:text-sand"
@@ -1061,31 +996,33 @@ const ObservationForm = ({
                     )}
                   </div>
                   {showProfileResults && filteredProfiles.length > 0 && (
-                    <div className="w-full mt-1 bg-white dark:bg-bark border-2 border-slate-border dark:border-slate rounded-md shadow-custom-lg">
-                      {filteredProfiles.map((p) => {
-                        const label = p.display_name ?? p.email ?? p.id;
-                        return (
-                          <button
-                            key={p.id}
-                            type="button"
-                            onMouseDown={(e) => e.preventDefault()}
-                            onClick={() => {
-                              onChange(label);
-                              setShowProfileResults(false);
-                            }}
-                            className="w-full text-left px-3 py-2 hover:bg-sand dark:hover:bg-forest transition-colors border-b border-slate-border dark:border-slate last:border-b-0"
-                          >
-                            <div className="font-medium text-bark dark:text-sand">
-                              {label}
-                            </div>
-                            {p.display_name && p.email && (
-                              <div className="text-xs text-slate">
-                                {p.email}
+                    <div className="absolute z-[1100] w-full mt-1 bg-white dark:bg-bark border-2 border-slate-border dark:border-slate rounded-md shadow-custom-lg overflow-hidden">
+                      <div className="max-h-60 overflow-y-auto p-1">
+                        {filteredProfiles.map((p) => {
+                          const label = p.display_name ?? p.email ?? p.id;
+                          return (
+                            <button
+                              key={p.id}
+                              type="button"
+                              onMouseDown={(e) => e.preventDefault()}
+                              onClick={() => {
+                                onChange(label);
+                                setShowProfileResults(false);
+                              }}
+                              className="w-full text-left px-2 py-2 rounded-md hover:bg-sand dark:hover:bg-forest transition-colors"
+                            >
+                              <div className="font-medium text-sm text-bark dark:text-sand">
+                                {label}
                               </div>
-                            )}
-                          </button>
-                        );
-                      })}
+                              {p.display_name && p.email && (
+                                <div className="text-xs text-slate">
+                                  {p.email}
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
                 </div>

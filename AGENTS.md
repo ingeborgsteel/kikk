@@ -10,6 +10,7 @@ kikk is a nature observation tracking application built with React, TypeScript, 
 
 - **Frontend**: React 19.2.1 + TypeScript + Vite
 - **Styling**: Tailwind CSS with custom design tokens
+- **UI Components**: shadcn/ui pattern (Radix primitives + Tailwind, copied into `components/ui/`, not an npm package) — the standard for all UI primitives going forward
 - **Backend**: Hono (lightweight framework) running on Cloudflare Workers
 - **Maps**: Leaflet for interactive mapping, with offline PWA tile caching
 - **Authentication**: Supabase (optional)
@@ -79,8 +80,15 @@ Every context must expose a custom hook (e.g., `useObservations()`) that throws 
 - Mobile-first responsive design
 - Use `dark:` prefix for dark mode styles
 
+### UI Components — shadcn/ui is the standard
+- All UI primitives (buttons, inputs, dropdowns, dialogs, etc.) should follow the shadcn/ui pattern: Radix UI primitives + `class-variance-authority` + Tailwind, source copied directly into `src/react-app/components/ui/` — not pulled in as an opaque npm dependency.
+- Before building a new primitive, check `components/ui/` for an existing one (e.g. `button.tsx`, `input.tsx`, `combobox.tsx`, `Modal.tsx`) and reuse/extend it rather than hand-rolling a one-off.
+- When a needed primitive doesn't exist yet, add it via the shadcn CLI or by porting the relevant shadcn/ui source into `components/ui/`, matching this project's existing token/class conventions (see `combobox.tsx` for a worked example built on `@radix-ui/react-popover` + `cmdk`).
+- Native HTML form controls (`<select>`, unstyled `<input>`) should be migrated to shadcn-style components over time — don't introduce new native `<select>` elements.
+
 ### Key Unified Components (always use these, never reinvent)
 - **Modal** (`src/react-app/components/ui/Modal.tsx`): universal modal/dialog component — consistent header, ESC-to-close, click-outside-to-close, optional submit on Enter, configurable `maxWidth`. Used by ExportDialog, MapClickDialog, etc.
+- **Combobox** (`src/react-app/components/ui/combobox.tsx`): shadcn-style searchable dropdown (Radix Popover + cmdk) supporting grouped options and free-text custom entries; the standard replacement for native `<select>`.
 - **Marker Icons** (`src/react-app/lib/markerIcons.ts`): `createSelectionIcon()` (rust, selections/editable positions), `createObservationIcon()` (forest green, observations), `createUserLocationIcon()` (purple, saved locations)
 - **Map Components**: `Map.tsx` (full-page map with layer switching) and `LocationEditor` (embedded 300px editor for forms, no controls) — both share layer preference via `MapPreferencesContext`, persisted to localStorage and synced across tabs
 
@@ -134,6 +142,7 @@ Never store sensitive data (tokens, passwords) in localStorage or Context — re
 5. Inline styles instead of Tailwind classes
 6. `any` types instead of proper interfaces
 7. Breaking responsive design — always test mobile viewports
+8. Adding new native `<select>`/unstyled form controls instead of shadcn-style `components/ui/` primitives
 
 ## Testing Approach
 
@@ -156,7 +165,8 @@ Document manual test steps in the PR description when adding new features.
 - Check new components follow existing patterns (functional, hooks, single responsibility)
 - Ensure Tailwind classes use the project's custom design tokens
 - Confirm responsive design and dark mode support
-- Verify unified components are used where applicable (Modal, Marker Icons, Map)
+- Verify unified components are used where applicable (Modal, Combobox, Marker Icons, Map)
+- New UI primitives follow the shadcn/ui pattern (Radix + Tailwind, copied source in `components/ui/`) rather than a new one-off or a third-party component library
 - Check new state uses the correct mechanism (Context vs. TanStack Query)
 - Look for regressions in localStorage data handling
 - Confirm Supabase-dependent features degrade gracefully when Supabase is not configured

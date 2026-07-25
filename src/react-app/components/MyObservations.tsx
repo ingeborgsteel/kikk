@@ -192,34 +192,35 @@ function MyObservations({ onBack }: MyObservationsProps) {
                   <X size={14} />
                 </button>
               )}
-              {showLocationResults && filteredLocationSuggestions.length > 0 && (
-                <div className="absolute z-[1100] w-full mt-1 bg-white dark:bg-bark border-2 border-slate-border dark:border-slate rounded-md shadow-custom-lg overflow-hidden">
-                  <div className="max-h-60 overflow-y-auto p-1">
-                    {filteredLocationSuggestions.map((suggestion) => (
-                      <button
-                        key={suggestion.name}
-                        type="button"
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => {
-                          setLocationSearch(suggestion.name);
-                          setShowLocationResults(false);
-                        }}
-                        className="w-full flex items-center gap-1.5 text-left px-2 py-2 rounded-md hover:bg-sand dark:hover:bg-forest transition-colors"
-                      >
-                        {suggestion.isSaved && (
-                          <MapPinned
-                            size={14}
-                            className="shrink-0 text-violet-600 dark:text-violet-400"
-                          />
-                        )}
-                        <span className="text-sm text-bark dark:text-sand truncate">
-                          {suggestion.name}
-                        </span>
-                      </button>
-                    ))}
+              {showLocationResults &&
+                filteredLocationSuggestions.length > 0 && (
+                  <div className="absolute z-[1100] w-full mt-1 bg-white dark:bg-bark border-2 border-slate-border dark:border-slate rounded-md shadow-custom-lg overflow-hidden">
+                    <div className="max-h-60 overflow-y-auto p-1">
+                      {filteredLocationSuggestions.map((suggestion) => (
+                        <button
+                          key={suggestion.name}
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => {
+                            setLocationSearch(suggestion.name);
+                            setShowLocationResults(false);
+                          }}
+                          className="w-full flex items-center gap-1.5 text-left px-2 py-2 rounded-md hover:bg-sand dark:hover:bg-forest transition-colors"
+                        >
+                          {suggestion.isSaved && (
+                            <MapPinned
+                              size={14}
+                              className="shrink-0 text-violet-600 dark:text-violet-400"
+                            />
+                          )}
+                          <span className="text-sm text-bark dark:text-sand truncate">
+                            {suggestion.name}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
             </div>
           )}
 
@@ -290,7 +291,10 @@ function MyObservations({ onBack }: MyObservationsProps) {
             </p>
           </div>
         ) : view === "table" ? (
-          <ObservationsTable observations={filteredObservations} />
+          <ObservationsTable
+            observations={filteredObservations}
+            onEdit={setEditingId}
+          />
         ) : (
           <div className="flex flex-col space-y-md">
             {filteredObservations.map((observation) => (

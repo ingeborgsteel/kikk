@@ -28,10 +28,10 @@ const TimePicker = ({
 
   useEffect(() => {
     if (!autoOpen) return;
-    const input = inputRef.current;
-    if (!input) return;
-    input.focus();
-    input.showPicker?.();
+    // Only focus — showPicker() requires an active user gesture and throws
+    // when called from an effect (which runs a tick after the click that
+    // triggered the mount).
+    inputRef.current?.focus();
   }, [autoOpen]);
 
   return (

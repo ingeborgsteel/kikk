@@ -1,13 +1,27 @@
-import { useState } from "react";
-import { FileSpreadsheet, Filter, MapPin } from "lucide-react";
+import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import {
+  FileSpreadsheet,
+  LayoutList,
+  MapPin,
+  MapPinned,
+  Search,
+  Table2,
+  X,
+} from "lucide-react";
+import dayjs, { Dayjs } from "dayjs";
 import { useObservations } from "../context/ObservationsContext";
 import { useLocations } from "../context/LocationsContext";
 import { Button } from "./ui/button";
+import { Input } from "./ui/input.tsx";
+import { DatePicker } from "./ui/date-picker.tsx";
 import ObservationForm from "./ObservationForm.tsx";
 import ExportDialog from "./ExportDialog";
 import ObservationItem from "./ObservationItem";
+import ObservationsTable from "./ObservationsTable.tsx";
 import { getUnexportedCount } from "../queries/useExports";
 import Header from "./Header.tsx";
+import { twMerge } from "tailwind-merge";
 
 interface MyObservationsProps {
   onBack: () => void;
@@ -18,7 +32,26 @@ function MyObservations({ onBack }: MyObservationsProps) {
   const { locations } = useLocations();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showExportDialog, setShowExportDialog] = useState(false);
-  const [filterLocationId, setFilterLocationId] = useState<string | null>(null);
+  const [locationSearch, setLocationSearch] = useState("");
+  const [showLocationResults, setShowLocationResults] = useState(false);
+  const [dateFrom, setDateFrom] = useState<Dayjs | null>(null);
+  const [dateTo, setDateTo] = useState<Dayjs | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const view = searchParams.get("view") === "table" ? "table" : "list";
+  const setView = (next: "list" | "table") => {
+    setSearchParams(
+      (prev) => {
+        const params = new URLSearchParams(prev);
+        if (next === "list") {
+          params.delete("view");
+        } else {
+          params.set("view", next);
+        }
+        return params;
+      },
+      { replace: true },
+    );
+  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -72,10 +105,58 @@ function MyObservations({ onBack }: MyObservationsProps) {
     }
   };
 
-  // Filter observations by location if a filter is active
-  const filteredObservations = filterLocationId
-    ? observations.filter((obs) => obs.locationId === filterLocationId)
-    : observations;
+  // Distinct locality names actually used across observations, so unsaved
+  // (free-text) localities show up as suggestions too, not just saved ones.
+  const locationSuggestions = useMemo(() => {
+    const savedNamesByName = new Map(
+      locations.map((loc) => [loc.name.toLowerCase(), loc]),
+    );
+    const seen = new Set<string>();
+    const suggestions: { name: string; isSaved: boolean }[] = [];
+
+    for (const obs of observations) {
+      const name = obs.locationName?.trim();
+      if (!name || seen.has(name.toLowerCase())) continue;
+      seen.add(name.toLowerCase());
+      suggestions.push({
+        name,
+        isSaved: savedNamesByName.has(name.toLowerCase()),
+      });
+    }
+
+    return suggestions.sort((a, b) => a.name.localeCompare(b.name, "no"));
+  }, [observations, locations]);
+
+  const filteredLocationSuggestions = locationSearch.trim()
+    ? locationSuggestions.filter((s) =>
+        s.name.toLowerCase().includes(locationSearch.trim().toLowerCase()),
+      )
+    : locationSuggestions;
+
+  // Filter observations by locality name search (matches saved and unsaved
+  // names) and/or a startDate range
+  const filteredObservations = observations.filter((obs) => {
+    if (
+      locationSearch.trim() &&
+      !obs.locationName
+        ?.toLowerCase()
+        .includes(locationSearch.trim().toLowerCase())
+    ) {
+      return false;
+    }
+
+    if (dateFrom || dateTo) {
+      const startDate = dayjs(obs.startDate);
+      if (dateFrom && startDate.isBefore(dateFrom.startOf("day"))) {
+        return false;
+      }
+      if (dateTo && startDate.isAfter(dateTo.endOf("day"))) {
+        return false;
+      }
+    }
+
+    return true;
+  });
 
   const unexportedCount = getUnexportedCount(filteredObservations);
 
@@ -84,47 +165,147 @@ function MyObservations({ onBack }: MyObservationsProps) {
   return (
     <div className="w-full min-h-screen bg-sand dark:bg-bark pb-16 md:pb-0">
       <Header title={"kikket på"} />
-      <div className="max-w-4xl mx-auto p-lg md:p-xl">
-        <div className="mb-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-md">
+      <div className="mx-auto max-w-full p-lg md:p-xl">
+        <div className="mb-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-md flex-wrap">
           <div className="hidden md:block">
             <Button onClick={onBack} variant="outline">
               ← Tilbake til kart
             </Button>
           </div>
 
-          {/* Location filter */}
-          {locations.length > 0 && (
-            <div className="flex items-center gap-2 w-full md:w-auto">
-              <Filter size={20} className="text-bark dark:text-sand" />
-              <select
-                value={filterLocationId || ""}
-                onChange={(e) => setFilterLocationId(e.target.value || null)}
-                className="flex-1 md:flex-initial p-2 rounded border-2 border-moss bg-sand dark:bg-bark text-bark dark:text-sand"
-              >
-                <option value="">Alle observasjoner</option>
-                {locations.map((location) => (
-                  <option key={location.id} value={location.id}>
-                    {location.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
+          <div className="flex flex-wrap items-center gap-2 flex-1">
+            {/* Location search */}
+            {locationSuggestions.length > 0 && (
+              <div className="relative w-full md:w-56">
+                <Search
+                  size={16}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate pointer-events-none"
+                />
+                <Input
+                  type="text"
+                  placeholder="Søk etter lokalitet..."
+                  value={locationSearch}
+                  className={twMerge("pl-8", locationSearch && "pr-8")}
+                  onChange={(e) => {
+                    setLocationSearch(e.target.value);
+                    setShowLocationResults(true);
+                  }}
+                  onFocus={() => setShowLocationResults(true)}
+                  onBlur={() =>
+                    setTimeout(() => setShowLocationResults(false), 150)
+                  }
+                />
+                {locationSearch && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLocationSearch("");
+                      setShowLocationResults(false);
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate hover:text-bark dark:hover:text-sand"
+                    aria-label="Fjern lokalitetsfilter"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+                {showLocationResults &&
+                  filteredLocationSuggestions.length > 0 && (
+                    <div className="absolute z-[1100] w-full mt-1 bg-white dark:bg-bark border-2 border-slate-border dark:border-slate rounded-md shadow-custom-lg overflow-hidden">
+                      <div className="max-h-60 overflow-y-auto p-1">
+                        {filteredLocationSuggestions.map((suggestion) => (
+                          <button
+                            key={suggestion.name}
+                            type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => {
+                              setLocationSearch(suggestion.name);
+                              setShowLocationResults(false);
+                            }}
+                            className="w-full flex items-center gap-1.5 text-left px-2 py-2 rounded-md hover:bg-sand dark:hover:bg-forest transition-colors"
+                          >
+                            {suggestion.isSaved && (
+                              <MapPinned
+                                size={14}
+                                className="shrink-0 text-violet-600 dark:text-violet-400"
+                              />
+                            )}
+                            <span className="text-sm text-bark dark:text-sand truncate">
+                              {suggestion.name}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+              </div>
+            )}
 
-          {observations.length > 0 && (
-            <Button
-              onClick={() => setShowExportDialog(true)}
-              className="ml-auto"
-            >
-              <FileSpreadsheet size={20} className="mr-2" />
-              Eksporter til Excel
-              {unexportedCount > 0 && (
-                <span className="ml-2 px-2 py-0.5 bg-moss text-white text-xs rounded-full">
-                  {unexportedCount} nye
-                </span>
-              )}
-            </Button>
-          )}
+            {/* Date range filter */}
+            <div className="flex items-center gap-1.5">
+              <DatePicker
+                value={dateFrom}
+                onChange={setDateFrom}
+                onClear={() => setDateFrom(null)}
+                placeholder="Fra dato"
+                className="w-36"
+              />
+              <span className="text-slate text-sm">–</span>
+              <DatePicker
+                value={dateTo}
+                onChange={setDateTo}
+                onClear={() => setDateTo(null)}
+                placeholder="Til dato"
+                className="w-36"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 ml-auto">
+            <div className="flex items-center border-2 border-moss rounded-md overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setView("list")}
+                aria-pressed={view === "list"}
+                className={twMerge(
+                  "p-2 transition-colors",
+                  view === "list"
+                    ? "bg-moss text-white"
+                    : "bg-white dark:bg-bark text-bark dark:text-sand hover:bg-sand dark:hover:bg-forest",
+                )}
+                aria-label="Listevisning"
+                title="Listevisning"
+              >
+                <LayoutList size={18} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setView("table")}
+                aria-pressed={view === "table"}
+                className={twMerge(
+                  "p-2 transition-colors",
+                  view === "table"
+                    ? "bg-moss text-white"
+                    : "bg-white dark:bg-bark text-bark dark:text-sand hover:bg-sand dark:hover:bg-forest",
+                )}
+                aria-label="Tabellvisning"
+                title="Tabellvisning"
+              >
+                <Table2 size={18} />
+              </button>
+            </div>
+
+            {observations.length > 0 && (
+              <Button onClick={() => setShowExportDialog(true)}>
+                <FileSpreadsheet size={20} className="mr-2" />
+                Eksporter til Excel
+                {unexportedCount > 0 && (
+                  <span className="ml-2 px-2 py-0.5 bg-moss text-white text-xs rounded-full">
+                    {unexportedCount} nye
+                  </span>
+                )}
+              </Button>
+            )}
+          </div>
         </div>
 
         {filteredObservations.length === 0 && observations.length > 0 ? (
@@ -145,6 +326,11 @@ function MyObservations({ onBack }: MyObservationsProps) {
               Klikk på kartet for å legge til din første observasjon!
             </p>
           </div>
+        ) : view === "table" ? (
+          <ObservationsTable
+            observations={filteredObservations}
+            onEdit={setEditingId}
+          />
         ) : (
           <div className="flex flex-col space-y-md">
             {filteredObservations.map((observation) => (

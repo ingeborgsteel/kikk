@@ -819,7 +819,7 @@ const ObservationForm = ({
             )}
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+          <div className="flex flex-col gap-md">
             <Controller
               name={"startDate"}
               control={control}
@@ -831,39 +831,42 @@ const ObservationForm = ({
                   >
                     Startdato
                   </Label>
-                  <div className="mt-1">
+                  <div className="mt-1 flex items-center gap-2">
                     <DatePicker
                       id="startDate"
+                      className="flex-1"
                       value={value ? dayjs(value) : null}
                       onChange={(newValue) =>
                         newValue && onChange(newValue.toISOString())
                       }
                     />
+                    {startTimeEnabled && (
+                      <>
+                        <TimePicker
+                          className="flex-1"
+                          value={value ? dayjs(value) : null}
+                          onChange={(hour, minute) => {
+                            const base = value ? dayjs(value) : dayjs();
+                            onChange(
+                              base
+                                .hour(hour)
+                                .minute(minute)
+                                .second(0)
+                                .toISOString(),
+                            );
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setStartTimeEnabled(false)}
+                          className="text-xs text-gray-400 hover:text-gray-600 whitespace-nowrap"
+                        >
+                          Fjern tid
+                        </button>
+                      </>
+                    )}
                   </div>
-                  {startTimeEnabled ? (
-                    <div className="mt-2 flex items-center gap-2">
-                      <TimePicker
-                        value={value ? dayjs(value) : null}
-                        onChange={(hour, minute) => {
-                          const base = value ? dayjs(value) : dayjs();
-                          onChange(
-                            base
-                              .hour(hour)
-                              .minute(minute)
-                              .second(0)
-                              .toISOString(),
-                          );
-                        }}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setStartTimeEnabled(false)}
-                        className="text-xs text-gray-400 hover:text-gray-600 whitespace-nowrap"
-                      >
-                        Fjern tid
-                      </button>
-                    </div>
-                  ) : (
+                  {!startTimeEnabled && (
                     <button
                       type="button"
                       onClick={() => setStartTimeEnabled(true)}
@@ -884,39 +887,42 @@ const ObservationForm = ({
                   <Label htmlFor="endDate" className="text-bark dark:text-sand">
                     Sluttdato
                   </Label>
-                  <div className="mt-1">
+                  <div className="mt-1 flex items-center gap-2">
                     <DatePicker
                       id="endDate"
+                      className="flex-1"
                       value={value ? dayjs(value) : null}
                       onChange={(newValue) =>
                         onChange(newValue ? newValue.toISOString() : null)
                       }
                     />
+                    {endTimeEnabled && (
+                      <>
+                        <TimePicker
+                          className="flex-1"
+                          value={value ? dayjs(value) : null}
+                          onChange={(hour, minute) => {
+                            const base = value ? dayjs(value) : dayjs();
+                            onChange(
+                              base
+                                .hour(hour)
+                                .minute(minute)
+                                .second(0)
+                                .toISOString(),
+                            );
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setEndTimeEnabled(false)}
+                          className="text-xs text-gray-400 hover:text-gray-600 whitespace-nowrap"
+                        >
+                          Fjern tid
+                        </button>
+                      </>
+                    )}
                   </div>
-                  {endTimeEnabled ? (
-                    <div className="mt-2 flex items-center gap-2">
-                      <TimePicker
-                        value={value ? dayjs(value) : null}
-                        onChange={(hour, minute) => {
-                          const base = value ? dayjs(value) : dayjs();
-                          onChange(
-                            base
-                              .hour(hour)
-                              .minute(minute)
-                              .second(0)
-                              .toISOString(),
-                          );
-                        }}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setEndTimeEnabled(false)}
-                        className="text-xs text-gray-400 hover:text-gray-600 whitespace-nowrap"
-                      >
-                        Fjern tid
-                      </button>
-                    </div>
-                  ) : (
+                  {!endTimeEnabled && (
                     <button
                       type="button"
                       onClick={() => setEndTimeEnabled(true)}

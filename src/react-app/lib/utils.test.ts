@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { sortSpeciesByTaxonGroupAndName } from "./utils";
+import {
+  sortSpeciesAlphabetically,
+  sortSpeciesByTaxonGroupAndName,
+} from "./utils";
 import { Species } from "../types/observation";
 
 function makeSpecies(
@@ -97,6 +100,58 @@ describe("sortSpeciesByTaxonGroupAndName", () => {
     const original = [...species];
 
     sortSpeciesByTaxonGroupAndName(species);
+
+    expect(species).toEqual(original);
+  });
+});
+
+describe("sortSpeciesAlphabetically", () => {
+  it("orders species alphabetically by popular name, ignoring taxon group", () => {
+    const species = [
+      makeSpecies({
+        id: "1",
+        species: { PrefferedPopularname: "Rådyr", TaxonGroup: "pattedyr" },
+      }),
+      makeSpecies({
+        id: "2",
+        species: { PrefferedPopularname: "Blåmeis", TaxonGroup: "fugler" },
+      }),
+      makeSpecies({
+        id: "3",
+        species: { PrefferedPopularname: "Ærfugl", TaxonGroup: "fugler" },
+      }),
+    ];
+
+    const sorted = sortSpeciesAlphabetically(species);
+
+    expect(sorted.map((s) => s.id)).toEqual(["2", "1", "3"]);
+  });
+
+  it("falls back to ValidScientificName when PrefferedPopularname is missing", () => {
+    const species = [
+      makeSpecies({
+        id: "1",
+        species: { ValidScientificName: "Zeta" },
+      }),
+      makeSpecies({
+        id: "2",
+        species: { ValidScientificName: "Alfa" },
+      }),
+    ];
+
+    const sorted = sortSpeciesAlphabetically(species);
+
+    expect(sorted.map((s) => s.id)).toEqual(["2", "1"]);
+  });
+
+  it("does not mutate the input array", () => {
+    const species = [
+      makeSpecies({ id: "1", species: { PrefferedPopularname: "B" } }),
+      makeSpecies({ id: "2", species: { PrefferedPopularname: "A" } }),
+    ];
+    const original = [...species];
+
+    sortSpeciesAlphabetically(species);
 
     expect(species).toEqual(original);
   });

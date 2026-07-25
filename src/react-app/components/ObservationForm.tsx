@@ -14,6 +14,7 @@ import {
   getRecentSpecies,
   rankSpeciesResults,
   reverseGeocode,
+  sortSpeciesAlphabetically,
   sortSpeciesByTaxonGroupAndName,
 } from "../lib/utils.ts";
 import { LocationEditor } from "./LocationEditor.tsx";
@@ -645,15 +646,26 @@ const ObservationForm = ({
                         Observerte arter
                       </Label>
                       {species.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            onChange(sortSpeciesByTaxonGroupAndName(species))
-                          }
-                          className="text-xs text-slate hover:text-bark dark:hover:text-sand transition-colors"
-                        >
-                          Sorter
-                        </button>
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              onChange(sortSpeciesAlphabetically(species))
+                            }
+                            className="text-xs text-slate hover:text-bark dark:hover:text-sand transition-colors"
+                          >
+                            Sorter a-å
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              onChange(sortSpeciesByTaxonGroupAndName(species))
+                            }
+                            className="text-xs text-slate hover:text-bark dark:hover:text-sand transition-colors"
+                          >
+                            Sorter etter artsgruppe
+                          </button>
+                        </div>
                       )}
                     </div>
                     {species.length === 0 && (

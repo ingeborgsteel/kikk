@@ -10,7 +10,7 @@ export interface TaxonRecord {
   ValidScientificNameFormatted?: string; // contains HTML (e.g. <i>...</i>)
   ValidScientificNameAuthorship?: string;
 
-  PrefferedPopularname: string; // note: spelling as in source
+  PrefferedPopularname?: string; // note: spelling as in source
   MatchedName?: string;
 
   TaxonGroup?: string;

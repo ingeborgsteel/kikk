@@ -123,6 +123,9 @@ export function getLifeList(observations: Observation[]): LifeListEntry[] {
   });
 }
 
+const speciesNameOf = (s: Species): string =>
+  s.species.PrefferedPopularname || s.species.ValidScientificName || "";
+
 /**
  * Sort species by taxon group (systematic order from TAXON_GROUP_KEYS),
  * then alphabetically by preferred popular name within each group.
@@ -138,15 +141,22 @@ export function sortSpeciesByTaxonGroupAndName(species: Species[]): Species[] {
     return index === -1 ? TAXON_GROUP_KEYS.length : index;
   };
 
-  const nameOf = (s: Species): string =>
-    s.species.PrefferedPopularname || s.species.ValidScientificName || "";
-
   return [...species].sort((a, b) => {
     const groupDiff =
       groupIndex(a.species.TaxonGroup) - groupIndex(b.species.TaxonGroup);
     if (groupDiff !== 0) return groupDiff;
-    return nameOf(a).localeCompare(nameOf(b), "no");
+    return speciesNameOf(a).localeCompare(speciesNameOf(b), "no");
   });
+}
+
+/**
+ * Sort species alphabetically by preferred popular name (A -> Å),
+ * ignoring taxon group. Returns a new array; does not mutate the input.
+ */
+export function sortSpeciesAlphabetically(species: Species[]): Species[] {
+  return [...species].sort((a, b) =>
+    speciesNameOf(a).localeCompare(speciesNameOf(b), "no"),
+  );
 }
 
 /**

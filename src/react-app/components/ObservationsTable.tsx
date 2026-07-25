@@ -1,4 +1,4 @@
-import { ReactNode, useMemo, useState } from "react";
+import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import {
   createColumnHelper,
   flexRender,
@@ -35,7 +35,7 @@ interface FlatRow {
 }
 
 const cellClass =
-  "px-2 py-1.5 text-sm text-bark dark:text-sand whitespace-nowrap align-middle";
+  "p-0 text-sm text-bark dark:text-sand whitespace-nowrap align-middle";
 const headerClass =
   "px-2 py-2 text-left text-xs font-semibold text-bark dark:text-sand whitespace-nowrap sticky top-0 bg-sand dark:bg-forest z-10 border-b-2 border-moss";
 
@@ -45,6 +45,29 @@ const formatTime = (value?: string) =>
   value && dayjs(value).isValid() ? dayjs(value).format("HH:mm") : "";
 
 const columnHelper = createColumnHelper<FlatRow>();
+
+/** Text/number input that auto-focuses and selects its content the moment it's mounted, so the first click into edit mode is ready to type over. */
+const AutoFocusInput = (
+  props: React.InputHTMLAttributes<HTMLInputElement>,
+) => {
+  const ref = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    ref.current?.focus();
+    ref.current?.select();
+  }, []);
+  return <Input ref={ref} variant="ghost" {...props} />;
+};
+
+const AutoFocusTextarea = (
+  props: React.TextareaHTMLAttributes<HTMLTextAreaElement>,
+) => {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    ref.current?.focus();
+    ref.current?.select();
+  }, []);
+  return <Textarea ref={ref} variant="ghost" {...props} />;
+};
 
 const ObservationsTable = ({ observations }: ObservationsTableProps) => {
   const { updateObservation, deleteObservation } = useObservations();
@@ -117,32 +140,64 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
     );
   }, [observations]);
 
-  const editableCell = (
+  /** Text-style cell: shows plain text, and the very first click both enters edit mode and focuses the input (no second click needed). */
+  const textCell = (
     cellKey: string,
     display: ReactNode,
     editControl: ReactNode,
   ) => {
     const isEditing = editingCell === cellKey;
+    if (isEditing) {
+      return editControl;
+    }
     return (
-      <div
-        className="cursor-pointer min-h-5"
-        onClick={() => !isEditing && setEditingCell(cellKey)}
+      <button
+        type="button"
+        onClick={() => setEditingCell(cellKey)}
+        className="w-full h-full text-left px-2 py-1.5 hover:bg-sand/60 dark:hover:bg-forest/60 transition-colors"
       >
-        {isEditing ? (
-          editControl
-        ) : display ? (
-          display
-        ) : (
-          <span className="text-slate">—</span>
-        )}
-      </div>
+        {display || <span className="text-slate">—</span>}
+      </button>
+    );
+  };
+
+  /** Dropdown/picker-style cell: the first click both enters edit mode and opens the popover immediately. */
+  const pickerCell = (
+    cellKey: string,
+    display: ReactNode,
+    renderControl: (opts: {
+      defaultOpen: boolean;
+      onOpenChange: (open: boolean) => void;
+    }) => ReactNode,
+  ) => {
+    const isEditing = editingCell === cellKey;
+    if (isEditing) {
+      return renderControl({
+        defaultOpen: true,
+        onOpenChange: (open) => {
+          if (!open) setEditingCell(null);
+        },
+      });
+    }
+    return (
+      <button
+        type="button"
+        onClick={() => setEditingCell(cellKey)}
+        className="w-full h-full text-left px-2 py-1.5 hover:bg-sand/60 dark:hover:bg-forest/60 transition-colors"
+      >
+        {display || <span className="text-slate">—</span>}
+      </button>
     );
   };
 
   const toggleCell = (active: boolean | undefined, onToggle: () => void) => (
-    <div className="cursor-pointer text-center" onClick={onToggle}>
+    <button
+      type="button"
+      onClick={onToggle}
+      className="w-full h-full text-center px-2 py-1.5 hover:bg-sand/60 dark:hover:bg-forest/60 transition-colors"
+    >
       {active ? "✕" : ""}
-    </div>
+    </button>
   );
 
   const columns = useMemo(
@@ -156,7 +211,7 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
             <button
               type="button"
               onClick={() => removeSpeciesRow(observation, speciesIndex)}
-              className="text-slate hover:text-rust transition-colors"
+              className="w-full h-full flex items-center justify-center px-2 py-1.5 text-slate hover:text-rust transition-colors"
               aria-label="Fjern art"
             >
               <Trash2 size={14} />
@@ -169,12 +224,11 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
         header: "Artsnavn",
         cell: ({ row }) => {
           const { observation, species, speciesIndex, rowId } = row.original;
-          return editableCell(
+          return textCell(
             `${rowId}-speciesName`,
             species.species.PrefferedPopularname ??
               species.species.ValidScientificName,
-            <Input
-              autoFocus
+            <AutoFocusInput
               defaultValue={
                 species.species.PrefferedPopularname ??
                 species.species.ValidScientificName ??
@@ -187,6 +241,10 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
                 });
                 setEditingCell(null);
               }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.currentTarget.blur();
+                if (e.key === "Escape") setEditingCell(null);
+              }}
             />,
           );
         },
@@ -196,15 +254,18 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
         header: "Lokalitetsnavn",
         cell: ({ row }) => {
           const { observation, rowId } = row.original;
-          return editableCell(
+          return textCell(
             `${rowId}-locationName`,
             observation.locationName,
-            <Input
-              autoFocus
+            <AutoFocusInput
               defaultValue={observation.locationName || ""}
               onBlur={(e) => {
                 setObservationField(observation, "locationName", e.target.value);
                 setEditingCell(null);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.currentTarget.blur();
+                if (e.key === "Escape") setEditingCell(null);
               }}
             />,
           );
@@ -215,13 +276,12 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
         header: "Nøyaktighet",
         cell: ({ row }) => {
           const { observation, rowId } = row.original;
-          return editableCell(
+          return textCell(
             `${rowId}-uncertaintyRadius`,
             observation.uncertaintyRadius
               ? `${observation.uncertaintyRadius} m`
               : "",
-            <Input
-              autoFocus
+            <AutoFocusInput
               type="number"
               defaultValue={observation.uncertaintyRadius ?? ""}
               onBlur={(e) => {
@@ -230,6 +290,10 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
                   setObservationField(observation, "uncertaintyRadius", parsed);
                 }
                 setEditingCell(null);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.currentTarget.blur();
+                if (e.key === "Escape") setEditingCell(null);
               }}
             />,
           );
@@ -240,11 +304,10 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
         header: "Antall",
         cell: ({ row }) => {
           const { observation, species, speciesIndex, rowId } = row.original;
-          return editableCell(
+          return textCell(
             `${rowId}-count`,
             species.count,
-            <Input
-              autoFocus
+            <AutoFocusInput
               type="number"
               min="1"
               defaultValue={species.count ?? ""}
@@ -254,6 +317,10 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
                   setSpeciesField(observation, speciesIndex, "count", parsed);
                 }
                 setEditingCell(null);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.currentTarget.blur();
+                if (e.key === "Escape") setEditingCell(null);
               }}
             />,
           );
@@ -265,20 +332,17 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
         cell: ({ row }) => {
           const { observation, species, speciesIndex, rowId } = row.original;
           const taxonGroup = species.species.TaxonGroup || "";
-          return editableCell(
-            `${rowId}-unit`,
-            species.unit,
+          const cellKey = `${rowId}-unit`;
+          return pickerCell(cellKey, species.unit, ({ defaultOpen, onOpenChange }) => (
             <Combobox
+              variant="ghost"
+              defaultOpen={defaultOpen}
+              onOpenChange={onOpenChange}
               value={species.unit || ""}
-              onChange={(v) => {
-                setSpeciesField(observation, speciesIndex, "unit", v);
-                setEditingCell(null);
-              }}
-              options={
-                getUnitOptionsForTaxonGroup(taxonGroup) as ComboboxOption[]
-              }
-            />,
-          );
+              onChange={(v) => setSpeciesField(observation, speciesIndex, "unit", v)}
+              options={getUnitOptionsForTaxonGroup(taxonGroup) as ComboboxOption[]}
+            />
+          ));
         },
       }),
       columnHelper.display({
@@ -287,20 +351,19 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
         cell: ({ row }) => {
           const { observation, species, speciesIndex, rowId } = row.original;
           const taxonGroup = species.species.TaxonGroup || "";
-          return editableCell(
-            `${rowId}-gender`,
-            species.gender,
+          const cellKey = `${rowId}-gender`;
+          return pickerCell(cellKey, species.gender, ({ defaultOpen, onOpenChange }) => (
             <Combobox
+              variant="ghost"
+              defaultOpen={defaultOpen}
+              onOpenChange={onOpenChange}
               value={species.gender || ""}
-              onChange={(v) => {
-                setSpeciesField(observation, speciesIndex, "gender", v);
-                setEditingCell(null);
-              }}
+              onChange={(v) => setSpeciesField(observation, speciesIndex, "gender", v)}
               options={
                 getGenderOptionsForTaxonGroup(taxonGroup) as ComboboxOption[]
               }
-            />,
-          );
+            />
+          ));
         },
       }),
       columnHelper.display({
@@ -309,20 +372,17 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
         cell: ({ row }) => {
           const { observation, species, speciesIndex, rowId } = row.original;
           const taxonGroup = species.species.TaxonGroup || "";
-          return editableCell(
-            `${rowId}-age`,
-            species.age,
+          const cellKey = `${rowId}-age`;
+          return pickerCell(cellKey, species.age, ({ defaultOpen, onOpenChange }) => (
             <Combobox
+              variant="ghost"
+              defaultOpen={defaultOpen}
+              onOpenChange={onOpenChange}
               value={species.age || ""}
-              onChange={(v) => {
-                setSpeciesField(observation, speciesIndex, "age", v);
-                setEditingCell(null);
-              }}
-              options={
-                getAgeOptionsForTaxonGroup(taxonGroup) as ComboboxOption[]
-              }
-            />,
-          );
+              onChange={(v) => setSpeciesField(observation, speciesIndex, "age", v)}
+              options={getAgeOptionsForTaxonGroup(taxonGroup) as ComboboxOption[]}
+            />
+          ));
         },
       }),
       columnHelper.display({
@@ -331,20 +391,19 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
         cell: ({ row }) => {
           const { observation, species, speciesIndex, rowId } = row.original;
           const taxonGroup = species.species.TaxonGroup || "";
-          return editableCell(
-            `${rowId}-method`,
-            species.method,
+          const cellKey = `${rowId}-method`;
+          return pickerCell(cellKey, species.method, ({ defaultOpen, onOpenChange }) => (
             <Combobox
+              variant="ghost"
+              defaultOpen={defaultOpen}
+              onOpenChange={onOpenChange}
               value={species.method || ""}
-              onChange={(v) => {
-                setSpeciesField(observation, speciesIndex, "method", v);
-                setEditingCell(null);
-              }}
+              onChange={(v) => setSpeciesField(observation, speciesIndex, "method", v)}
               options={
                 getMethodOptionsForTaxonGroup(taxonGroup) as ComboboxOption[]
               }
-            />,
-          );
+            />
+          ));
         },
       }),
       columnHelper.display({
@@ -353,20 +412,19 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
         cell: ({ row }) => {
           const { observation, species, speciesIndex, rowId } = row.original;
           const taxonGroup = species.species.TaxonGroup || "";
-          return editableCell(
-            `${rowId}-activity`,
-            species.activity,
+          const cellKey = `${rowId}-activity`;
+          return pickerCell(cellKey, species.activity, ({ defaultOpen, onOpenChange }) => (
             <Combobox
+              variant="ghost"
+              defaultOpen={defaultOpen}
+              onOpenChange={onOpenChange}
               value={species.activity || ""}
-              onChange={(v) => {
-                setSpeciesField(observation, speciesIndex, "activity", v);
-                setEditingCell(null);
-              }}
+              onChange={(v) => setSpeciesField(observation, speciesIndex, "activity", v)}
               options={
                 getActivityOptionsForTaxonGroup(taxonGroup) as ComboboxOption[]
               }
-            />,
-          );
+            />
+          ));
         },
       }),
       columnHelper.display({
@@ -374,22 +432,27 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
         header: "Fra dato",
         cell: ({ row }) => {
           const { observation, rowId } = row.original;
-          return editableCell(
-            `${rowId}-startDateDate`,
+          const cellKey = `${rowId}-startDateDate`;
+          return pickerCell(
+            cellKey,
             formatDate(observation.startDate),
-            <DatePicker
-              value={dayjs(observation.startDate)}
-              onChange={(v) => {
-                if (!v) return;
-                const base = dayjs(observation.startDate);
-                setObservationField(
-                  observation,
-                  "startDate",
-                  base.year(v.year()).month(v.month()).date(v.date()).toISOString(),
-                );
-                setEditingCell(null);
-              }}
-            />,
+            ({ defaultOpen, onOpenChange }) => (
+              <DatePicker
+                variant="ghost"
+                defaultOpen={defaultOpen}
+                onOpenChange={onOpenChange}
+                value={dayjs(observation.startDate)}
+                onChange={(v) => {
+                  if (!v) return;
+                  const base = dayjs(observation.startDate);
+                  setObservationField(
+                    observation,
+                    "startDate",
+                    base.year(v.year()).month(v.month()).date(v.date()).toISOString(),
+                  );
+                }}
+              />
+            ),
           );
         },
       }),
@@ -398,10 +461,12 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
         header: "Fra klokkeslett",
         cell: ({ row }) => {
           const { observation, rowId } = row.original;
-          return editableCell(
+          return textCell(
             `${rowId}-startDateTime`,
             formatTime(observation.startDate),
             <TimePicker
+              variant="ghost"
+              autoOpen
               value={dayjs(observation.startDate)}
               onChange={(hour, minute) => {
                 setObservationField(
@@ -424,28 +489,33 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
         header: "Til dato",
         cell: ({ row }) => {
           const { observation, rowId } = row.original;
-          return editableCell(
-            `${rowId}-endDateDate`,
+          const cellKey = `${rowId}-endDateDate`;
+          return pickerCell(
+            cellKey,
             formatDate(observation.endDate),
-            <DatePicker
-              value={observation.endDate ? dayjs(observation.endDate) : null}
-              onClear={() => {
-                setObservationField(observation, "endDate", undefined);
-                setEditingCell(null);
-              }}
-              onChange={(v) => {
-                if (!v) return;
-                const base = observation.endDate
-                  ? dayjs(observation.endDate)
-                  : dayjs(observation.startDate);
-                setObservationField(
-                  observation,
-                  "endDate",
-                  base.year(v.year()).month(v.month()).date(v.date()).toISOString(),
-                );
-                setEditingCell(null);
-              }}
-            />,
+            ({ defaultOpen, onOpenChange }) => (
+              <DatePicker
+                variant="ghost"
+                defaultOpen={defaultOpen}
+                onOpenChange={onOpenChange}
+                value={observation.endDate ? dayjs(observation.endDate) : null}
+                onClear={() => {
+                  setObservationField(observation, "endDate", undefined);
+                  setEditingCell(null);
+                }}
+                onChange={(v) => {
+                  if (!v) return;
+                  const base = observation.endDate
+                    ? dayjs(observation.endDate)
+                    : dayjs(observation.startDate);
+                  setObservationField(
+                    observation,
+                    "endDate",
+                    base.year(v.year()).month(v.month()).date(v.date()).toISOString(),
+                  );
+                }}
+              />
+            ),
           );
         },
       }),
@@ -454,10 +524,12 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
         header: "Til klokkeslett",
         cell: ({ row }) => {
           const { observation, rowId } = row.original;
-          return editableCell(
+          return textCell(
             `${rowId}-endDateTime`,
             formatTime(observation.endDate),
             <TimePicker
+              variant="ghost"
+              autoOpen
               value={observation.endDate ? dayjs(observation.endDate) : null}
               onChange={(hour, minute) => {
                 const base = observation.endDate
@@ -479,16 +551,18 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
         header: "Kommentar",
         cell: ({ row }) => {
           const { observation, species, speciesIndex, rowId } = row.original;
-          return editableCell(
+          return textCell(
             `${rowId}-speciesComment`,
             species.comment,
-            <Textarea
-              autoFocus
+            <AutoFocusTextarea
               rows={2}
               defaultValue={species.comment || ""}
               onBlur={(e) => {
                 setSpeciesField(observation, speciesIndex, "comment", e.target.value);
                 setEditingCell(null);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") setEditingCell(null);
               }}
             />,
           );
@@ -499,11 +573,10 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
         header: "Privat kommentar",
         cell: ({ row }) => {
           const { observation, species, speciesIndex, rowId } = row.original;
-          return editableCell(
+          return textCell(
             `${rowId}-privateComment`,
             species.privateComment,
-            <Textarea
-              autoFocus
+            <AutoFocusTextarea
               rows={2}
               defaultValue={species.privateComment || ""}
               onBlur={(e) => {
@@ -515,6 +588,9 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
                 );
                 setEditingCell(null);
               }}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") setEditingCell(null);
+              }}
             />,
           );
         },
@@ -524,15 +600,18 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
         header: "Medobservatør",
         cell: ({ row }) => {
           const { observation, rowId } = row.original;
-          return editableCell(
+          return textCell(
             `${rowId}-observerName`,
             observation.observerName,
-            <Input
-              autoFocus
+            <AutoFocusInput
               defaultValue={observation.observerName || ""}
               onBlur={(e) => {
                 setObservationField(observation, "observerName", e.target.value);
                 setEditingCell(null);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.currentTarget.blur();
+                if (e.key === "Escape") setEditingCell(null);
               }}
             />,
           );
@@ -543,15 +622,18 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
         header: "Prosjekt",
         cell: ({ row }) => {
           const { observation, rowId } = row.original;
-          return editableCell(
+          return textCell(
             `${rowId}-project`,
             observation.project,
-            <Input
-              autoFocus
+            <AutoFocusInput
               defaultValue={observation.project || ""}
               onBlur={(e) => {
                 setObservationField(observation, "project", e.target.value);
                 setEditingCell(null);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.currentTarget.blur();
+                if (e.key === "Escape") setEditingCell(null);
               }}
             />,
           );

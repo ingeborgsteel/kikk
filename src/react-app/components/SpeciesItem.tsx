@@ -21,6 +21,7 @@ import { getGenderOptionsForTaxonGroup } from "../lib/genderOptions.ts";
 import { getUnitOptionsForTaxonGroup } from "../lib/unitOptions.ts";
 import { DatePicker } from "./ui/date-picker.tsx";
 import dayjs from "dayjs";
+import { twMerge } from "tailwind-merge";
 
 interface SpeciesItemProps {
   species: Species;
@@ -359,66 +360,34 @@ const SpeciesItem = ({
             />
           </div>
 
-          <div className="flex flex-wrap gap-sm">
-            <label className="flex items-center gap-sm cursor-pointer">
-              <input
-                type="checkbox"
-                checked={species.notRediscovered || false}
-                onChange={(e) =>
-                  updateSpecies("notRediscovered", e.target.checked)
-                }
-                className="w-4 h-4"
-              />
-              <span className="text-xs text-bark dark:text-sand">
-                Ikke gjenfunnet
-              </span>
-            </label>
-            <label className="flex items-center gap-sm cursor-pointer">
-              <input
-                type="checkbox"
-                checked={species.notFound || false}
-                onChange={(e) => updateSpecies("notFound", e.target.checked)}
-                className="w-4 h-4"
-              />
-              <span className="text-xs text-bark dark:text-sand">
-                Ikke funnet
-              </span>
-            </label>
-            <label className="flex items-center gap-sm cursor-pointer">
-              <input
-                type="checkbox"
-                checked={species.secondHand || false}
-                onChange={(e) => updateSpecies("secondHand", e.target.checked)}
-                className="w-4 h-4"
-              />
-              <span className="text-xs text-bark dark:text-sand">
-                Andrehånds
-              </span>
-            </label>
-            <label className="flex items-center gap-sm cursor-pointer">
-              <input
-                type="checkbox"
-                checked={species.uncertainIdentification || false}
-                onChange={(e) =>
-                  updateSpecies("uncertainIdentification", e.target.checked)
-                }
-                className="w-4 h-4"
-              />
-              <span className="text-xs text-bark dark:text-sand">
-                Usikker artsbestemming
-              </span>
-            </label>
-            <label className="flex items-center gap-sm cursor-pointer">
-              <input
-                type="checkbox"
-                checked={species.hide || false}
-                onChange={(e) => updateSpecies("hide", e.target.checked)}
-                className="w-4 h-4"
-              />
-              <span className="text-xs text-bark dark:text-sand">
-                Skjul fra Artsobservasjoner
-              </span>
-            </label>
+          <div className="flex flex-wrap gap-1.5">
+            {(
+              [
+                ["notRediscovered", "Ikke gjenfunnet"],
+                ["notFound", "Ikke funnet"],
+                ["secondHand", "Andrehånds"],
+                ["uncertainIdentification", "Usikker artsbestemming"],
+                ["hide", "Skjul fra Artsobservasjoner"],
+              ] as const
+            ).map(([field, label]) => {
+              const active = species[field] || false;
+              return (
+                <button
+                  key={field}
+                  type="button"
+                  onClick={() => updateSpecies(field, !active)}
+                  aria-pressed={active}
+                  className={twMerge(
+                    "px-3 py-2 rounded-md border text-xs transition-colors",
+                    active
+                      ? "bg-moss text-white border-moss"
+                      : "bg-white dark:bg-bark text-bark dark:text-sand border-slate-border dark:border-slate hover:bg-sand dark:hover:bg-forest",
+                  )}
+                >
+                  {label}
+                </button>
+              );
+            })}
           </div>
 
           <div>

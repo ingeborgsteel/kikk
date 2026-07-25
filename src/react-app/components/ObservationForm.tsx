@@ -14,6 +14,7 @@ import {
   getRecentSpecies,
   rankSpeciesResults,
   reverseGeocode,
+  sortSpeciesByTaxonGroupAndName,
 } from "../lib/utils.ts";
 import { LocationEditor } from "./LocationEditor.tsx";
 import { UserLocation } from "../types/location.ts";
@@ -635,9 +636,22 @@ const ObservationForm = ({
                     </div>
                   </div>
                   <div>
-                    <Label className="text-bark dark:text-sand">
-                      Observerte arter
-                    </Label>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-bark dark:text-sand">
+                        Observerte arter
+                      </Label>
+                      {species.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onChange(sortSpeciesByTaxonGroupAndName(species))
+                          }
+                          className="text-xs text-slate hover:text-bark dark:hover:text-sand transition-colors"
+                        >
+                          Sorter
+                        </button>
+                      )}
+                    </div>
                     {species.length === 0 && (
                       <p className="text-sm text-slate mt-1">
                         Ingen arter lagt til enda. Bruk søkefeltet over for å

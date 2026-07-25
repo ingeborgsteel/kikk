@@ -39,10 +39,9 @@ export function useCreateObservation() {
         queryKey: ["observations"],
       });
 
-      const optimisticId = `optimistic-${crypto.randomUUID()}`;
       const optimisticObservation: Observation = {
         ...input,
-        id: optimisticId,
+        id: `optimistic-${crypto.randomUUID()}`,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         species: input.species.map((s) => ({
@@ -57,24 +56,15 @@ export function useCreateObservation() {
         (old) => [optimisticObservation, ...(old ?? [])],
       );
 
-      return { previous, optimisticId };
-    },
-    onSuccess: (created, _input, context) => {
-      // Swap the optimistic placeholder for the real row returned by the
-      // server, without a refetch — avoids a visible blink from replacing
-      // already-correct data a moment later.
-      qc.setQueriesData<Observation[]>(
-        { queryKey: ["observations"] },
-        (old) =>
-          old?.map((obs) =>
-            obs.id === context?.optimisticId ? created : obs,
-          ) ?? old,
-      );
+      return { previous };
     },
     onError: (_err, _input, context) => {
       context?.previous.forEach(([queryKey, data]) => {
         qc.setQueryData(queryKey, data);
       });
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["observations"] });
     },
   });
 }
@@ -98,19 +88,13 @@ export function useUpdateObservation() {
 
       return { previous };
     },
-    onSuccess: (updated) => {
-      // Reconcile with the server's copy (e.g. updatedAt) without a
-      // refetch, so a successful save doesn't cause a visible re-render blink.
-      qc.setQueriesData<Observation[]>(
-        { queryKey: ["observations"] },
-        (old) =>
-          old?.map((obs) => (obs.id === updated.id ? updated : obs)) ?? old,
-      );
-    },
     onError: (_err, _input, context) => {
       context?.previous.forEach(([queryKey, data]) => {
         qc.setQueryData(queryKey, data);
       });
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["observations"] });
     },
   });
 }
@@ -137,6 +121,9 @@ export function useDeleteObservation() {
       context?.previous.forEach(([queryKey, data]) => {
         qc.setQueryData(queryKey, data);
       });
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["observations"] });
     },
   });
 }

@@ -14,6 +14,8 @@ import {
   getRecentSpecies,
   rankSpeciesResults,
   reverseGeocode,
+  sortSpeciesAlphabetically,
+  sortSpeciesByTaxonGroupAndName,
 } from "../lib/utils.ts";
 import { LocationEditor } from "./LocationEditor.tsx";
 import { UserLocation } from "../types/location.ts";
@@ -330,10 +332,12 @@ const ObservationForm = ({
         toStorageDateTimeValue(data.startDate, startTimeEnabled) ||
         dayjs().format(DATE_TIME_STORAGE_FORMAT);
       const endDate = toStorageDateTimeValue(data.endDate, endTimeEnabled);
+      const species = sortSpeciesByTaxonGroupAndName(data.species);
 
       if (data.id) {
         updateObservation({
           ...data,
+          species,
           locationId: presetLocation?.id ?? data.locationId,
           startDate,
           endDate,
@@ -342,6 +346,7 @@ const ObservationForm = ({
         if (data.observerName) sessionObserverName = data.observerName;
         addObservation({
           ...data,
+          species,
           locationId: presetLocation?.id,
           startDate,
           endDate,
@@ -375,6 +380,7 @@ const ObservationForm = ({
       if (data.observerName) sessionObserverName = data.observerName;
       addObservation({
         ...data,
+        species: sortSpeciesByTaxonGroupAndName(data.species),
         locationId: presetLocation?.id,
         startDate,
         endDate,
@@ -635,9 +641,33 @@ const ObservationForm = ({
                     </div>
                   </div>
                   <div>
-                    <Label className="text-bark dark:text-sand">
-                      Observerte arter
-                    </Label>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-bark dark:text-sand">
+                        Observerte arter
+                      </Label>
+                      {species.length > 1 && (
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              onChange(sortSpeciesAlphabetically(species))
+                            }
+                            className="text-xs text-slate hover:text-bark dark:hover:text-sand transition-colors"
+                          >
+                            Sorter a-å
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              onChange(sortSpeciesByTaxonGroupAndName(species))
+                            }
+                            className="text-xs text-slate hover:text-bark dark:hover:text-sand transition-colors"
+                          >
+                            Sorter etter artsgruppe
+                          </button>
+                        </div>
+                      )}
+                    </div>
                     {species.length === 0 && (
                       <p className="text-sm text-slate mt-1">
                         Ingen arter lagt til enda. Bruk søkefeltet over for å

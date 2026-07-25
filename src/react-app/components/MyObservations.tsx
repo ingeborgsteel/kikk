@@ -9,10 +9,12 @@ import {
   Table2,
   X,
 } from "lucide-react";
+import dayjs, { Dayjs } from "dayjs";
 import { useObservations } from "../context/ObservationsContext";
 import { useLocations } from "../context/LocationsContext";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input.tsx";
+import { DatePicker } from "./ui/date-picker.tsx";
 import ObservationForm from "./ObservationForm.tsx";
 import ExportDialog from "./ExportDialog";
 import ObservationItem from "./ObservationItem";
@@ -32,6 +34,8 @@ function MyObservations({ onBack }: MyObservationsProps) {
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [locationSearch, setLocationSearch] = useState("");
   const [showLocationResults, setShowLocationResults] = useState(false);
+  const [dateFrom, setDateFrom] = useState<Dayjs | null>(null);
+  const [dateTo, setDateTo] = useState<Dayjs | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const view = searchParams.get("view") === "table" ? "table" : "list";
   const setView = (next: "list" | "table") => {
@@ -129,14 +133,30 @@ function MyObservations({ onBack }: MyObservationsProps) {
       )
     : locationSuggestions;
 
-  // Filter observations by a locality name search (matches saved and unsaved names)
-  const filteredObservations = locationSearch.trim()
-    ? observations.filter((obs) =>
-        obs.locationName
-          ?.toLowerCase()
-          .includes(locationSearch.trim().toLowerCase()),
-      )
-    : observations;
+  // Filter observations by locality name search (matches saved and unsaved
+  // names) and/or a startDate range
+  const filteredObservations = observations.filter((obs) => {
+    if (
+      locationSearch.trim() &&
+      !obs.locationName
+        ?.toLowerCase()
+        .includes(locationSearch.trim().toLowerCase())
+    ) {
+      return false;
+    }
+
+    if (dateFrom || dateTo) {
+      const startDate = dayjs(obs.startDate);
+      if (dateFrom && startDate.isBefore(dateFrom.startOf("day"))) {
+        return false;
+      }
+      if (dateTo && startDate.isAfter(dateTo.endOf("day"))) {
+        return false;
+      }
+    }
+
+    return true;
+  });
 
   const unexportedCount = getUnexportedCount(filteredObservations);
 
@@ -145,84 +165,100 @@ function MyObservations({ onBack }: MyObservationsProps) {
   return (
     <div className="w-full min-h-screen bg-sand dark:bg-bark pb-16 md:pb-0">
       <Header title={"kikket på"} />
-      <div
-        className={twMerge(
-          "mx-auto p-lg md:p-xl",
-          view === "table" ? "max-w-full" : "max-w-4xl",
-        )}
-      >
-        <div className="mb-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-md">
+      <div className="mx-auto max-w-full p-lg md:p-xl">
+        <div className="mb-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-md flex-wrap">
           <div className="hidden md:block">
             <Button onClick={onBack} variant="outline">
               ← Tilbake til kart
             </Button>
           </div>
 
-          {/* Location search */}
-          {locationSuggestions.length > 0 && (
-            <div className="relative w-full md:w-64">
-              <Search
-                size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate pointer-events-none"
-              />
-              <Input
-                type="text"
-                placeholder="Søk etter lokalitet..."
-                value={locationSearch}
-                className={twMerge("pl-8", locationSearch && "pr-8")}
-                onChange={(e) => {
-                  setLocationSearch(e.target.value);
-                  setShowLocationResults(true);
-                }}
-                onFocus={() => setShowLocationResults(true)}
-                onBlur={() =>
-                  setTimeout(() => setShowLocationResults(false), 150)
-                }
-              />
-              {locationSearch && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLocationSearch("");
-                    setShowLocationResults(false);
+          <div className="flex flex-wrap items-center gap-2 flex-1">
+            {/* Location search */}
+            {locationSuggestions.length > 0 && (
+              <div className="relative w-full md:w-56">
+                <Search
+                  size={16}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate pointer-events-none"
+                />
+                <Input
+                  type="text"
+                  placeholder="Søk etter lokalitet..."
+                  value={locationSearch}
+                  className={twMerge("pl-8", locationSearch && "pr-8")}
+                  onChange={(e) => {
+                    setLocationSearch(e.target.value);
+                    setShowLocationResults(true);
                   }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate hover:text-bark dark:hover:text-sand"
-                  aria-label="Fjern lokalitetsfilter"
-                >
-                  <X size={14} />
-                </button>
-              )}
-              {showLocationResults &&
-                filteredLocationSuggestions.length > 0 && (
-                  <div className="absolute z-[1100] w-full mt-1 bg-white dark:bg-bark border-2 border-slate-border dark:border-slate rounded-md shadow-custom-lg overflow-hidden">
-                    <div className="max-h-60 overflow-y-auto p-1">
-                      {filteredLocationSuggestions.map((suggestion) => (
-                        <button
-                          key={suggestion.name}
-                          type="button"
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => {
-                            setLocationSearch(suggestion.name);
-                            setShowLocationResults(false);
-                          }}
-                          className="w-full flex items-center gap-1.5 text-left px-2 py-2 rounded-md hover:bg-sand dark:hover:bg-forest transition-colors"
-                        >
-                          {suggestion.isSaved && (
-                            <MapPinned
-                              size={14}
-                              className="shrink-0 text-violet-600 dark:text-violet-400"
-                            />
-                          )}
-                          <span className="text-sm text-bark dark:text-sand truncate">
-                            {suggestion.name}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                  onFocus={() => setShowLocationResults(true)}
+                  onBlur={() =>
+                    setTimeout(() => setShowLocationResults(false), 150)
+                  }
+                />
+                {locationSearch && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLocationSearch("");
+                      setShowLocationResults(false);
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate hover:text-bark dark:hover:text-sand"
+                    aria-label="Fjern lokalitetsfilter"
+                  >
+                    <X size={14} />
+                  </button>
                 )}
+                {showLocationResults &&
+                  filteredLocationSuggestions.length > 0 && (
+                    <div className="absolute z-[1100] w-full mt-1 bg-white dark:bg-bark border-2 border-slate-border dark:border-slate rounded-md shadow-custom-lg overflow-hidden">
+                      <div className="max-h-60 overflow-y-auto p-1">
+                        {filteredLocationSuggestions.map((suggestion) => (
+                          <button
+                            key={suggestion.name}
+                            type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => {
+                              setLocationSearch(suggestion.name);
+                              setShowLocationResults(false);
+                            }}
+                            className="w-full flex items-center gap-1.5 text-left px-2 py-2 rounded-md hover:bg-sand dark:hover:bg-forest transition-colors"
+                          >
+                            {suggestion.isSaved && (
+                              <MapPinned
+                                size={14}
+                                className="shrink-0 text-violet-600 dark:text-violet-400"
+                              />
+                            )}
+                            <span className="text-sm text-bark dark:text-sand truncate">
+                              {suggestion.name}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+              </div>
+            )}
+
+            {/* Date range filter */}
+            <div className="flex items-center gap-1.5">
+              <DatePicker
+                value={dateFrom}
+                onChange={setDateFrom}
+                onClear={() => setDateFrom(null)}
+                placeholder="Fra dato"
+                className="w-36"
+              />
+              <span className="text-slate text-sm">–</span>
+              <DatePicker
+                value={dateTo}
+                onChange={setDateTo}
+                onClear={() => setDateTo(null)}
+                placeholder="Til dato"
+                className="w-36"
+              />
             </div>
-          )}
+          </div>
 
           <div className="flex items-center gap-2 ml-auto">
             <div className="flex items-center border-2 border-moss rounded-md overflow-hidden">

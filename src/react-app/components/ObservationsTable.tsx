@@ -213,7 +213,7 @@ const ObservationsTable = ({
       <button
         type="button"
         onClick={() => setEditingCell(cellKey)}
-        className="w-full h-full text-left px-2 py-1.5 hover:bg-sand/60 dark:hover:bg-forest/60 transition-colors"
+        className="w-full h-full text-left px-2 py-1.5 hover:bg-moss/15 dark:hover:bg-moss/25 transition-colors"
       >
         {display || <span className="text-slate">—</span>}
       </button>
@@ -242,7 +242,7 @@ const ObservationsTable = ({
       <button
         type="button"
         onClick={() => setEditingCell(cellKey)}
-        className="w-full h-full text-left px-2 py-1.5 hover:bg-sand/60 dark:hover:bg-forest/60 transition-colors"
+        className="w-full h-full text-left px-2 py-1.5 hover:bg-moss/15 dark:hover:bg-moss/25 transition-colors"
       >
         {display || <span className="text-slate">—</span>}
       </button>
@@ -253,7 +253,7 @@ const ObservationsTable = ({
     <button
       type="button"
       onClick={onToggle}
-      className="w-full h-full flex items-center justify-center px-2 py-1.5 hover:bg-sand/60 dark:hover:bg-forest/60 transition-colors"
+      className="w-full h-full flex items-center justify-center px-2 py-1.5 hover:bg-moss/15 dark:hover:bg-moss/25 transition-colors"
       role="checkbox"
       aria-checked={!!active}
     >

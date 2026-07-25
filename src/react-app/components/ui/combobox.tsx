@@ -107,7 +107,7 @@ const Combobox = ({
         <PopoverPrimitive.Content
           align="start"
           sideOffset={4}
-          className="z-[1100] w-[var(--radix-popover-trigger-width)] rounded-md border-2 border-slate-border dark:border-slate bg-white dark:bg-bark shadow-custom-lg overflow-hidden"
+          className="z-[1100] w-[max(var(--radix-popover-trigger-width),14rem)] rounded-md border-2 border-slate-border dark:border-slate bg-white dark:bg-bark shadow-custom-lg overflow-hidden"
         >
           <CommandPrimitive shouldFilter={false} className="flex flex-col">
             <CommandPrimitive.Input

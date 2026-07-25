@@ -1,13 +1,15 @@
 import { useState } from "react";
-import { FileSpreadsheet, Filter, MapPin } from "lucide-react";
+import { FileSpreadsheet, Filter, LayoutList, MapPin, Table2 } from "lucide-react";
 import { useObservations } from "../context/ObservationsContext";
 import { useLocations } from "../context/LocationsContext";
 import { Button } from "./ui/button";
 import ObservationForm from "./ObservationForm.tsx";
 import ExportDialog from "./ExportDialog";
 import ObservationItem from "./ObservationItem";
+import ObservationsTable from "./ObservationsTable.tsx";
 import { getUnexportedCount } from "../queries/useExports";
 import Header from "./Header.tsx";
+import { twMerge } from "tailwind-merge";
 
 interface MyObservationsProps {
   onBack: () => void;
@@ -19,6 +21,7 @@ function MyObservations({ onBack }: MyObservationsProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [filterLocationId, setFilterLocationId] = useState<string | null>(null);
+  const [view, setView] = useState<"list" | "table">("list");
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -84,7 +87,12 @@ function MyObservations({ onBack }: MyObservationsProps) {
   return (
     <div className="w-full min-h-screen bg-sand dark:bg-bark pb-16 md:pb-0">
       <Header title={"kikket på"} />
-      <div className="max-w-4xl mx-auto p-lg md:p-xl">
+      <div
+        className={twMerge(
+          "mx-auto p-lg md:p-xl",
+          view === "table" ? "max-w-full" : "max-w-4xl",
+        )}
+      >
         <div className="mb-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-md">
           <div className="hidden md:block">
             <Button onClick={onBack} variant="outline">
@@ -111,20 +119,52 @@ function MyObservations({ onBack }: MyObservationsProps) {
             </div>
           )}
 
-          {observations.length > 0 && (
-            <Button
-              onClick={() => setShowExportDialog(true)}
-              className="ml-auto"
-            >
-              <FileSpreadsheet size={20} className="mr-2" />
-              Eksporter til Excel
-              {unexportedCount > 0 && (
-                <span className="ml-2 px-2 py-0.5 bg-moss text-white text-xs rounded-full">
-                  {unexportedCount} nye
-                </span>
-              )}
-            </Button>
-          )}
+          <div className="flex items-center gap-2 ml-auto">
+            <div className="flex items-center border-2 border-moss rounded-md overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setView("list")}
+                aria-pressed={view === "list"}
+                className={twMerge(
+                  "p-2 transition-colors",
+                  view === "list"
+                    ? "bg-moss text-white"
+                    : "bg-white dark:bg-bark text-bark dark:text-sand hover:bg-sand dark:hover:bg-forest",
+                )}
+                aria-label="Listevisning"
+                title="Listevisning"
+              >
+                <LayoutList size={18} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setView("table")}
+                aria-pressed={view === "table"}
+                className={twMerge(
+                  "p-2 transition-colors",
+                  view === "table"
+                    ? "bg-moss text-white"
+                    : "bg-white dark:bg-bark text-bark dark:text-sand hover:bg-sand dark:hover:bg-forest",
+                )}
+                aria-label="Tabellvisning"
+                title="Tabellvisning"
+              >
+                <Table2 size={18} />
+              </button>
+            </div>
+
+            {observations.length > 0 && (
+              <Button onClick={() => setShowExportDialog(true)}>
+                <FileSpreadsheet size={20} className="mr-2" />
+                Eksporter til Excel
+                {unexportedCount > 0 && (
+                  <span className="ml-2 px-2 py-0.5 bg-moss text-white text-xs rounded-full">
+                    {unexportedCount} nye
+                  </span>
+                )}
+              </Button>
+            )}
+          </div>
         </div>
 
         {filteredObservations.length === 0 && observations.length > 0 ? (
@@ -145,6 +185,8 @@ function MyObservations({ onBack }: MyObservationsProps) {
               Klikk på kartet for å legge til din første observasjon!
             </p>
           </div>
+        ) : view === "table" ? (
+          <ObservationsTable observations={filteredObservations} />
         ) : (
           <div className="flex flex-col space-y-md">
             {filteredObservations.map((observation) => (

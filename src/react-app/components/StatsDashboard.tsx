@@ -151,7 +151,9 @@ function countUniqueSpecies(observations: Observation[]): number {
   const seen = new Set<string>();
   for (const obs of observations) {
     for (const s of obs.species) {
-      seen.add(s.species.PrefferedPopularname);
+      seen.add(
+        s.species.PrefferedPopularname ?? s.species.ValidScientificName ?? "",
+      );
     }
   }
   return seen.size;

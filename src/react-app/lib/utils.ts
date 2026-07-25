@@ -25,7 +25,10 @@ export function getRecentSpecies(
   for (const obs of observations) {
     for (const speciesObs of obs.species) {
       const speciesId =
-        speciesObs.species.Id ?? speciesObs.species.PrefferedPopularname;
+        speciesObs.species.Id ??
+        speciesObs.species.PrefferedPopularname ??
+        speciesObs.species.ValidScientificName ??
+        "";
       const existingEntry = speciesMap.get(speciesId);
 
       if (!existingEntry || obs.updatedAt > existingEntry.date) {
@@ -86,7 +89,10 @@ export function getLifeList(observations: Observation[]): LifeListEntry[] {
     const obsDate = obs.startDate || obs.createdAt;
     for (const speciesObs of obs.species) {
       const speciesId =
-        speciesObs.species.Id ?? speciesObs.species.PrefferedPopularname;
+        speciesObs.species.Id ??
+        speciesObs.species.PrefferedPopularname ??
+        speciesObs.species.ValidScientificName ??
+        "";
       const existing = speciesMap.get(speciesId);
 
       if (existing) {

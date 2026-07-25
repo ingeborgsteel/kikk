@@ -29,11 +29,11 @@ import { getMethodOptionsForTaxonGroup } from "../lib/methodOptions.ts";
 import { getActivityOptionsForTaxonGroup } from "../lib/activityOptions.ts";
 import { twMerge } from "tailwind-merge";
 
-const ROWS_PER_PAGE = 20;
+const ROWS_PER_PAGE = 40;
 
 // Pin the first three columns (actions, species name, locality name) so
 // they stay visible while scrolling horizontally through the rest of the table.
-const STICKY_COLUMN_IDS = ["actions", "speciesName", "locationName"];
+const STICKY_COLUMN_IDS = ["actions", "speciesName"];
 
 interface ObservationsTableProps {
   observations: Observation[];
@@ -908,31 +908,29 @@ const ObservationsTable = ({
     columns,
     getCoreRowModel: getCoreRowModel(),
     getRowId: (row) => row.rowId,
+    state: {
+      columnPinning: { left: STICKY_COLUMN_IDS },
+    },
   });
 
-  const stickyLeftOffsets = useMemo(() => {
-    const offsets: Record<string, number> = {};
-    let left = 0;
-    for (const header of table.getFlatHeaders()) {
-      if (!STICKY_COLUMN_IDS.includes(header.column.id)) continue;
-      offsets[header.column.id] = left;
-      left += header.getSize();
-    }
-    return offsets;
-  }, [table]);
+  const getStickyStyle = (
+    column: ReturnType<typeof table.getColumn>,
+    zIndex: number,
+  ): React.CSSProperties | undefined => {
+    if (!column || column.getIsPinned() !== "left") return undefined;
+    return {
+      position: "sticky",
+      left: column.getAfter("right"),
+      zIndex,
+    };
+  };
 
-  const getStickyStyle = (columnId: string): React.CSSProperties | undefined =>
-    columnId in stickyLeftOffsets
-      ? { position: "sticky", left: stickyLeftOffsets[columnId], zIndex: 5 }
-      : undefined;
-
-  const lastStickyColumnId =
-    STICKY_COLUMN_IDS[STICKY_COLUMN_IDS.length - 1];
+  const lastStickyColumnId = STICKY_COLUMN_IDS[STICKY_COLUMN_IDS.length - 1];
 
   return (
     <div className="border-2 border-moss/40 rounded-sm overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="border-collapse table-fixed">
+        <table className="border-separate border-spacing-0 table-fixed">
           <colgroup>
             {table.getFlatHeaders().map((header) => (
               <col key={header.id} style={{ width: header.getSize() }} />
@@ -946,12 +944,11 @@ const ObservationsTable = ({
                     key={header.id}
                     className={twMerge(
                       headerClass,
-                      header.column.id in stickyLeftOffsets &&
-                        "z-20 bg-sand dark:bg-forest",
-                      header.column.id === lastStickyColumnId &&
-                        "border-r-2 border-moss/40",
+                      header.column.getIsPinned() === "left" &&
+                        "bg-sand dark:bg-forest",
+                      header.column.id === lastStickyColumnId && "border-r-2",
                     )}
-                    style={getStickyStyle(header.column.id)}
+                    style={getStickyStyle(header.column, 20)}
                   >
                     {flexRender(
                       header.column.columnDef.header,
@@ -979,7 +976,7 @@ const ObservationsTable = ({
                           "border-r-2 border-moss/40",
                         isNewGroup && "border-t-2 border-moss/40",
                       )}
-                      style={getStickyStyle(cell.column.id)}
+                      style={getStickyStyle(cell.column, 5)}
                     >
                       {flexRender(
                         cell.column.columnDef.cell,

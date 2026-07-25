@@ -6,7 +6,14 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import { ChevronLeft, ChevronRight, MapPinned, Trash2 } from "lucide-react";
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  MapPinned,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import { Observation, Species } from "../types/observation.ts";
 import { useObservations } from "../context/ObservationsContext.tsx";
 import { Input } from "./ui/input.tsx";
@@ -22,10 +29,11 @@ import { getMethodOptionsForTaxonGroup } from "../lib/methodOptions.ts";
 import { getActivityOptionsForTaxonGroup } from "../lib/activityOptions.ts";
 import { twMerge } from "tailwind-merge";
 
-const OBSERVATIONS_PER_PAGE = 20;
+const ROWS_PER_PAGE = 20;
 
 interface ObservationsTableProps {
   observations: Observation[];
+  onEdit: (id: string) => void;
 }
 
 interface FlatRow {
@@ -70,7 +78,10 @@ const AutoFocusTextarea = (
   return <Textarea ref={ref} variant="ghost" {...props} />;
 };
 
-const ObservationsTable = ({ observations }: ObservationsTableProps) => {
+const ObservationsTable = ({
+  observations,
+  onEdit,
+}: ObservationsTableProps) => {
   const { updateObservation, deleteObservation } = useObservations();
   const [editingCell, setEditingCell] = useState<string | null>(null);
 
@@ -79,6 +90,7 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
     field: K,
     value: Observation[K],
   ) => {
+    if (observation[field] === value) return;
     updateObservation({ ...observation, [field]: value });
   };
 
@@ -88,6 +100,8 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
     field: K,
     value: Species[K],
   ) => {
+    const current = observation.species[speciesIndex];
+    if (current[field] === value) return;
     const nextSpecies = observation.species.map((s, i) =>
       i === speciesIndex ? { ...s, [field]: value } : s,
     );
@@ -133,29 +147,14 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
     [observations],
   );
 
-  const pageCount = Math.max(
-    1,
-    Math.ceil(sortedObservations.length / OBSERVATIONS_PER_PAGE),
-  );
-  const clampedPage = Math.min(page, pageCount - 1);
-
-  useEffect(() => {
-    if (page !== clampedPage) setPage(clampedPage);
-  }, [page, clampedPage]);
-
-  const pageObservations = useMemo(
-    () =>
-      sortedObservations.slice(
-        clampedPage * OBSERVATIONS_PER_PAGE,
-        (clampedPage + 1) * OBSERVATIONS_PER_PAGE,
-      ),
-    [sortedObservations, clampedPage],
-  );
-
-  const data = useMemo<FlatRow[]>(() => {
+  // Flatten to species-rows first, then paginate by row count directly
+  // (rather than by observation count), so page size reflects what's
+  // actually rendered — while keeping each observation's species rows
+  // together on one page.
+  const allRows = useMemo<FlatRow[]>(() => {
     let groupCount = 0;
     let lastObservationId: string | null = null;
-    return pageObservations.flatMap((observation) =>
+    return sortedObservations.flatMap((observation) =>
       observation.species.map((species, speciesIndex) => {
         const isNewGroup = observation.id !== lastObservationId;
         if (isNewGroup) groupCount++;
@@ -170,7 +169,35 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
         };
       }),
     );
-  }, [pageObservations]);
+  }, [sortedObservations]);
+
+  const pages = useMemo(() => {
+    const result: FlatRow[][] = [];
+    let current: FlatRow[] = [];
+    for (const row of allRows) {
+      if (row.isNewGroup && current.length >= ROWS_PER_PAGE) {
+        result.push(current);
+        current = [];
+      }
+      current.push(row);
+    }
+    if (current.length > 0) result.push(current);
+    return result.length > 0 ? result : [[]];
+  }, [allRows]);
+
+  const pageCount = pages.length;
+  const clampedPage = Math.min(page, pageCount - 1);
+
+  useEffect(() => {
+    if (page !== clampedPage) setPage(clampedPage);
+  }, [page, clampedPage]);
+
+  const data = pages[clampedPage];
+
+  const totalRows = allRows.length;
+  const rowsBeforePage = pages
+    .slice(0, clampedPage)
+    .reduce((sum, p) => sum + p.length, 0);
 
   /** Text-style cell: shows plain text, and the very first click both enters edit mode and focuses the input (no second click needed). */
   const textCell = (
@@ -226,29 +253,50 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
     <button
       type="button"
       onClick={onToggle}
-      className="w-full h-full text-center px-2 py-1.5 hover:bg-sand/60 dark:hover:bg-forest/60 transition-colors"
+      className="w-full h-full flex items-center justify-center px-2 py-1.5 hover:bg-sand/60 dark:hover:bg-forest/60 transition-colors"
+      role="checkbox"
+      aria-checked={!!active}
     >
-      {active ? "✕" : ""}
+      <span
+        className={twMerge(
+          "h-4 w-4 rounded-sm border-2 flex items-center justify-center",
+          active
+            ? "bg-moss border-moss text-white"
+            : "border-slate-border dark:border-slate bg-white dark:bg-bark",
+        )}
+      >
+        {active && <Check size={12} strokeWidth={3} />}
+      </span>
     </button>
   );
 
   const columns = useMemo(
     () => [
       columnHelper.display({
-        id: "remove",
+        id: "actions",
         header: "",
-        size: 44,
+        size: 72,
         cell: ({ row }) => {
           const { observation, speciesIndex } = row.original;
           return (
-            <button
-              type="button"
-              onClick={() => removeSpeciesRow(observation, speciesIndex)}
-              className="w-full h-full flex items-center justify-center px-2 py-1.5 text-slate hover:text-rust transition-colors"
-              aria-label="Fjern art"
-            >
-              <Trash2 size={14} />
-            </button>
+            <div className="w-full h-full flex items-center justify-center gap-1">
+              <button
+                type="button"
+                onClick={() => onEdit(observation.id)}
+                className="p-1 text-slate hover:text-moss transition-colors"
+                aria-label="Rediger observasjon"
+              >
+                <Pencil size={14} />
+              </button>
+              <button
+                type="button"
+                onClick={() => removeSpeciesRow(observation, speciesIndex)}
+                className="p-1 text-slate hover:text-rust transition-colors"
+                aria-label="Fjern art"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
           );
         },
       }),
@@ -269,10 +317,18 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
                 ""
               }
               onBlur={(e) => {
-                setSpeciesField(observation, speciesIndex, "species", {
-                  ...species.species,
-                  PrefferedPopularname: e.target.value,
-                });
+                const nextName = e.target.value;
+                if (
+                  nextName !==
+                  (species.species.PrefferedPopularname ??
+                    species.species.ValidScientificName ??
+                    "")
+                ) {
+                  setSpeciesField(observation, speciesIndex, "species", {
+                    ...species.species,
+                    PrefferedPopularname: nextName,
+                  });
+                }
                 setEditingCell(null);
               }}
               onKeyDown={(e) => {
@@ -844,7 +900,7 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
   });
 
   return (
-    <div className="border-2 border-moss/40 rounded-md overflow-hidden">
+    <div className="border-2 border-moss/40 rounded-sm overflow-hidden">
       <div className="overflow-x-auto">
         <table className="border-collapse table-fixed">
           <colgroup>
@@ -895,12 +951,8 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
       {pageCount > 1 && (
         <div className="flex items-center justify-between gap-md px-md py-sm border-t-2 border-moss/40 bg-sand dark:bg-forest">
           <span className="text-xs text-slate">
-            Observasjon {clampedPage * OBSERVATIONS_PER_PAGE + 1}–
-            {Math.min(
-              (clampedPage + 1) * OBSERVATIONS_PER_PAGE,
-              sortedObservations.length,
-            )}{" "}
-            av {sortedObservations.length}
+            Observasjon {rowsBeforePage + 1}–{rowsBeforePage + data.length} av{" "}
+            {totalRows}
           </span>
           <div className="flex items-center gap-2">
             <Button

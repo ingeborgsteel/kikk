@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { FileSpreadsheet, Filter, LayoutList, MapPin, Table2 } from "lucide-react";
 import { useObservations } from "../context/ObservationsContext";
 import { useLocations } from "../context/LocationsContext";
@@ -21,7 +22,22 @@ function MyObservations({ onBack }: MyObservationsProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [filterLocationId, setFilterLocationId] = useState<string | null>(null);
-  const [view, setView] = useState<"list" | "table">("list");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const view = searchParams.get("view") === "table" ? "table" : "list";
+  const setView = (next: "list" | "table") => {
+    setSearchParams(
+      (prev) => {
+        const params = new URLSearchParams(prev);
+        if (next === "list") {
+          params.delete("view");
+        } else {
+          params.set("view", next);
+        }
+        return params;
+      },
+      { replace: true },
+    );
+  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);

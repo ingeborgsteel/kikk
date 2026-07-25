@@ -55,6 +55,7 @@
     "typescript-eslint": "8.48.0",
     "vite": "^6.0.0",
     "vite-plugin-pwa": "^1.3.0",
+    "vitest": "^4.1.10",
     "wrangler": "4.56.0"
   },
   "private": true,
@@ -66,7 +67,8 @@
     "dev": "vite",
     "lint": "eslint .",
     "format": "npx prettier --write .",
-    "preview": "npm run build && vite preview"
+    "preview": "npm run build && vite preview",
+    "test": "vitest run"
   },
   "type": "module"
 }

@@ -6,7 +6,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import { Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { Observation, Species } from "../types/observation.ts";
 import { useObservations } from "../context/ObservationsContext.tsx";
 import { Input } from "./ui/input.tsx";
@@ -14,12 +14,15 @@ import { Textarea } from "./ui/textarea.tsx";
 import { Combobox, ComboboxOption } from "./ui/combobox.tsx";
 import { DatePicker } from "./ui/date-picker.tsx";
 import { TimePicker } from "./ui/time-picker.tsx";
+import { Button } from "./ui/button.tsx";
 import { getAgeOptionsForTaxonGroup } from "../lib/ageOptions.ts";
 import { getGenderOptionsForTaxonGroup } from "../lib/genderOptions.ts";
 import { getUnitOptionsForTaxonGroup } from "../lib/unitOptions.ts";
 import { getMethodOptionsForTaxonGroup } from "../lib/methodOptions.ts";
 import { getActivityOptionsForTaxonGroup } from "../lib/activityOptions.ts";
 import { twMerge } from "tailwind-merge";
+
+const OBSERVATIONS_PER_PAGE = 20;
 
 interface ObservationsTableProps {
   observations: Observation[];
@@ -117,13 +120,42 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
     });
   };
 
+  const [page, setPage] = useState(0);
+
+  const goToPage = (next: number) => {
+    setPage(next);
+    setEditingCell(null);
+  };
+
+  const sortedObservations = useMemo(
+    () =>
+      [...observations].sort((a, b) => dayjs(b.startDate).diff(dayjs(a.startDate))),
+    [observations],
+  );
+
+  const pageCount = Math.max(
+    1,
+    Math.ceil(sortedObservations.length / OBSERVATIONS_PER_PAGE),
+  );
+  const clampedPage = Math.min(page, pageCount - 1);
+
+  useEffect(() => {
+    if (page !== clampedPage) setPage(clampedPage);
+  }, [page, clampedPage]);
+
+  const pageObservations = useMemo(
+    () =>
+      sortedObservations.slice(
+        clampedPage * OBSERVATIONS_PER_PAGE,
+        (clampedPage + 1) * OBSERVATIONS_PER_PAGE,
+      ),
+    [sortedObservations, clampedPage],
+  );
+
   const data = useMemo<FlatRow[]>(() => {
-    const sorted = [...observations].sort((a, b) =>
-      dayjs(b.startDate).diff(dayjs(a.startDate)),
-    );
     let groupCount = 0;
     let lastObservationId: string | null = null;
-    return sorted.flatMap((observation) =>
+    return pageObservations.flatMap((observation) =>
       observation.species.map((species, speciesIndex) => {
         const isNewGroup = observation.id !== lastObservationId;
         if (isNewGroup) groupCount++;
@@ -138,7 +170,7 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
         };
       }),
     );
-  }, [observations]);
+  }, [pageObservations]);
 
   /** Text-style cell: shows plain text, and the very first click both enters edit mode and focuses the input (no second click needed). */
   const textCell = (
@@ -722,40 +754,83 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
   });
 
   return (
-    <div className="overflow-x-auto border-2 border-moss/40 rounded-md">
-      <table className="border-collapse w-full">
-        <thead>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <th key={header.id} className={headerClass}>
-                  {flexRender(header.column.columnDef.header, header.getContext())}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map((row) => {
-            const { isNewGroup, groupParity } = row.original;
-            return (
-              <tr
-                key={row.id}
-                className={twMerge(
-                  groupParity ? "bg-moss/5 dark:bg-moss/10" : "",
-                  isNewGroup ? "border-t-2 border-moss/40" : "",
-                )}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className={cellClass}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
+    <div className="border-2 border-moss/40 rounded-md overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="border-collapse w-full">
+          <thead>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <th key={header.id} className={headerClass}>
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext(),
+                    )}
+                  </th>
                 ))}
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
+            ))}
+          </thead>
+          <tbody>
+            {table.getRowModel().rows.map((row) => {
+              const { isNewGroup, groupParity } = row.original;
+              return (
+                <tr
+                  key={row.id}
+                  className={twMerge(
+                    groupParity ? "bg-moss/5 dark:bg-moss/10" : "",
+                    isNewGroup ? "border-t-2 border-moss/40" : "",
+                  )}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <td key={cell.id} className={cellClass}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {pageCount > 1 && (
+        <div className="flex items-center justify-between gap-md px-md py-sm border-t-2 border-moss/40 bg-sand dark:bg-forest">
+          <span className="text-xs text-slate">
+            Observasjon {clampedPage * OBSERVATIONS_PER_PAGE + 1}–
+            {Math.min(
+              (clampedPage + 1) * OBSERVATIONS_PER_PAGE,
+              sortedObservations.length,
+            )}{" "}
+            av {sortedObservations.length}
+          </span>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={clampedPage === 0}
+              onClick={() => goToPage(Math.max(0, clampedPage - 1))}
+              aria-label="Forrige side"
+            >
+              <ChevronLeft size={16} />
+            </Button>
+            <span className="text-xs text-bark dark:text-sand whitespace-nowrap">
+              Side {clampedPage + 1} av {pageCount}
+            </span>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={clampedPage >= pageCount - 1}
+              onClick={() => goToPage(Math.min(pageCount - 1, clampedPage + 1))}
+              aria-label="Neste side"
+            >
+              <ChevronRight size={16} />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

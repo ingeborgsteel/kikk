@@ -698,6 +698,7 @@ const ObservationForm = ({
                       {species.map((s, index) => (
                         <SpeciesItem
                           key={index}
+                          itemKey={index}
                           species={s}
                           updateSpecies={(field, value) =>
                             updateSpecies(index, field, value)

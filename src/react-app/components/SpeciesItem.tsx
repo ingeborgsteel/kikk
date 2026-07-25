@@ -30,7 +30,7 @@ interface SpeciesItemProps {
   ) => void;
   updateTaxonGroup: (taxonGroup: string) => void;
   removeSpecies: () => void;
-  key: number;
+  itemKey: number;
 }
 
 const SpeciesItem = ({
@@ -38,7 +38,7 @@ const SpeciesItem = ({
   updateSpecies,
   updateTaxonGroup,
   removeSpecies,
-  key,
+  itemKey,
 }: SpeciesItemProps) => {
   const { observations } = useObservations();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -142,13 +142,13 @@ const SpeciesItem = ({
             )}
             <div className="mt-1">
               <Label
-                htmlFor={`taxon-group-${key}`}
+                htmlFor={`taxon-group-${itemKey}`}
                 className="text-bark dark:text-sand text-xs"
               >
                 Artsgruppe
               </Label>
               <Combobox
-                id={`taxon-group-${key}`}
+                id={`taxon-group-${itemKey}`}
                 value={taxonGroup}
                 onChange={(v) => updateTaxonGroup(v.toLowerCase().trim())}
                 options={TAXON_GROUP_PICKER_OPTIONS}
@@ -161,13 +161,13 @@ const SpeciesItem = ({
           <div className="grid grid-cols-2 gap-sm">
             <div>
               <Label
-                htmlFor={`gender-${key}`}
+                htmlFor={`gender-${itemKey}`}
                 className="text-bark dark:text-sand text-xs"
               >
                 Kjønn
               </Label>
               <Combobox
-                id={`gender-${key}`}
+                id={`gender-${itemKey}`}
                 value={species.gender || ""}
                 onChange={(v) => updateSpecies("gender", v)}
                 options={genderOptions}
@@ -176,13 +176,13 @@ const SpeciesItem = ({
             </div>
             <div>
               <Label
-                htmlFor={`age-${key}`}
+                htmlFor={`age-${itemKey}`}
                 className="text-bark dark:text-sand text-xs"
               >
                 Alder
               </Label>
               <Combobox
-                id={`age-${key}`}
+                id={`age-${itemKey}`}
                 value={species.age || ""}
                 onChange={(v) => updateSpecies("age", v)}
                 options={ageOptions}
@@ -196,13 +196,13 @@ const SpeciesItem = ({
           >
             <div>
               <Label
-                htmlFor={`count-${key}`}
+                htmlFor={`count-${itemKey}`}
                 className="text-bark dark:text-sand text-xs"
               >
                 Antall
               </Label>
               <Input
-                id={`count-${key}`}
+                id={`count-${itemKey}`}
                 type="number"
                 min="1"
                 value={countInput}
@@ -225,13 +225,13 @@ const SpeciesItem = ({
             {showUnit && (
               <div>
                 <Label
-                  htmlFor={`unit-${key}`}
+                  htmlFor={`unit-${itemKey}`}
                   className="text-bark dark:text-sand text-xs"
                 >
                   Enhet
                 </Label>
                 <Combobox
-                  id={`unit-${key}`}
+                  id={`unit-${itemKey}`}
                   value={species.unit || ""}
                   onChange={(v) => updateSpecies("unit", v)}
                   options={unitOptions}
@@ -247,13 +247,13 @@ const SpeciesItem = ({
             {showMethod && (
               <div>
                 <Label
-                  htmlFor={`method-${key}`}
+                  htmlFor={`method-${itemKey}`}
                   className="text-bark dark:text-sand text-xs"
                 >
                   Metode
                 </Label>
                 <Combobox
-                  id={`method-${key}`}
+                  id={`method-${itemKey}`}
                   value={species.method || ""}
                   onChange={(v) => updateSpecies("method", v)}
                   options={
@@ -277,13 +277,13 @@ const SpeciesItem = ({
             {showActivity && (
               <div>
                 <Label
-                  htmlFor={`activity-${key}`}
+                  htmlFor={`activity-${itemKey}`}
                   className="text-bark dark:text-sand text-xs"
                 >
                   Aktivitet
                 </Label>
                 <Combobox
-                  id={`activity-${key}`}
+                  id={`activity-${itemKey}`}
                   value={species.activity || ""}
                   onChange={(v) => updateSpecies("activity", v)}
                   options={
@@ -308,13 +308,13 @@ const SpeciesItem = ({
 
           <div>
             <Label
-              htmlFor={`species-comment-${key}`}
+              htmlFor={`species-comment-${itemKey}`}
               className="text-bark dark:text-sand text-xs"
             >
               Notat (synlig for alle)
             </Label>
             <Textarea
-              id={`species-comment-${key}`}
+              id={`species-comment-${itemKey}`}
               placeholder="Notater om denne spesifikke observasjonen..."
               value={species.comment}
               onChange={(e) => updateSpecies("comment", e.target.value)}
@@ -325,13 +325,13 @@ const SpeciesItem = ({
 
           <div>
             <Label
-              htmlFor={`private-comment-${key}`}
+              htmlFor={`private-comment-${itemKey}`}
               className="text-bark dark:text-sand text-xs"
             >
               Privat kommentar
             </Label>
             <Textarea
-              id={`private-comment-${key}`}
+              id={`private-comment-${itemKey}`}
               placeholder="Private notater..."
               value={species.privateComment || ""}
               onChange={(e) => updateSpecies("privateComment", e.target.value)}
@@ -342,13 +342,13 @@ const SpeciesItem = ({
 
           <div>
             <Label
-              htmlFor={`private-collection-${key}`}
+              htmlFor={`private-collection-${itemKey}`}
               className="text-bark dark:text-sand text-xs"
             >
               Privat samling
             </Label>
             <Input
-              id={`private-collection-${key}`}
+              id={`private-collection-${itemKey}`}
               type="text"
               placeholder="Navn på samlingseier"
               value={species.privateCollection || ""}
@@ -423,14 +423,14 @@ const SpeciesItem = ({
 
           <div>
             <Label
-              htmlFor={`delay-publication-${key}`}
+              htmlFor={`delay-publication-${itemKey}`}
               className="text-bark dark:text-sand text-xs"
             >
               Utsett publisering til
             </Label>
             <div className="mt-1">
               <DatePicker
-                id={`delay-publication-${key}`}
+                id={`delay-publication-${itemKey}`}
                 value={
                   species.delayPublication
                     ? dayjs(species.delayPublication)

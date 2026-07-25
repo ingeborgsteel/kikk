@@ -50,9 +50,7 @@ const formatTime = (value?: string) =>
 const columnHelper = createColumnHelper<FlatRow>();
 
 /** Text/number input that auto-focuses and selects its content the moment it's mounted, so the first click into edit mode is ready to type over. */
-const AutoFocusInput = (
-  props: React.InputHTMLAttributes<HTMLInputElement>,
-) => {
+const AutoFocusInput = (props: React.InputHTMLAttributes<HTMLInputElement>) => {
   const ref = useRef<HTMLInputElement>(null);
   useEffect(() => {
     ref.current?.focus();
@@ -129,7 +127,9 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
 
   const sortedObservations = useMemo(
     () =>
-      [...observations].sort((a, b) => dayjs(b.startDate).diff(dayjs(a.startDate))),
+      [...observations].sort((a, b) =>
+        dayjs(b.startDate).diff(dayjs(a.startDate)),
+      ),
     [observations],
   );
 
@@ -295,7 +295,11 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
             <AutoFocusInput
               defaultValue={observation.locationName || ""}
               onBlur={(e) => {
-                setObservationField(observation, "locationName", e.target.value);
+                setObservationField(
+                  observation,
+                  "locationName",
+                  e.target.value,
+                );
                 setEditingCell(null);
               }}
               onKeyDown={(e) => {
@@ -371,16 +375,24 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
           const { observation, species, speciesIndex, rowId } = row.original;
           const taxonGroup = species.species.TaxonGroup || "";
           const cellKey = `${rowId}-unit`;
-          return pickerCell(cellKey, species.unit, ({ defaultOpen, onOpenChange }) => (
-            <Combobox
-              variant="ghost"
-              defaultOpen={defaultOpen}
-              onOpenChange={onOpenChange}
-              value={species.unit || ""}
-              onChange={(v) => setSpeciesField(observation, speciesIndex, "unit", v)}
-              options={getUnitOptionsForTaxonGroup(taxonGroup) as ComboboxOption[]}
-            />
-          ));
+          return pickerCell(
+            cellKey,
+            species.unit,
+            ({ defaultOpen, onOpenChange }) => (
+              <Combobox
+                variant="ghost"
+                defaultOpen={defaultOpen}
+                onOpenChange={onOpenChange}
+                value={species.unit || ""}
+                onChange={(v) =>
+                  setSpeciesField(observation, speciesIndex, "unit", v)
+                }
+                options={
+                  getUnitOptionsForTaxonGroup(taxonGroup) as ComboboxOption[]
+                }
+              />
+            ),
+          );
         },
       }),
       columnHelper.display({
@@ -391,18 +403,24 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
           const { observation, species, speciesIndex, rowId } = row.original;
           const taxonGroup = species.species.TaxonGroup || "";
           const cellKey = `${rowId}-gender`;
-          return pickerCell(cellKey, species.gender, ({ defaultOpen, onOpenChange }) => (
-            <Combobox
-              variant="ghost"
-              defaultOpen={defaultOpen}
-              onOpenChange={onOpenChange}
-              value={species.gender || ""}
-              onChange={(v) => setSpeciesField(observation, speciesIndex, "gender", v)}
-              options={
-                getGenderOptionsForTaxonGroup(taxonGroup) as ComboboxOption[]
-              }
-            />
-          ));
+          return pickerCell(
+            cellKey,
+            species.gender,
+            ({ defaultOpen, onOpenChange }) => (
+              <Combobox
+                variant="ghost"
+                defaultOpen={defaultOpen}
+                onOpenChange={onOpenChange}
+                value={species.gender || ""}
+                onChange={(v) =>
+                  setSpeciesField(observation, speciesIndex, "gender", v)
+                }
+                options={
+                  getGenderOptionsForTaxonGroup(taxonGroup) as ComboboxOption[]
+                }
+              />
+            ),
+          );
         },
       }),
       columnHelper.display({
@@ -413,16 +431,24 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
           const { observation, species, speciesIndex, rowId } = row.original;
           const taxonGroup = species.species.TaxonGroup || "";
           const cellKey = `${rowId}-age`;
-          return pickerCell(cellKey, species.age, ({ defaultOpen, onOpenChange }) => (
-            <Combobox
-              variant="ghost"
-              defaultOpen={defaultOpen}
-              onOpenChange={onOpenChange}
-              value={species.age || ""}
-              onChange={(v) => setSpeciesField(observation, speciesIndex, "age", v)}
-              options={getAgeOptionsForTaxonGroup(taxonGroup) as ComboboxOption[]}
-            />
-          ));
+          return pickerCell(
+            cellKey,
+            species.age,
+            ({ defaultOpen, onOpenChange }) => (
+              <Combobox
+                variant="ghost"
+                defaultOpen={defaultOpen}
+                onOpenChange={onOpenChange}
+                value={species.age || ""}
+                onChange={(v) =>
+                  setSpeciesField(observation, speciesIndex, "age", v)
+                }
+                options={
+                  getAgeOptionsForTaxonGroup(taxonGroup) as ComboboxOption[]
+                }
+              />
+            ),
+          );
         },
       }),
       columnHelper.display({
@@ -433,18 +459,24 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
           const { observation, species, speciesIndex, rowId } = row.original;
           const taxonGroup = species.species.TaxonGroup || "";
           const cellKey = `${rowId}-method`;
-          return pickerCell(cellKey, species.method, ({ defaultOpen, onOpenChange }) => (
-            <Combobox
-              variant="ghost"
-              defaultOpen={defaultOpen}
-              onOpenChange={onOpenChange}
-              value={species.method || ""}
-              onChange={(v) => setSpeciesField(observation, speciesIndex, "method", v)}
-              options={
-                getMethodOptionsForTaxonGroup(taxonGroup) as ComboboxOption[]
-              }
-            />
-          ));
+          return pickerCell(
+            cellKey,
+            species.method,
+            ({ defaultOpen, onOpenChange }) => (
+              <Combobox
+                variant="ghost"
+                defaultOpen={defaultOpen}
+                onOpenChange={onOpenChange}
+                value={species.method || ""}
+                onChange={(v) =>
+                  setSpeciesField(observation, speciesIndex, "method", v)
+                }
+                options={
+                  getMethodOptionsForTaxonGroup(taxonGroup) as ComboboxOption[]
+                }
+              />
+            ),
+          );
         },
       }),
       columnHelper.display({
@@ -455,18 +487,26 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
           const { observation, species, speciesIndex, rowId } = row.original;
           const taxonGroup = species.species.TaxonGroup || "";
           const cellKey = `${rowId}-activity`;
-          return pickerCell(cellKey, species.activity, ({ defaultOpen, onOpenChange }) => (
-            <Combobox
-              variant="ghost"
-              defaultOpen={defaultOpen}
-              onOpenChange={onOpenChange}
-              value={species.activity || ""}
-              onChange={(v) => setSpeciesField(observation, speciesIndex, "activity", v)}
-              options={
-                getActivityOptionsForTaxonGroup(taxonGroup) as ComboboxOption[]
-              }
-            />
-          ));
+          return pickerCell(
+            cellKey,
+            species.activity,
+            ({ defaultOpen, onOpenChange }) => (
+              <Combobox
+                variant="ghost"
+                defaultOpen={defaultOpen}
+                onOpenChange={onOpenChange}
+                value={species.activity || ""}
+                onChange={(v) =>
+                  setSpeciesField(observation, speciesIndex, "activity", v)
+                }
+                options={
+                  getActivityOptionsForTaxonGroup(
+                    taxonGroup,
+                  ) as ComboboxOption[]
+                }
+              />
+            ),
+          );
         },
       }),
       columnHelper.display({
@@ -491,7 +531,11 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
                   setObservationField(
                     observation,
                     "startDate",
-                    base.year(v.year()).month(v.month()).date(v.date()).toISOString(),
+                    base
+                      .year(v.year())
+                      .month(v.month())
+                      .date(v.date())
+                      .toISOString(),
                   );
                 }}
               />
@@ -556,7 +600,11 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
                   setObservationField(
                     observation,
                     "endDate",
-                    base.year(v.year()).month(v.month()).date(v.date()).toISOString(),
+                    base
+                      .year(v.year())
+                      .month(v.month())
+                      .date(v.date())
+                      .toISOString(),
                   );
                 }}
               />
@@ -605,7 +653,12 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
               rows={2}
               defaultValue={species.comment || ""}
               onBlur={(e) => {
-                setSpeciesField(observation, speciesIndex, "comment", e.target.value);
+                setSpeciesField(
+                  observation,
+                  speciesIndex,
+                  "comment",
+                  e.target.value,
+                );
                 setEditingCell(null);
               }}
               onKeyDown={(e) => {
@@ -655,7 +708,11 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
             <AutoFocusInput
               defaultValue={observation.observerName || ""}
               onBlur={(e) => {
-                setObservationField(observation, "observerName", e.target.value);
+                setObservationField(
+                  observation,
+                  "observerName",
+                  e.target.value,
+                );
                 setEditingCell(null);
               }}
               onKeyDown={(e) => {
@@ -782,10 +839,7 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
         <table className="border-collapse table-fixed">
           <colgroup>
             {table.getFlatHeaders().map((header) => (
-              <col
-                key={header.id}
-                style={{ width: header.getSize() }}
-              />
+              <col key={header.id} style={{ width: header.getSize() }} />
             ))}
           </colgroup>
           <thead>
@@ -815,7 +869,10 @@ const ObservationsTable = ({ observations }: ObservationsTableProps) => {
                 >
                   {row.getVisibleCells().map((cell) => (
                     <td key={cell.id} className={cellClass}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
                     </td>
                   ))}
                 </tr>

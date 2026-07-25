@@ -1,7 +1,8 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { Observation } from "../types/observation";
+import { Observation, Species } from "../types/observation";
 import { TaxonRecord } from "../types/artsdatabanken";
+import { TAXON_GROUP_KEYS } from "./taxonGroups";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -119,6 +120,32 @@ export function getLifeList(observations: Observation[]): LifeListEntry[] {
     const nameB =
       b.species.PrefferedPopularname || b.species.ValidScientificName || "";
     return nameA.localeCompare(nameB, "no");
+  });
+}
+
+/**
+ * Sort species by taxon group (systematic order from TAXON_GROUP_KEYS),
+ * then alphabetically by preferred popular name within each group.
+ * Species with an unknown/missing taxon group sort last.
+ * Returns a new array; does not mutate the input.
+ */
+export function sortSpeciesByTaxonGroupAndName(species: Species[]): Species[] {
+  const groupIndex = (taxonGroup?: string): number => {
+    if (!taxonGroup) return TAXON_GROUP_KEYS.length;
+    const index = TAXON_GROUP_KEYS.indexOf(
+      taxonGroup.toLowerCase().trim() as (typeof TAXON_GROUP_KEYS)[number],
+    );
+    return index === -1 ? TAXON_GROUP_KEYS.length : index;
+  };
+
+  const nameOf = (s: Species): string =>
+    s.species.PrefferedPopularname || s.species.ValidScientificName || "";
+
+  return [...species].sort((a, b) => {
+    const groupDiff =
+      groupIndex(a.species.TaxonGroup) - groupIndex(b.species.TaxonGroup);
+    if (groupDiff !== 0) return groupDiff;
+    return nameOf(a).localeCompare(nameOf(b), "no");
   });
 }
 

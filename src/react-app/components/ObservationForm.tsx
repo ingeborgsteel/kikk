@@ -167,7 +167,6 @@ const ObservationForm = ({
 
   const { data: searchResults = [], isLoading } = useSpeciesSearch(searchTerm);
 
-
   // Build set of previously observed species IDs for ranking boost
   const previouslyObservedIds = useMemo(() => {
     const ids = new Set<number>();
@@ -481,6 +480,21 @@ const ObservationForm = ({
             }}
             render={({ field: { value: species = [], onChange } }) => {
               const addSpecies = (taxon: TaxonRecord) => {
+                const isDuplicate = species.some((s) =>
+                  taxon.Id != null
+                    ? s.species.Id === taxon.Id
+                    : s.species.PrefferedPopularname ===
+                      taxon.PrefferedPopularname,
+                );
+                if (isDuplicate) {
+                  const name = taxon.PrefferedPopularname ?? "denne arten";
+                  const confirmed = confirm(
+                    `${name} er allerede lagt til. Vil du legge til en ekstra av denne arten?`,
+                  );
+                  if (!confirmed) {
+                    return;
+                  }
+                }
                 const newObservation: CreateSpecies = {
                   species: taxon,
                 };
@@ -608,25 +622,13 @@ const ObservationForm = ({
 
                       {/* Search Results Dropdown */}
                       {showResults && searchTerm.length >= 2 && (
-                        <div className="absolute z-10 w-full mt-1 bg-white dark:bg-bark border-2 border-slate-border dark:border-slate rounded-md shadow-custom-lg max-h-60 overflow-y-auto">
-                          <button
-                            type="button"
-                            onClick={() => addFreeTextSpecies(searchTerm)}
-                            className="w-full text-left px-3 py-2 hover:bg-sand dark:hover:bg-forest transition-colors border-b border-slate-border dark:border-slate"
-                          >
-                            <div className="font-medium text-bark dark:text-sand">
-                              {searchTerm}
-                            </div>
-                            <div className="text-xs text-slate">
-                              Legg til egendefinert art
-                            </div>
-                          </button>
+                        <div className="absolute z-[1100] w-full mt-1 bg-white dark:bg-bark border-2 border-slate-border dark:border-slate rounded-md shadow-custom-lg max-h-60 overflow-y-auto">
                           {rankedResults.map((species) => (
                             <button
                               key={species.Id ?? species.PrefferedPopularname}
                               type="button"
                               onClick={() => addSpecies(species)}
-                              className="w-full text-left px-3 py-2 hover:bg-sand dark:hover:bg-forest transition-colors border-b border-slate-border dark:border-slate last:border-b-0"
+                              className="w-full text-left px-3 py-2 hover:bg-sand dark:hover:bg-forest transition-colors border-b border-slate-border dark:border-slate"
                             >
                               <div className="font-medium text-bark dark:text-sand">
                                 {species.PrefferedPopularname}
@@ -636,6 +638,18 @@ const ObservationForm = ({
                               </div>
                             </button>
                           ))}
+                          <button
+                            type="button"
+                            onClick={() => addFreeTextSpecies(searchTerm)}
+                            className="w-full text-left px-3 py-2 hover:bg-sand dark:hover:bg-forest transition-colors border-b border-slate-border dark:border-slate last:border-b-0"
+                          >
+                            <div className="font-medium text-bark dark:text-sand">
+                              {searchTerm}
+                            </div>
+                            <div className="text-xs text-slate">
+                              Legg til egendefinert art
+                            </div>
+                          </button>
                         </div>
                       )}
                     </div>
@@ -794,11 +808,14 @@ const ObservationForm = ({
                   }
                   className="mt-1"
                 >
-                  {[1, 5, 10, 25, 50, 75, 100, 125, 150, 200, 250, 300, 400, 500, 750, 1000, 1500, 2000, 2500, 3000, 5000].map(
-                    (n) => (
-                      <option key={n} value={n}>{n} m</option>
-                    ),
-                  )}
+                  {[
+                    1, 5, 10, 25, 50, 75, 100, 125, 150, 200, 250, 300, 400,
+                    500, 750, 1000, 1500, 2000, 2500, 3000, 5000,
+                  ].map((n) => (
+                    <option key={n} value={n}>
+                      {n} m
+                    </option>
+                  ))}
                 </Select>
               </div>
             )}

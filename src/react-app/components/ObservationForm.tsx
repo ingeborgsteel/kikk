@@ -480,6 +480,21 @@ const ObservationForm = ({
             }}
             render={({ field: { value: species = [], onChange } }) => {
               const addSpecies = (taxon: TaxonRecord) => {
+                const isDuplicate = species.some((s) =>
+                  taxon.Id != null
+                    ? s.species.Id === taxon.Id
+                    : s.species.PrefferedPopularname ===
+                      taxon.PrefferedPopularname,
+                );
+                if (isDuplicate) {
+                  const name = taxon.PrefferedPopularname ?? "denne arten";
+                  const confirmed = confirm(
+                    `${name} er allerede lagt til. Vil du legge til en ekstra av denne arten?`,
+                  );
+                  if (!confirmed) {
+                    return;
+                  }
+                }
                 const newObservation: CreateSpecies = {
                   species: taxon,
                 };

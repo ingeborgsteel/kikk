@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { searchSpecies } from "../api/artsdatabanken.ts";
 import { TaxonRecord } from "../types/artsdatabanken.ts";
 
@@ -19,5 +19,6 @@ export const useSpeciesSearch = (searchTerm: string, debounceMs = 300) => {
     queryFn: () => searchSpecies(debouncedTerm),
     enabled: debouncedTerm.length >= 2,
     staleTime: 1000 * 60 * 5, // 5 minutes
+    placeholderData: keepPreviousData,
   });
 };

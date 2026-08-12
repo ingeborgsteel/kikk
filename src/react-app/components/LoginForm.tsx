@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Lock } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "./ui/button";
-import { isSupabaseConfigured } from "../lib/supabase";
+import { isAuthConfigured } from "../lib/auth";
 import { Input } from "./ui/input.tsx";
 import { Modal } from "./ui/Modal.tsx";
 
@@ -33,8 +33,8 @@ export function LoginForm({
     return () => document.removeEventListener("keydown", handleEscape);
   }, [closeLoginForm, showLoginForm]);
 
-  // Don't render if Supabase is not configured
-  if (!isSupabaseConfigured()) {
+  // Don't render if auth is not configured
+  if (!isAuthConfigured()) {
     return null;
   }
 

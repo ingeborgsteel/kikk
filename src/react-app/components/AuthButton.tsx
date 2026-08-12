@@ -1,7 +1,7 @@
 import { LogIn, LogOut, User } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "./ui/button";
-import { isSupabaseConfigured } from "../lib/supabase";
+import { isAuthConfigured } from "../lib/auth";
 
 export function AuthButton({
   openProfilePage,
@@ -10,8 +10,8 @@ export function AuthButton({
 }) {
   const { user, signOut, setShowLoginForm } = useAuth();
 
-  // Don't render if Supabase is not configured
-  if (!isSupabaseConfigured()) {
+  // Don't render if auth is not configured
+  if (!isAuthConfigured()) {
     return null;
   }
 

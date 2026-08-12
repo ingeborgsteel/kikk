@@ -2,11 +2,10 @@ import {
   createContext,
   useContext,
   useState,
-  useEffect,
   ReactNode,
 } from "react";
-import { User, AuthError } from "@supabase/supabase-js";
-import { supabase, isSupabaseConfigured } from "../lib/supabase";
+import type { User } from "better-auth";
+import { betterAuthClient, isAuthConfigured } from "../lib/auth";
 import { useUserAccesses as useUserAccess } from "../queries/useUserAccesses";
 import { UserAccess } from "../types/user_access";
 
@@ -17,7 +16,7 @@ interface AuthContextType {
   signInWithEmail: (
     email: string,
     password: string,
-  ) => Promise<{ error: AuthError | null }>;
+  ) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   showLoginForm: boolean;
   setShowLoginForm: (val: boolean) => void;
@@ -26,51 +25,25 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(!isSupabaseConfigured());
   const [showLoginForm, setShowLoginForm] = useState(false);
+  const { data, isPending } = betterAuthClient.useSession();
+  const user = data?.user ?? null;
+  const loading = isAuthConfigured() ? isPending : false;
 
   const { data: userAccess } = useUserAccess(user?.id || "", {
     enabled: !!user?.id,
   });
 
-  useEffect(() => {
-    // Only initialize auth if Supabase is configured
-    if (!isSupabaseConfigured()) {
-      return;
-    }
-
-    // Check active session
-    supabase.auth
-      .getSession()
-      .then(({ data: { session } }) => {
-        setUser(session?.user ?? null);
-        setLoading(false);
-      })
-      .catch(() => {
-        setLoading(false);
-      });
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
   const signInWithEmail = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error } = await betterAuthClient.signIn.email({
       email,
       password,
     });
-    return { error };
+    return { error: error ? new Error(error.message) : null };
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await betterAuthClient.signOut();
   };
 
   return (

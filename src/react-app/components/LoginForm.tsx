@@ -13,8 +13,10 @@ export function LoginForm({
   closeLoginForm: () => void;
   showLoginForm: boolean;
 }) {
-  const { signInWithEmail } = useAuth();
+  const { signInWithEmail, signUp } = useAuth();
 
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -33,35 +35,66 @@ export function LoginForm({
     return () => document.removeEventListener("keydown", handleEscape);
   }, [closeLoginForm, showLoginForm]);
 
-  // Don't render if auth is not configured
+  useEffect(() => {
+    if (showLoginForm) {
+      setMode("signin");
+      setName("");
+      setEmail("");
+      setPassword("");
+      setMessage("");
+    }
+  }, [showLoginForm]);
+
   if (!isAuthConfigured()) {
     return null;
   }
 
-  const handleSignIn = async (e: React.FormEvent) => {
+  const resetForm = () => {
+    setName("");
+    setEmail("");
+    setPassword("");
+    setMessage("");
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
 
-    const { error } = await signInWithEmail(email, password);
+    let error: Error | null = null;
+
+    if (mode === "signup") {
+      const result = await signUp(email, password, name);
+      if (result.error) {
+        error = result.error;
+      } else {
+        // Auto-sign in after successful sign-up
+        const signInResult = await signInWithEmail(email, password);
+        error = signInResult.error;
+      }
+    } else {
+      const result = await signInWithEmail(email, password);
+      error = result.error;
+    }
 
     if (error) {
-      // Map common errors to user-friendly Norwegian messages
+      const lower = error.message.toLowerCase();
       let errorMessage = "Noe gikk galt. Prøv igjen.";
       if (
-        error.message.toLowerCase().includes("invalid login credentials") ||
-        error.message.toLowerCase().includes("invalid email or password")
+        lower.includes("invalid login credentials") ||
+        lower.includes("invalid email or password")
       ) {
         errorMessage = "Ugyldig e-post eller passord.";
-      } else if (error.message.toLowerCase().includes("email not confirmed")) {
+      } else if (lower.includes("email not confirmed")) {
         errorMessage = "E-posten din er ikke bekreftet. Sjekk innboksen din.";
-      } else if (error.message.toLowerCase().includes("rate limit")) {
+      } else if (lower.includes("user already exists")) {
+        errorMessage = "En bruker med denne e-posten finnes allerede.";
+      } else if (lower.includes("rate limit")) {
         errorMessage = "For mange forsøk. Vent litt før du prøver igjen.";
       }
       setMessage(errorMessage);
     } else {
-      setEmail("");
-      setPassword("");
+      resetForm();
       closeLoginForm();
     }
 
@@ -72,9 +105,29 @@ export function LoginForm({
     return null;
   }
 
+  const title = mode === "signup" ? "Registrer deg" : "Logg inn";
+  const submitLabel = loading
+    ? mode === "signup"
+      ? "Registrerer..."
+      : "Logger inn..."
+    : mode === "signup"
+      ? "Registrer deg"
+      : "Logg inn";
+
   return (
-    <Modal onClose={closeLoginForm} isOpen={showLoginForm} title="Logg inn">
-      <form onSubmit={handleSignIn} className="space-y-lg">
+    <Modal onClose={closeLoginForm} isOpen={showLoginForm} title={title}>
+      <form onSubmit={handleSubmit} className="space-y-lg">
+        {mode === "signup" && (
+          <Input
+            type="text"
+            placeholder="Navn"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            autoComplete="name"
+            name="name"
+            required
+          />
+        )}
         <Input
           type="email"
           placeholder="din@epost.no"
@@ -95,28 +148,61 @@ export function LoginForm({
             className={"pl-8"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
+            autoComplete={
+              mode === "signup" ? "new-password" : "current-password"
+            }
             name="password"
             required
           />
         </div>
-        <div className="flex gap-md justify-end pt-md">
-          <Button
-            type="button"
-            onClick={() => {
-              closeLoginForm();
-              setEmail("");
-              setPassword("");
-              setMessage("");
-            }}
-            variant="outline"
-            size="sm"
-          >
-            Avbryt
-          </Button>
-          <Button type="submit" disabled={loading} size="sm">
-            {loading ? "Logger inn..." : "Logg inn"}
-          </Button>
+        <div className="flex flex-col gap-md pt-md">
+          <p className="text-sm text-bark dark:text-sand">
+            {mode === "signup" ? (
+              <>
+                Har du allerede en konto?{" "}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("signin");
+                    setMessage("");
+                  }}
+                  className="underline hover:text-forest dark:hover:text-sand"
+                >
+                  Logg inn
+                </button>
+              </>
+            ) : (
+              <>
+                Har du ikke konto?{" "}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("signup");
+                    setMessage("");
+                  }}
+                  className="underline hover:text-forest dark:hover:text-sand"
+                >
+                  Registrer deg
+                </button>
+              </>
+            )}
+          </p>
+          <div className="flex gap-md justify-end">
+            <Button
+              type="button"
+              onClick={() => {
+                closeLoginForm();
+                resetForm();
+              }}
+              variant="outline"
+              size="sm"
+            >
+              Avbryt
+            </Button>
+            <Button type="submit" disabled={loading} size="sm">
+              {submitLabel}
+            </Button>
+          </div>
         </div>
         {message && (
           <p className="text-xs mt-1 text-bark dark:text-sand">{message}</p>

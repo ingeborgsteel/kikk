@@ -17,6 +17,11 @@ interface AuthContextType {
     email: string,
     password: string,
   ) => Promise<{ error: Error | null }>;
+  signUp: (
+    email: string,
+    password: string,
+    name: string,
+  ) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   showLoginForm: boolean;
   setShowLoginForm: (val: boolean) => void;
@@ -42,6 +47,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error ? new Error(error.message) : null };
   };
 
+  const signUp = async (email: string, password: string, name: string) => {
+    const { error } = await betterAuthClient.signUp.email({
+      email,
+      password,
+      name,
+    });
+    return { error: error ? new Error(error.message) : null };
+  };
+
   const signOut = async () => {
     await betterAuthClient.signOut();
   };
@@ -52,6 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         loading,
         signInWithEmail,
+        signUp,
         signOut,
         userAccess,
         showLoginForm,

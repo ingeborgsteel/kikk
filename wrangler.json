@@ -15,9 +15,9 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "kikk-auth",
-      "database_id": "1f37d773-30fd-4ed5-b1bd-5b5c1f10fce5",
-      "preview_database_id": "kikk-auth-preview",
+      "database_name": "kikk-db",
+      "database_id": "8be1edcf-1c04-43e9-8e5e-3ef59eed5967",
+      "preview_database_id": "kikk-db-preview",
       "migrations_dir": "migrations"
     }
   ]

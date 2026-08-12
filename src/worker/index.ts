@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { betterAuth } from "better-auth";
+import dataApp from "./data";
 
 interface LogEntry {
   level: "info" | "error" | "warn";
@@ -21,6 +22,8 @@ app.all("/api/auth/*", async (c) => {
   });
   return auth.handler(c.req.raw);
 });
+
+app.route("/api", dataApp);
 
 app.post("/api/logs", async (c) => {
   try {

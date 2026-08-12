@@ -1,7 +1,7 @@
 import { BarChart3, Binoculars, Map, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { isSupabaseConfigured } from "../lib/supabase";
+import { isAuthConfigured } from "../lib/auth";
 
 interface BottomNavProps {
   currentView: "map" | "observations" | "stats" | "profile";
@@ -11,7 +11,7 @@ interface BottomNavProps {
 export function BottomNav({ currentView, onLoginClick }: BottomNavProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const supabaseConfigured = isSupabaseConfigured();
+  const supabaseConfigured = isAuthConfigured();
 
   const handleProfileOrLogin = () => {
     if (user) {

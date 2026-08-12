@@ -17,7 +17,7 @@ import {
   useUpdateObservation,
 } from "../queries/useObservation.ts";
 import { CreateObservation } from "../api/observations.ts";
-import { isSupabaseConfigured } from "../lib/supabase.ts";
+import { isRemoteStorageConfigured } from "../lib/auth.ts";
 
 interface ObservationsContextType {
   observations: Observation[];
@@ -63,7 +63,7 @@ function saveQueue(queue: Observation[]) {
 }
 
 export function ObservationsProvider({ children }: { children: ReactNode }) {
-  const supabaseConfigured = useMemo(() => isSupabaseConfigured(), []);
+  const supabaseConfigured = useMemo(() => isRemoteStorageConfigured(), []);
   const isOnline = useOnlineStatus();
   const isDraining = useRef(false);
 

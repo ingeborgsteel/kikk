@@ -7,7 +7,7 @@ import { Textarea } from "./ui/textarea";
 import { useObservations } from "../context/ObservationsContext";
 import { Observation, Species } from "../types/observation";
 import { useProfiles } from "../queries/useProfiles.ts";
-import { isSupabaseConfigured } from "../lib/supabase.ts";
+import { isRemoteStorageConfigured } from "../lib/auth.ts";
 import { useSpeciesSearch } from "../queries/useSpeciesSearch.ts";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import {
@@ -160,7 +160,7 @@ const ObservationForm = ({
     hasTime(observation?.endDate),
   );
 
-  const supabaseConfigured = isSupabaseConfigured();
+  const supabaseConfigured = isRemoteStorageConfigured();
   const { data: profiles = [] } = useProfiles({ enabled: supabaseConfigured });
   const [showProfileResults, setShowProfileResults] = useState(false);
 

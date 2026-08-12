@@ -14,7 +14,7 @@ import {
   useUpdateUserLocation,
 } from "../queries/useUserLocation.ts";
 import { CreateUserLocation } from "../api/locations.ts";
-import { isSupabaseConfigured } from "../lib/supabase.ts";
+import { isRemoteStorageConfigured } from "../lib/auth.ts";
 
 interface LocationsContextType {
   locations: UserLocation[];
@@ -31,7 +31,7 @@ const STORAGE_KEY = "kikk_user_locations";
 
 export function LocationsProvider({ children }: { children: ReactNode }) {
   // Memoize Supabase configuration check to avoid re-evaluation on every render
-  const supabaseConfigured = useMemo(() => isSupabaseConfigured(), []);
+  const supabaseConfigured = useMemo(() => isRemoteStorageConfigured(), []);
 
   // Local state for when Supabase is not configured
   const [localLocations, setLocalLocations] = useState<UserLocation[]>(() => {

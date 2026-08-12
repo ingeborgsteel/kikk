@@ -7,3 +7,5 @@ export const betterAuthClient = createAuthClient({
 });
 
 export const isAuthConfigured = () => true;
+
+export const isRemoteStorageConfigured = () => true;

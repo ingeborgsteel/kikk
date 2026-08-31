@@ -17,6 +17,8 @@ import {
 } from "../lib/markerIcons.ts";
 import { useMapPreferences } from "../context/MapPreferencesContext.tsx";
 import { Button } from "./ui/button.tsx";
+import { cn } from "../lib/utils.ts";
+import { Maximize2, Minimize2 } from "lucide-react";
 
 const DefaultIcon = L.icon({
   iconUrl: icon,
@@ -53,6 +55,8 @@ interface LocationEditorProps {
   isPresetLocation?: boolean;
   onLocationChange: (lat: number, lng: number) => void;
   zoom?: number;
+  compact?: boolean;
+  onToggleExpandCallback?: () => void;
 }
 
 export const LocationEditor = ({
@@ -61,23 +65,29 @@ export const LocationEditor = ({
   isPresetLocation = false,
   onLocationChange,
   zoom = 13,
+  compact = false,
+  onToggleExpandCallback,
 }: LocationEditorProps) => {
-  const [hidden, setHidden] = useState(false);
+  const [hidden, setHidden] = useState(compact);
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
   const circleRef = useRef<L.Circle | null>(null);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   const { currentLayer } = useMapPreferences();
+  const onLocationChangeRef = useRef(onLocationChange);
+  onLocationChangeRef.current = onLocationChange;
 
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
     // Initialize map centered on the location with the specified zoom
+    const previewZoom = Math.max(3, zoom - 7);
+    const initialZoom = hidden ? previewZoom : zoom;
     map.current = L.map(mapContainer.current, {
-      zoomControl: true,
+      zoomControl: !hidden,
       attributionControl: false,
-    }).setView([location.lat, location.lng], zoom);
+    }).setView([location.lat, location.lng], initialZoom);
 
     // Get tile layer configuration
     const { url, attribution } = getTileLayerConfig(currentLayer);
@@ -88,10 +98,10 @@ export const LocationEditor = ({
       attribution,
     }).addTo(map.current);
 
-    // Add draggable marker
+    // Add marker (draggable only in the full editor)
     markerRef.current = L.marker([location.lat, location.lng], {
       icon: isPresetLocation ? UserLocationicon : EditableIcon,
-      draggable: true,
+      draggable: !isPresetLocation && !hidden,
     }).addTo(map.current);
 
     if (typeof uncertaintyRadius === "number" && uncertaintyRadius > 0) {
@@ -104,23 +114,6 @@ export const LocationEditor = ({
         weight: 1,
         interactive: false,
       }).addTo(map.current);
-    }
-
-    if (!isPresetLocation) {
-      markerRef.current.on("dragend", () => {
-        if (markerRef.current) {
-          const newPos = markerRef.current.getLatLng();
-          onLocationChange(newPos.lat, newPos.lng);
-        }
-      });
-
-      map.current.on("click", (e: L.LeafletMouseEvent) => {
-        const { lat, lng } = e.latlng;
-        if (markerRef.current) {
-          markerRef.current.setLatLng([lat, lng]);
-        }
-        onLocationChange(lat, lng);
-      });
     }
 
     // Ensure the map container is properly sized
@@ -150,6 +143,63 @@ export const LocationEditor = ({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Manage map size, interactions and event listeners based on hidden/expanded state
+  useEffect(() => {
+    if (!map.current) return;
+    const m = map.current;
+    const marker = markerRef.current;
+    const targetZoom = hidden ? Math.max(3, zoom - 7) : zoom;
+
+    const handleDragEnd = () => {
+      if (marker) {
+        const newPos = marker.getLatLng();
+        onLocationChangeRef.current(newPos.lat, newPos.lng);
+      }
+    };
+
+    const handleMapClick = (e: L.LeafletMouseEvent) => {
+      const { lat, lng } = e.latlng;
+      if (marker) {
+        marker.setLatLng([lat, lng]);
+      }
+      onLocationChangeRef.current(lat, lng);
+    };
+
+    if (!isPresetLocation && !hidden) {
+      marker?.on("dragend", handleDragEnd);
+      m.on("click", handleMapClick);
+
+      m.dragging?.enable();
+      m.touchZoom?.enable();
+      m.doubleClickZoom?.enable();
+      m.scrollWheelZoom?.enable();
+      m.boxZoom?.enable();
+      m.keyboard?.enable();
+      m.zoomControl?.addTo(m);
+      marker?.dragging?.enable();
+    } else {
+      m.dragging?.disable();
+      m.touchZoom?.disable();
+      m.doubleClickZoom?.disable();
+      m.scrollWheelZoom?.disable();
+      m.boxZoom?.disable();
+      m.keyboard?.disable();
+      m.zoomControl?.remove();
+      marker?.dragging?.disable();
+    }
+
+    m.setZoom(targetZoom);
+
+    setTimeout(() => {
+      m.invalidateSize();
+    }, 0);
+
+    return () => {
+      marker?.off("dragend", handleDragEnd);
+      m.off("click", handleMapClick);
+    };
+  }, [hidden, isPresetLocation, zoom]);
 
   // Update marker position when location prop changes externally
   useEffect(() => {
@@ -191,26 +241,33 @@ export const LocationEditor = ({
 
   return (
     <div>
-      <p className="text-sm text-slate mt-1 mb-2">
-        Lat: {location.lat.toFixed(4)}, Lng: {location.lng.toFixed(4)}
-      </p>
-      {typeof uncertaintyRadius === "number" && uncertaintyRadius > 0 && (
+      {!compact && (
         <p className="text-sm text-slate mt-1 mb-2">
-          Nøyaktighet: approx. {uncertaintyRadius} m
+          Lat: {location.lat.toFixed(4)}, Lng: {location.lng.toFixed(4)}
         </p>
       )}
       <div
-        className={`w-full ${hidden ? "h-[60px]" : "h-[300px]"} rounded-md overflow-hidden border-2 border-moss relative`}
+        className={cn(
+          "w-full rounded-md overflow-hidden border-2 border-moss relative flex-1",
+          compact ? "h-16" : hidden ? "h-[60px]" : "h-[300px]",
+        )}
       >
         <Button
-          className={"absolute top-2 right-2 z-[600]"}
-          variant={"secondary"}
+          type="button"
+          size={"icon"}
+          variant="outline"
+          aria-label={hidden ? "Vis kart" : "Skjul kart"}
+          className={cn(
+            "absolute z-[600] bg-white/90 dark:bg-bark/90 shadow-sm",
+            compact ? "top-1 right-1" : "top-2 right-2",
+          )}
           onClick={(e) => {
             e.preventDefault();
             setHidden(!hidden);
+            onToggleExpandCallback?.();
           }}
         >
-          {hidden ? "Ekspander" : "Kollaps"}
+          {hidden ? <Maximize2 size={16} /> : <Minimize2 size={18} />}
         </Button>
         <div ref={mapContainer} className="w-full h-full" />
         {!hidden && (

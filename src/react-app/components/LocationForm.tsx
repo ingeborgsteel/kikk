@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { Button } from "./ui/button";
 import { useLocations } from "../context/LocationsContext";
 import { useAuth } from "../context/AuthContext";
 import { CreateUserLocation } from "../api/locations";
 import { UserLocation } from "../types/location";
-import { reverseGeocode } from "../lib/utils";
+import { useReverseGeocode } from "../queries/useReverseGeocode";
 import { LocationEditor } from "./LocationEditor";
 import { Input } from "./ui/input.tsx";
 import { Textarea } from "./ui/textarea.tsx";
@@ -39,10 +39,10 @@ export function LocationForm({
 }: AddLocationFormProps) {
   const { addLocation, updateLocation } = useLocations();
   const { user } = useAuth();
-  const [loadingName, setLoadingName] = useState(!editingLocation);
   const [currentLocation, setCurrentLocation] = useState(initialLocation);
+  const autoSuggestedNameRef = useRef<string | null>(null);
 
-  const { register, handleSubmit, setValue, control } =
+  const { register, handleSubmit, setValue, getValues, control } =
     useForm<LocationFormData>({
       defaultValues: {
         name: editingLocation?.name || "",
@@ -57,23 +57,24 @@ export function LocationForm({
     name: "uncertaintyRadius",
   });
 
-  // Fetch suggested name from reverse geocoding (only for new locations)
-  useEffect(() => {
-    if (editingLocation) return; // Skip for editing
+  const { data: geocodedName, isLoading: isGeocodingLoading } =
+    useReverseGeocode(
+      currentLocation.lat,
+      currentLocation.lng,
+      !editingLocation,
+    );
 
-    reverseGeocode(currentLocation.lat, currentLocation.lng)
-      .then((name) => {
-        if (name) {
-          setValue("name", name);
-        }
-      })
-      .catch((err) => {
-        console.error("Failed to get location name suggestion:", err);
-      })
-      .finally(() => {
-        setLoadingName(false);
-      });
-  }, [currentLocation, editingLocation, setValue]);
+  const loadingName = isGeocodingLoading;
+
+  // Apply reverse-geocoded name suggestion for new locations
+  useEffect(() => {
+    if (geocodedName == null || editingLocation) return;
+    const current = getValues("name");
+    if (current === "" || current === autoSuggestedNameRef.current) {
+      setValue("name", geocodedName, { shouldDirty: false });
+      autoSuggestedNameRef.current = geocodedName;
+    }
+  }, [geocodedName, editingLocation, getValues, setValue]);
 
   // Update coordinates when location changes in map
   const handleLocationChange = (lat: number, lng: number) => {

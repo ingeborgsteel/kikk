@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Combobox } from "./ui/combobox";
@@ -13,10 +13,10 @@ import { Controller, useForm, useWatch } from "react-hook-form";
 import {
   getRecentSpecies,
   rankSpeciesResults,
-  reverseGeocode,
   sortSpeciesAlphabetically,
   sortSpeciesByTaxonGroupAndName,
 } from "../lib/utils.ts";
+import { useReverseGeocode } from "../queries/useReverseGeocode.ts";
 import { LocationEditor } from "./LocationEditor.tsx";
 import { UserLocation } from "../types/location.ts";
 import { Modal } from "./ui/Modal.tsx";
@@ -141,11 +141,9 @@ const ObservationForm = ({
   const { addObservation, updateObservation, observations } = useObservations();
   const [searchTerm, setSearchTerm] = useState("");
   const [showResults, setShowResults] = useState(false);
-  const [loadingLocationName, setLoadingLocationName] = useState(
-    !observation && !presetLocation,
-  );
-  const [geocodingFailed, setGeocodingFailed] = useState(false);
   const [currentLocation, setCurrentLocation] = useState(location);
+  const [geocodeLocation, setGeocodeLocation] = useState(location);
+  const autoSuggestedNameRef = useRef<string | null>(null);
   const [successMessage, setSuccessMessage] = useState("");
   const [successTimeout, setSuccessTimeout] = useState<ReturnType<
     typeof setTimeout
@@ -165,6 +163,15 @@ const ObservationForm = ({
   const [showProfileResults, setShowProfileResults] = useState(false);
 
   const { data: searchResults = [], isLoading } = useSpeciesSearch(searchTerm);
+  const {
+    data: geocodedName,
+    isLoading: isGeocodingLoading,
+    isError: isGeocodingError,
+  } = useReverseGeocode(
+    geocodeLocation.lat,
+    geocodeLocation.lng,
+    !observation && !presetLocation,
+  );
 
   // Build set of previously observed species IDs for ranking boost
   const previouslyObservedIds = useMemo(() => {
@@ -246,27 +253,10 @@ const ObservationForm = ({
       );
 
       if (distance > 100) {
-        setLoadingLocationName(true);
-        setGeocodingFailed(false);
-        reverseGeocode(lat, lng)
-          .then((name) => {
-            if (name) {
-              setValue("locationName", name);
-              setGeocodingFailed(false);
-            } else {
-              setGeocodingFailed(true);
-            }
-          })
-          .catch((err) => {
-            console.error("Failed to get location name:", err);
-            setGeocodingFailed(true);
-          })
-          .finally(() => {
-            setLoadingLocationName(false);
-          });
+        setGeocodeLocation(newLocation);
       }
     },
-    [currentLocation, setValue, presetLocation],
+    [currentLocation, setValue, setGeocodeLocation, presetLocation],
   );
 
   // Cleanup success message timeout on unmount
@@ -287,34 +277,19 @@ const ObservationForm = ({
     }
   }, [observation, reset, getValues]);
 
-  // Fetch location name when form opens for a new observation
+  const loadingLocationName = isGeocodingLoading;
+  const geocodingFailed =
+    isGeocodingError || (geocodedName === null && !isGeocodingLoading);
+
+  // Apply reverse-geocoded location name for new observations
   useEffect(() => {
-    const currentLocationName = getValues("locationName");
-    // When a preset location is set, use its name
-    if (presetLocation) {
-      setValue("locationName", presetLocation.name, { shouldDirty: false });
-      return;
+    if (geocodedName == null || observation || presetLocation) return;
+    const current = getValues("locationName");
+    if (current === "" || current === autoSuggestedNameRef.current) {
+      setValue("locationName", geocodedName, { shouldDirty: false });
+      autoSuggestedNameRef.current = geocodedName;
     }
-    // Only fetch if this is a new observation, locationName is not yet set
-    if (!observation && currentLocationName === "") {
-      reverseGeocode(currentLocation.lat, currentLocation.lng)
-        .then((name) => {
-          if (name) {
-            setValue("locationName", name, { shouldDirty: false });
-            setGeocodingFailed(false);
-          } else {
-            setGeocodingFailed(true);
-          }
-        })
-        .catch((err) => {
-          console.error("Failed to get location name:", err);
-          setGeocodingFailed(true);
-        })
-        .finally(() => {
-          setLoadingLocationName(false);
-        });
-    }
-  }, [observation, currentLocation, setValue, getValues, presetLocation]);
+  }, [geocodedName, observation, presetLocation, getValues, setValue]);
 
   // Auto-update endDate when startDate changes
   useEffect(() => {

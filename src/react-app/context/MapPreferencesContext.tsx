@@ -13,6 +13,8 @@ interface MapPreferencesContextType {
   setCurrentLayer: (layer: MapLayer) => void;
   showUncertaintyOverlay: boolean;
   setShowUncertaintyOverlay: (show: boolean) => void;
+  showAtlasSquares: boolean;
+  setShowAtlasSquares: (show: boolean) => void;
 }
 
 const MapPreferencesContext = createContext<
@@ -21,6 +23,7 @@ const MapPreferencesContext = createContext<
 
 const MAP_LAYER_STORAGE_KEY = "kikk-map-layer";
 const MAP_UNCERTAINTY_OVERLAY_STORAGE_KEY = "kikk-map-show-uncertainty";
+const MAP_ATLAS_SQUARES_STORAGE_KEY = "kikk-map-show-atlas-squares";
 
 /**
  * Provider for map preferences (selected layer, etc.)
@@ -38,6 +41,10 @@ export function MapPreferencesProvider({ children }: { children: ReactNode }) {
       return stored === "true";
     },
   );
+  const [showAtlasSquares, setShowAtlasSquaresState] = useState(() => {
+    const stored = localStorage.getItem(MAP_ATLAS_SQUARES_STORAGE_KEY);
+    return stored === "true";
+  });
 
   const setCurrentLayer = (layer: MapLayer) => {
     setCurrentLayerState(layer);
@@ -49,6 +56,11 @@ export function MapPreferencesProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(MAP_UNCERTAINTY_OVERLAY_STORAGE_KEY, String(show));
   };
 
+  const setShowAtlasSquares = (show: boolean) => {
+    setShowAtlasSquaresState(show);
+    localStorage.setItem(MAP_ATLAS_SQUARES_STORAGE_KEY, String(show));
+  };
+
   useEffect(() => {
     // Sync with localStorage changes from other tabs
     const handleStorageChange = (e: StorageEvent) => {
@@ -58,6 +70,10 @@ export function MapPreferencesProvider({ children }: { children: ReactNode }) {
 
       if (e.key === MAP_UNCERTAINTY_OVERLAY_STORAGE_KEY && e.newValue) {
         setShowUncertaintyOverlayState(e.newValue === "true");
+      }
+
+      if (e.key === MAP_ATLAS_SQUARES_STORAGE_KEY && e.newValue) {
+        setShowAtlasSquaresState(e.newValue === "true");
       }
     };
 
@@ -72,6 +88,8 @@ export function MapPreferencesProvider({ children }: { children: ReactNode }) {
         setCurrentLayer,
         showUncertaintyOverlay,
         setShowUncertaintyOverlay,
+        showAtlasSquares,
+        setShowAtlasSquares,
       }}
     >
       {children}

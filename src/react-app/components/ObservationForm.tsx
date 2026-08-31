@@ -150,6 +150,7 @@ const ObservationForm = ({
   > | null>(null);
   const [visibleRecentSpeciesCount, setVisibleRecentSpeciesCount] =
     useState(10);
+  const [showInlineMap, setShowInlineMap] = useState(false);
 
   const [startTimeEnabled, setStartTimeEnabled] = useState(
     !observation || hasTime(observation.startDate),
@@ -700,65 +701,87 @@ const ObservationForm = ({
           />
 
           <div>
-            <Controller
-              name={"locationName"}
-              control={control}
-              render={({ field: { value, onChange } }) => (
-                <div>
-                  <Label
-                    htmlFor="locationName"
-                    className="text-bark dark:text-sand"
-                  >
-                    Lokalitet
-                  </Label>
-                  <div className="relative">
-                    {presetLocation && (
-                      <MapPinned
-                        size={18}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-violet-600 dark:text-violet-400"
-                      />
-                    )}
-                    <Input
-                      id="locationName"
-                      type="text"
-                      placeholder="F.eks. Oslo, Nordmarka"
-                      value={value}
-                      onChange={(e) => onChange(e.target.value)}
-                      className={twMerge("mt-1", presetLocation && "pl-8")}
-                      readOnly={!!presetLocation}
-                      disabled={!!presetLocation}
-                    />
-                    {loadingLocationName && (
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                        <div className="w-4 h-4 border-2 border-slate-border border-t-rust rounded-full animate-spin"></div>
+            <div className="flex gap-3 items-start">
+              <div className="w-full">
+                <Controller
+                  name={"locationName"}
+                  control={control}
+                  render={({ field: { value, onChange } }) => (
+                    <div className="flex-1">
+                      <Label
+                        htmlFor="locationName"
+                        className="text-bark dark:text-sand"
+                      >
+                        Lokalitet
+                      </Label>
+                      <div className="relative">
+                        {presetLocation && (
+                          <MapPinned
+                            size={18}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-violet-600 dark:text-violet-400"
+                          />
+                        )}
+                        <Input
+                          id="locationName"
+                          type="text"
+                          placeholder="F.eks. Oslo, Nordmarka"
+                          value={value}
+                          onChange={(e) => onChange(e.target.value)}
+                          className={twMerge("mt-1", presetLocation && "pl-8")}
+                          readOnly={!!presetLocation}
+                          disabled={!!presetLocation}
+                        />
+                        {loadingLocationName && (
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                            <div className="w-4 h-4 border-2 border-slate-border border-t-rust rounded-full animate-spin"></div>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                  <p className="text-xs text-slate mt-1">
-                    {geocodingFailed && !presetLocation
-                      ? "Kunne ikke hente stedsnavn automatisk. Vennligst fyll inn manuelt."
-                      : ""}
-                  </p>
+                      <p className="text-xs text-slate mt-1">
+                        {geocodingFailed && !presetLocation
+                          ? "Kunne ikke hente stedsnavn automatisk. Vennligst fyll inn manuelt."
+                          : ""}
+                      </p>
+                    </div>
+                  )}
+                />
+                {!presetLocation && onSaveAsLocation && (
+                  <button
+                    type="button"
+                    onClick={() => onSaveAsLocation(currentLocation)}
+                    className="mt-2 flex items-center gap-1.5 text-sm text-slate hover:text-bark dark:hover:text-sand transition-colors"
+                    aria-label="Lagre denne posisjonen som min lokalitet"
+                  >
+                    <MapPin size={14} />
+                    Lagre som min lokalitet
+                  </button>
+                )}
+              </div>
+              {!showInlineMap && (
+                <div className="w-40 flex-shrink-0 mt-6">
+                  <LocationEditor
+                    compact
+                    isPresetLocation={!!presetLocation}
+                    location={currentLocation}
+                    uncertaintyRadius={uncertaintyRadius}
+                    onLocationChange={handleLocationChange}
+                    zoom={zoom}
+                    onToggleExpandCallback={() => setShowInlineMap(true)}
+                  />
                 </div>
               )}
-            />
-            <LocationEditor
-              isPresetLocation={!!presetLocation}
-              location={currentLocation}
-              uncertaintyRadius={uncertaintyRadius}
-              onLocationChange={handleLocationChange}
-              zoom={zoom}
-            />
-            {!presetLocation && onSaveAsLocation && (
-              <button
-                type="button"
-                onClick={() => onSaveAsLocation(currentLocation)}
-                className="mt-2 flex items-center gap-1.5 text-sm text-slate hover:text-bark dark:hover:text-sand transition-colors"
-                aria-label="Lagre denne posisjonen som min lokalitet"
-              >
-                <MapPin size={14} />
-                Lagre som min lokalitet
-              </button>
+            </div>
+            {showInlineMap && (
+              <div className="mt-3">
+                <LocationEditor
+                  isPresetLocation={!!presetLocation}
+                  location={currentLocation}
+                  uncertaintyRadius={uncertaintyRadius}
+                  onLocationChange={handleLocationChange}
+                  zoom={zoom}
+                  onToggleExpandCallback={() => setShowInlineMap(false)}
+                />
+              </div>
             )}
           </div>
 

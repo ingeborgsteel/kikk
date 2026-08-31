@@ -25,6 +25,7 @@ import {
   createSelectionIcon,
   createUserLocationIcon,
 } from "./lib/markerIcons.ts";
+import { getAtlasGridLines } from "./lib/atlasGrid.ts";
 import { useMapPreferences } from "./context/MapPreferencesContext.tsx";
 import { useGeolocation } from "./context/GeolocationContext.tsx";
 
@@ -61,6 +62,7 @@ const getTileLayerConfig = (
 const MAP_RESIZE_DELAY_MS = 100;
 const UNCERTAINTY_ZOOM_THRESHOLD = 9;
 const DEFAULT_ZOOM = 15;
+const ATLAS_MIN_ZOOM = 7;
 
 function useOnlineStatus() {
   return useSyncExternalStore(
@@ -166,9 +168,14 @@ function Map({
   const [showCenteredMessage, setShowCenteredMessage] = useState(false);
   const [currentZoom, setCurrentZoom] = useState(DEFAULT_ZOOM);
   const hasAutoLocatedRef = useRef(false);
-  const { currentLayer, setCurrentLayer, showUncertaintyOverlay } =
-    useMapPreferences();
+  const {
+    currentLayer,
+    setCurrentLayer,
+    showUncertaintyOverlay,
+    showAtlasSquares,
+  } = useMapPreferences();
   const tileLayerRef = useRef<L.TileLayer | null>(null);
+  const atlasGridLayerRef = useRef<L.Polyline | null>(null);
 
   const downloadCurrentLayer = useCallback(async () => {
     if (!map.current) return;
@@ -570,6 +577,68 @@ function Map({
       attribution,
     }).addTo(map.current);
   }, [currentLayer]);
+
+  // Effect to handle Atlas squares overlay
+  useEffect(() => {
+    if (!map.current) return;
+    const mapInstance = map.current;
+
+    const renderAtlasGrid = () => {
+      if (mapInstance.getZoom() < ATLAS_MIN_ZOOM) {
+        if (atlasGridLayerRef.current) {
+          atlasGridLayerRef.current.remove();
+          atlasGridLayerRef.current = null;
+        }
+        return;
+      }
+
+      const lines = getAtlasGridLines(mapInstance.getBounds());
+      if (lines.length === 0) {
+        if (atlasGridLayerRef.current) {
+          atlasGridLayerRef.current.remove();
+          atlasGridLayerRef.current = null;
+        }
+        return;
+      }
+
+      if (atlasGridLayerRef.current) {
+        atlasGridLayerRef.current.setLatLngs(lines);
+      } else {
+        atlasGridLayerRef.current = L.polyline(lines, {
+          color: "#2F5D50",
+          weight: 1,
+          opacity: 0.85,
+          interactive: false,
+        }).addTo(mapInstance);
+      }
+    };
+
+    if (!showAtlasSquares) {
+      if (atlasGridLayerRef.current) {
+        atlasGridLayerRef.current.remove();
+        atlasGridLayerRef.current = null;
+      }
+      return;
+    }
+
+    renderAtlasGrid();
+
+    const handleMapChange = () => {
+      renderAtlasGrid();
+    };
+
+    mapInstance.on("moveend", handleMapChange);
+    mapInstance.on("zoomend", handleMapChange);
+
+    return () => {
+      mapInstance.off("moveend", handleMapChange);
+      mapInstance.off("zoomend", handleMapChange);
+      if (atlasGridLayerRef.current) {
+        atlasGridLayerRef.current.remove();
+        atlasGridLayerRef.current = null;
+      }
+    };
+  }, [showAtlasSquares]);
 
   return (
     <div className="w-full h-[calc(100vh-80px)] relative flex-1 overflow-hidden bg-forest">

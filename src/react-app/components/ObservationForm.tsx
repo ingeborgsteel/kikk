@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Combobox } from "./ui/combobox";
@@ -13,10 +13,10 @@ import { Controller, useForm, useWatch } from "react-hook-form";
 import {
   getRecentSpecies,
   rankSpeciesResults,
-  reverseGeocode,
   sortSpeciesAlphabetically,
   sortSpeciesByTaxonGroupAndName,
 } from "../lib/utils.ts";
+import { useReverseGeocode } from "../queries/useReverseGeocode.ts";
 import { LocationEditor } from "./LocationEditor.tsx";
 import { UserLocation } from "../types/location.ts";
 import { Modal } from "./ui/Modal.tsx";
@@ -155,17 +155,16 @@ const ObservationForm = ({
   const { addObservation, updateObservation, observations } = useObservations();
   const [searchTerm, setSearchTerm] = useState("");
   const [showResults, setShowResults] = useState(false);
-  const [loadingLocationName, setLoadingLocationName] = useState(
-    !observation && !presetLocation,
-  );
-  const [geocodingFailed, setGeocodingFailed] = useState(false);
   const [currentLocation, setCurrentLocation] = useState(location);
+  const [geocodeLocation, setGeocodeLocation] = useState(location);
+  const autoSuggestedNameRef = useRef<string | null>(null);
   const [successMessage, setSuccessMessage] = useState("");
   const [successTimeout, setSuccessTimeout] = useState<ReturnType<
     typeof setTimeout
   > | null>(null);
   const [visibleRecentSpeciesCount, setVisibleRecentSpeciesCount] =
     useState(10);
+  const [showInlineMap, setShowInlineMap] = useState(false);
 
   const [startTimeEnabled, setStartTimeEnabled] = useState(
     !observation || hasTime(observation.startDate),
@@ -179,6 +178,15 @@ const ObservationForm = ({
   const [showProfileResults, setShowProfileResults] = useState(false);
 
   const { data: searchResults = [], isLoading } = useSpeciesSearch(searchTerm);
+  const {
+    data: geocodedName,
+    isLoading: isGeocodingLoading,
+    isError: isGeocodingError,
+  } = useReverseGeocode(
+    geocodeLocation.lat,
+    geocodeLocation.lng,
+    !observation && !presetLocation,
+  );
 
   // Build set of previously observed species IDs for ranking boost
   const previouslyObservedIds = useMemo(() => {
@@ -261,27 +269,10 @@ const ObservationForm = ({
       );
 
       if (distance > 100) {
-        setLoadingLocationName(true);
-        setGeocodingFailed(false);
-        reverseGeocode(lat, lng)
-          .then((name) => {
-            if (name) {
-              setValue("locationName", name);
-              setGeocodingFailed(false);
-            } else {
-              setGeocodingFailed(true);
-            }
-          })
-          .catch((err) => {
-            console.error("Failed to get location name:", err);
-            setGeocodingFailed(true);
-          })
-          .finally(() => {
-            setLoadingLocationName(false);
-          });
+        setGeocodeLocation(newLocation);
       }
     },
-    [currentLocation, setValue, presetLocation],
+    [currentLocation, setValue, setGeocodeLocation, presetLocation],
   );
 
   // Cleanup success message timeout on unmount
@@ -302,34 +293,19 @@ const ObservationForm = ({
     }
   }, [observation, reset, getValues]);
 
-  // Fetch location name when form opens for a new observation
+  const loadingLocationName = isGeocodingLoading;
+  const geocodingFailed =
+    isGeocodingError || (geocodedName === null && !isGeocodingLoading);
+
+  // Apply reverse-geocoded location name for new observations
   useEffect(() => {
-    const currentLocationName = getValues("locationName");
-    // When a preset location is set, use its name
-    if (presetLocation) {
-      setValue("locationName", presetLocation.name, { shouldDirty: false });
-      return;
+    if (geocodedName == null || observation || presetLocation) return;
+    const current = getValues("locationName");
+    if (current === "" || current === autoSuggestedNameRef.current) {
+      setValue("locationName", geocodedName, { shouldDirty: false });
+      autoSuggestedNameRef.current = geocodedName;
     }
-    // Only fetch if this is a new observation, locationName is not yet set
-    if (!observation && currentLocationName === "") {
-      reverseGeocode(currentLocation.lat, currentLocation.lng)
-        .then((name) => {
-          if (name) {
-            setValue("locationName", name, { shouldDirty: false });
-            setGeocodingFailed(false);
-          } else {
-            setGeocodingFailed(true);
-          }
-        })
-        .catch((err) => {
-          console.error("Failed to get location name:", err);
-          setGeocodingFailed(true);
-        })
-        .finally(() => {
-          setLoadingLocationName(false);
-        });
-    }
-  }, [observation, currentLocation, setValue, getValues, presetLocation]);
+  }, [geocodedName, observation, presetLocation, getValues, setValue]);
 
   // Auto-update endDate when startDate changes
   useEffect(() => {
@@ -742,65 +718,87 @@ const ObservationForm = ({
           />
 
           <div>
-            <Controller
-              name={"locationName"}
-              control={control}
-              render={({ field: { value, onChange } }) => (
-                <div>
-                  <Label
-                    htmlFor="locationName"
-                    className="text-bark dark:text-sand"
-                  >
-                    Lokalitet
-                  </Label>
-                  <div className="relative">
-                    {presetLocation && (
-                      <MapPinned
-                        size={18}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-violet-600 dark:text-violet-400"
-                      />
-                    )}
-                    <Input
-                      id="locationName"
-                      type="text"
-                      placeholder="F.eks. Oslo, Nordmarka"
-                      value={value}
-                      onChange={(e) => onChange(e.target.value)}
-                      className={twMerge("mt-1", presetLocation && "pl-8")}
-                      readOnly={!!presetLocation}
-                      disabled={!!presetLocation}
-                    />
-                    {loadingLocationName && (
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                        <div className="w-4 h-4 border-2 border-slate-border border-t-rust rounded-full animate-spin"></div>
+            <div className="flex gap-3 items-start">
+              <div className="w-full">
+                <Controller
+                  name={"locationName"}
+                  control={control}
+                  render={({ field: { value, onChange } }) => (
+                    <div className="flex-1">
+                      <Label
+                        htmlFor="locationName"
+                        className="text-bark dark:text-sand"
+                      >
+                        Lokalitet
+                      </Label>
+                      <div className="relative">
+                        {presetLocation && (
+                          <MapPinned
+                            size={18}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-violet-600 dark:text-violet-400"
+                          />
+                        )}
+                        <Input
+                          id="locationName"
+                          type="text"
+                          placeholder="F.eks. Oslo, Nordmarka"
+                          value={value}
+                          onChange={(e) => onChange(e.target.value)}
+                          className={twMerge("mt-1", presetLocation && "pl-8")}
+                          readOnly={!!presetLocation}
+                          disabled={!!presetLocation}
+                        />
+                        {loadingLocationName && (
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                            <div className="w-4 h-4 border-2 border-slate-border border-t-rust rounded-full animate-spin"></div>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                  <p className="text-xs text-slate mt-1">
-                    {geocodingFailed && !presetLocation
-                      ? "Kunne ikke hente stedsnavn automatisk. Vennligst fyll inn manuelt."
-                      : ""}
-                  </p>
+                      <p className="text-xs text-slate mt-1">
+                        {geocodingFailed && !presetLocation
+                          ? "Kunne ikke hente stedsnavn automatisk. Vennligst fyll inn manuelt."
+                          : ""}
+                      </p>
+                    </div>
+                  )}
+                />
+                {!presetLocation && onSaveAsLocation && (
+                  <button
+                    type="button"
+                    onClick={() => onSaveAsLocation(currentLocation)}
+                    className="mt-2 flex items-center gap-1.5 text-sm text-slate hover:text-bark dark:hover:text-sand transition-colors"
+                    aria-label="Lagre denne posisjonen som min lokalitet"
+                  >
+                    <MapPin size={14} />
+                    Lagre som min lokalitet
+                  </button>
+                )}
+              </div>
+              {!showInlineMap && (
+                <div className="w-40 flex-shrink-0 mt-6">
+                  <LocationEditor
+                    compact
+                    isPresetLocation={!!presetLocation}
+                    location={currentLocation}
+                    uncertaintyRadius={uncertaintyRadius}
+                    onLocationChange={handleLocationChange}
+                    zoom={zoom}
+                    onToggleExpandCallback={() => setShowInlineMap(true)}
+                  />
                 </div>
               )}
-            />
-            <LocationEditor
-              isPresetLocation={!!presetLocation}
-              location={currentLocation}
-              uncertaintyRadius={uncertaintyRadius}
-              onLocationChange={handleLocationChange}
-              zoom={zoom}
-            />
-            {!presetLocation && onSaveAsLocation && (
-              <button
-                type="button"
-                onClick={() => onSaveAsLocation(currentLocation)}
-                className="mt-2 flex items-center gap-1.5 text-sm text-slate hover:text-bark dark:hover:text-sand transition-colors"
-                aria-label="Lagre denne posisjonen som min lokalitet"
-              >
-                <MapPin size={14} />
-                Lagre som min lokalitet
-              </button>
+            </div>
+            {showInlineMap && (
+              <div className="mt-3">
+                <LocationEditor
+                  isPresetLocation={!!presetLocation}
+                  location={currentLocation}
+                  uncertaintyRadius={uncertaintyRadius}
+                  onLocationChange={handleLocationChange}
+                  zoom={zoom}
+                  onToggleExpandCallback={() => setShowInlineMap(false)}
+                />
+              </div>
             )}
           </div>
 

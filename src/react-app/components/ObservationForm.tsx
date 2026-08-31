@@ -34,6 +34,20 @@ const DATE_TIME_STORAGE_FORMAT = "YYYY-MM-DDTHH:mm:ssZ";
 // Session-level memory for the last used observer name (persists across form opens, cleared on page reload)
 let sessionObserverName: string | undefined = undefined;
 
+const LAST_UNCERTAINTY_RADIUS_KEY = "kikk-last-uncertainty-radius";
+
+const getLastUsedUncertaintyRadius = (): number | undefined => {
+  const stored = localStorage.getItem(LAST_UNCERTAINTY_RADIUS_KEY);
+  if (!stored) return undefined;
+  const value = Number(stored);
+  if (Number.isNaN(value) || value <= 0) return undefined;
+  return value;
+};
+
+const setLastUsedUncertaintyRadius = (value: number) => {
+  localStorage.setItem(LAST_UNCERTAINTY_RADIUS_KEY, String(value));
+};
+
 const hasTime = (value?: string) => {
   if (!value) return false;
   const d = dayjs(value);
@@ -202,6 +216,7 @@ const ObservationForm = ({
       uncertaintyRadius:
         observation?.uncertaintyRadius ||
         presetLocation?.uncertaintyRadius ||
+        getLastUsedUncertaintyRadius() ||
         100,
       ...(!observation ? { observerName: sessionObserverName } : {}),
       ...(!observation && presetSpecies
@@ -349,6 +364,7 @@ const ObservationForm = ({
           startDate,
           endDate,
         });
+        setLastUsedUncertaintyRadius(data.uncertaintyRadius);
         // Auto-activate kikkemodus when adding a new observation
         if (onActivateKikkemodus) {
           onActivateKikkemodus();
@@ -383,6 +399,7 @@ const ObservationForm = ({
         startDate,
         endDate,
       });
+      setLastUsedUncertaintyRadius(data.uncertaintyRadius);
 
       // Auto-activate kikkemodus when adding a new observation
       if (onActivateKikkemodus) {

@@ -52,6 +52,7 @@ src/
 - **Component State** for ephemeral UI state (form values, toggles, modals)
 
 Context providers:
+
 - `ObservationsContext` – CRUD for nature observations
 - `LocationsContext` – CRUD for saved user locations
 - `AuthContext` – Supabase authentication state
@@ -63,11 +64,13 @@ Every context must expose a custom hook (e.g., `useObservations()`) that throws 
 ## Code Style & Best Practices
 
 ### TypeScript
+
 - Use strict TypeScript with proper typing; avoid `any` — use specific types or generics
 - Define interfaces in `src/react-app/types/`
 - All functions must have return types
 
 ### React Patterns
+
 - Functional components with hooks only
 - React Hook Form for all forms
 - Keep components small and focused on a single responsibility
@@ -75,18 +78,21 @@ Every context must expose a custom hook (e.g., `useObservations()`) that throws 
 - `queries/` files wrap `api/` functions with TanStack Query hooks
 
 ### Styling
+
 - Tailwind CSS utility classes only — no inline styles or CSS files
 - Custom design tokens defined in `tailwind.config.js`: `forest` (dark green), `sand` (light), `bark` (dark)
 - Mobile-first responsive design
 - Use `dark:` prefix for dark mode styles
 
 ### UI Components — shadcn/ui is the standard
+
 - All UI primitives (buttons, inputs, dropdowns, dialogs, etc.) should follow the shadcn/ui pattern: Radix UI primitives + `class-variance-authority` + Tailwind, source copied directly into `src/react-app/components/ui/` — not pulled in as an opaque npm dependency.
 - Before building a new primitive, check `components/ui/` for an existing one (e.g. `button.tsx`, `input.tsx`, `combobox.tsx`, `Modal.tsx`) and reuse/extend it rather than hand-rolling a one-off.
 - When a needed primitive doesn't exist yet, add it via the shadcn CLI or by porting the relevant shadcn/ui source into `components/ui/`, matching this project's existing token/class conventions (see `combobox.tsx` for a worked example built on `@radix-ui/react-popover` + `cmdk`).
 - Native HTML form controls (`<select>`, unstyled `<input>`) should be migrated to shadcn-style components over time — don't introduce new native `<select>` elements.
 
 ### Key Unified Components (always use these, never reinvent)
+
 - **Modal** (`src/react-app/components/ui/Modal.tsx`): universal modal/dialog component — consistent header, ESC-to-close, click-outside-to-close, optional submit on Enter, configurable `maxWidth`. Used by ExportDialog, MapClickDialog, etc.
 - **Combobox** (`src/react-app/components/ui/combobox.tsx`): shadcn-style searchable dropdown (Radix Popover + cmdk) supporting grouped options and free-text custom entries; the standard replacement for native `<select>`.
 - **Marker Icons** (`src/react-app/lib/markerIcons.ts`): `createSelectionIcon()` (rust, selections/editable positions), `createObservationIcon()` (forest green, observations), `createUserLocationIcon()` (purple, saved locations)
@@ -129,9 +135,10 @@ Never store sensitive data (tokens, passwords) in localStorage or Context — re
 5. Components → build UI using the unified components above
 6. Ensure TypeScript compilation succeeds: `npm run build`
 7. Run linter before committing: `npm run lint`, and format with `npm run format`
-8. Test locally with `npm run dev`
-9. Verify responsive design and both light/dark themes
-10. Don't break local storage functionality or backward compatibility with existing observations data
+8. Run critical-path e2e tests with `npx playwright test` when the change affects UI, forms, navigation, maps, or localStorage
+9. Test locally with `npm run dev`
+10. Verify responsive design and both light/dark themes
+11. Don't break local storage functionality or backward compatibility with existing observations data
 
 ## Common Pitfalls to Avoid
 
@@ -146,7 +153,7 @@ Never store sensitive data (tokens, passwords) in localStorage or Context — re
 
 ## Testing Approach
 
-Manual testing is currently the primary method (no automated test suite yet — if one is introduced, use Vitest to align with the Vite toolchain). Before submitting changes, verify:
+Unit tests use Vitest (`src/**/*.test.ts`). Critical UI flows are covered by Playwright in `e2e/`. Before submitting changes, verify:
 
 1. Desktop and mobile viewports
 2. Light and dark mode
@@ -156,6 +163,7 @@ Manual testing is currently the primary method (no automated test suite yet — 
 6. With and without Supabase configured
 7. Backward compatibility — existing saved observations must still load correctly
 8. Offline functionality
+9. Playwright smoke tests pass (`npx playwright test`) for any map, form, or navigation change
 
 Document manual test steps in the PR description when adding new features.
 

@@ -9,12 +9,12 @@ usersApp.get("/", async (c) => {
   const db = drizzle(c.env.DB);
   const rows = await db
     .select({
-      id: schema.users.id,
-      name: schema.users.name,
-      email: schema.users.email,
+      id: schema.user.id,
+      name: schema.user.name,
+      email: schema.user.email,
     })
-    .from(schema.users)
-    .orderBy(asc(schema.users.name));
+    .from(schema.user)
+    .orderBy(asc(schema.user.name));
   return c.json(rows);
 });
 

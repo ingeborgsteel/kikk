@@ -40,13 +40,8 @@ function MyObservations({ onBack }: MyObservationsProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const { isImpersonating } = useAuth();
   const readOnly = isImpersonating;
-  const view = readOnly
-    ? "list"
-    : searchParams.get("view") === "table"
-      ? "table"
-      : "list";
+  const view = searchParams.get("view") === "table" ? "table" : "list";
   const setView = (next: "list" | "table") => {
-    if (readOnly) return;
     setSearchParams(
       (prev) => {
         const params = new URLSearchParams(prev);
@@ -269,40 +264,38 @@ function MyObservations({ onBack }: MyObservationsProps) {
           </div>
 
           <div className="flex items-center gap-2 ml-auto">
-            {!readOnly && (
-              <div className="flex items-center border-2 border-moss rounded-md overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => setView("list")}
-                  aria-pressed={view === "list"}
-                  className={twMerge(
-                    "p-2 transition-colors",
-                    view === "list"
-                      ? "bg-moss text-white"
-                      : "bg-white dark:bg-bark text-bark dark:text-sand hover:bg-sand dark:hover:bg-forest",
-                  )}
-                  aria-label="Listevisning"
-                  title="Listevisning"
-                >
-                  <LayoutList size={18} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setView("table")}
-                  aria-pressed={view === "table"}
-                  className={twMerge(
-                    "p-2 transition-colors",
-                    view === "table"
-                      ? "bg-moss text-white"
-                      : "bg-white dark:bg-bark text-bark dark:text-sand hover:bg-sand dark:hover:bg-forest",
-                  )}
-                  aria-label="Tabellvisning"
-                  title="Tabellvisning"
-                >
-                  <Table2 size={18} />
-                </button>
-              </div>
-            )}
+            <div className="flex items-center border-2 border-moss rounded-md overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setView("list")}
+                aria-pressed={view === "list"}
+                className={twMerge(
+                  "p-2 transition-colors",
+                  view === "list"
+                    ? "bg-moss text-white"
+                    : "bg-white dark:bg-bark text-bark dark:text-sand hover:bg-sand dark:hover:bg-forest",
+                )}
+                aria-label="Listevisning"
+                title="Listevisning"
+              >
+                <LayoutList size={18} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setView("table")}
+                aria-pressed={view === "table"}
+                className={twMerge(
+                  "p-2 transition-colors",
+                  view === "table"
+                    ? "bg-moss text-white"
+                    : "bg-white dark:bg-bark text-bark dark:text-sand hover:bg-sand dark:hover:bg-forest",
+                )}
+                aria-label="Tabellvisning"
+                title="Tabellvisning"
+              >
+                <Table2 size={18} />
+              </button>
+            </div>
 
             {!readOnly && observations.length > 0 && (
               <Button onClick={() => setShowExportDialog(true)}>
@@ -340,6 +333,7 @@ function MyObservations({ onBack }: MyObservationsProps) {
           <ObservationsTable
             observations={filteredObservations}
             onEdit={setEditingId}
+            readOnly={readOnly}
           />
         ) : (
           <div className="flex flex-col space-y-md">

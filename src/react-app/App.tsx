@@ -269,7 +269,7 @@ function App() {
                         onClick={() => navigate("/admin")}
                         variant="secondary"
                       >
-                        <Shield size={16} className="mr-2" />
+                        <Shield size={16} />
                         Admin
                       </Button>
                     )}

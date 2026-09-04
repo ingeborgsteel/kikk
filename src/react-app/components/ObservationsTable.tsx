@@ -38,6 +38,7 @@ const STICKY_COLUMN_IDS = ["actions", "speciesName"];
 interface ObservationsTableProps {
   observations: Observation[];
   onEdit: (id: string) => void;
+  readOnly?: boolean;
 }
 
 interface FlatRow {
@@ -92,6 +93,7 @@ const AutoFocusTextarea = (
 const ObservationsTable = ({
   observations,
   onEdit,
+  readOnly,
 }: ObservationsTableProps) => {
   const { updateObservation, deleteObservation } = useObservations();
   const [editingCell, setEditingCell] = useState<string | null>(null);
@@ -216,6 +218,13 @@ const ObservationsTable = ({
     display: ReactNode,
     editControl: ReactNode,
   ) => {
+    if (readOnly) {
+      return (
+        <span className="w-full h-full text-left px-2 py-1.5 block">
+          {display || <span className="text-slate">—</span>}
+        </span>
+      );
+    }
     const isEditing = editingCell === cellKey;
     if (isEditing) {
       return editControl;
@@ -240,6 +249,13 @@ const ObservationsTable = ({
       onOpenChange: (open: boolean) => void;
     }) => ReactNode,
   ) => {
+    if (readOnly) {
+      return (
+        <span className="w-full h-full text-left px-2 py-1.5 block">
+          {display || <span className="text-slate">—</span>}
+        </span>
+      );
+    }
     const isEditing = editingCell === cellKey;
     if (isEditing) {
       return renderControl({
@@ -260,14 +276,8 @@ const ObservationsTable = ({
     );
   };
 
-  const toggleCell = (active: boolean | undefined, onToggle: () => void) => (
-    <button
-      type="button"
-      onClick={onToggle}
-      className="w-full h-full flex items-center justify-center px-2 py-1.5 hover:bg-moss/15 dark:hover:bg-moss/25 transition-colors"
-      role="checkbox"
-      aria-checked={!!active}
-    >
+  const toggleCell = (active: boolean | undefined, onToggle: () => void) => {
+    const box = (
       <span
         className={twMerge(
           "h-4 w-4 rounded-sm border-2 flex items-center justify-center",
@@ -278,8 +288,26 @@ const ObservationsTable = ({
       >
         {active && <Check size={12} strokeWidth={3} />}
       </span>
-    </button>
-  );
+    );
+    if (readOnly) {
+      return (
+        <span className="w-full h-full flex items-center justify-center px-2 py-1.5">
+          {box}
+        </span>
+      );
+    }
+    return (
+      <button
+        type="button"
+        onClick={onToggle}
+        className="w-full h-full flex items-center justify-center px-2 py-1.5 hover:bg-moss/15 dark:hover:bg-moss/25 transition-colors"
+        role="checkbox"
+        aria-checked={!!active}
+      >
+        {box}
+      </button>
+    );
+  };
 
   const columns = useMemo(
     () => [
@@ -288,6 +316,9 @@ const ObservationsTable = ({
         header: "",
         size: 72,
         cell: ({ row }) => {
+          if (readOnly) {
+            return <div className="w-full h-full" />;
+          }
           const { observation, speciesIndex } = row.original;
           return (
             <div className="w-full h-full flex items-center justify-center gap-1">
@@ -900,7 +931,7 @@ const ObservationsTable = ({
       }),
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [editingCell],
+    [editingCell, readOnly],
   );
 
   const table = useReactTable({

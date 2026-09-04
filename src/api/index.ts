@@ -22,7 +22,12 @@ app.all("/api/auth/*", async (c) => {
     baseURL: new URL(c.req.url).origin,
     emailAndPassword: {
       enabled: true,
-      sendResetPassword: async ({ user, url }) => {
+      sendResetPassword: async ({ user, url, token }, request) => {
+        const origin = request
+          ? new URL(request.url).origin
+          : new URL(url).origin;
+        const resetUrl = `${origin}/reset-password?token=${token}`;
+
         const apiKey = c.env.RESEND_API_KEY;
         const fromEmail = c.env.RESEND_FROM_EMAIL;
         if (apiKey && fromEmail) {
@@ -36,7 +41,7 @@ app.all("/api/auth/*", async (c) => {
               from: fromEmail,
               to: user.email,
               subject: "Tilbakestilling av passord for kikk",
-              text: `Hei ${user.name || user.email},\n\nBruk denne lenken for å velge et nytt passord:\n${url}\n\nLenken er gyldig i en time.\n\nHilsen kikk`,
+              text: `Hei ${user.name || user.email},\n\nBruk denne lenken for å velge et nytt passord:\n${resetUrl}\n\nLenken er gyldig i en time.\n\nHilsen kikk`,
             }),
           }).then(async (res) => {
             if (!res.ok) {

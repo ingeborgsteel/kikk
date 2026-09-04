@@ -159,6 +159,18 @@ export function LoginForm({ closeLoginForm }: { closeLoginForm: () => void }) {
           {mode === "signin" && (
             <>
               <p className="text-sm text-bark dark:text-sand">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("forgot");
+                    setMessage("");
+                  }}
+                  className="underline hover:text-forest dark:hover:text-sand"
+                >
+                  Glemt passord?
+                </button>
+              </p>
+              <p className="text-sm text-bark dark:text-sand">
                 Har du ikke konto?{" "}
                 <button
                   type="button"
@@ -169,18 +181,6 @@ export function LoginForm({ closeLoginForm }: { closeLoginForm: () => void }) {
                   className="underline hover:text-forest dark:hover:text-sand"
                 >
                   Registrer deg
-                </button>
-              </p>
-              <p className="text-sm text-bark dark:text-sand">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMode("forgot");
-                    setMessage("");
-                  }}
-                  className="underline hover:text-forest dark:hover:text-sand"
-                >
-                  Glemt passord?
                 </button>
               </p>
             </>

@@ -1,5 +1,4 @@
 import { Hono } from "hono";
-import { eq } from "drizzle-orm";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { drizzle } from "drizzle-orm/d1";
@@ -11,39 +10,6 @@ type AuthEnv = Env & { RESEND_API_KEY?: string; RESEND_FROM_EMAIL?: string };
 const app = new Hono<{ Bindings: AuthEnv }>();
 
 app.get("/api/", (c) => c.json({ name: "Cloudflare" }));
-
-app.post("/api/admin/reset-password-link", async (c) => {
-  const { email } = await c.req.json<{ email?: string }>();
-  if (!email) {
-    return c.json({ message: "E-post mangler" }, 400);
-  }
-
-  const db = drizzle(c.env.DB);
-  const users = await db
-    .select()
-    .from(schema.user)
-    .where(eq(schema.user.email, email.toLowerCase()));
-  const user = users[0];
-  if (!user) {
-    return c.json({ message: "Fant ikke bruker" }, 404);
-  }
-
-  const token = crypto.randomUUID();
-  const now = new Date();
-  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-
-  await db.insert(schema.verification).values({
-    id: crypto.randomUUID(),
-    identifier: `reset-password:${token}`,
-    value: user.id,
-    expiresAt,
-    createdAt: now,
-    updatedAt: now,
-  });
-
-  const url = `${new URL(c.req.url).origin}/reset-password?token=${token}&email=${encodeURIComponent(user.email)}`;
-  return c.json({ url });
-});
 
 app.all("/api/auth/*", async (c) => {
   const db = drizzle(c.env.DB);

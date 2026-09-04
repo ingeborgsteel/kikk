@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Combobox } from "./ui/combobox";
@@ -6,17 +6,16 @@ import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { useObservations } from "../context/ObservationsContext";
 import { Observation, Species } from "../types/observation";
-import { useProfiles } from "../queries/useProfiles.ts";
-import { isRemoteStorageConfigured } from "../lib/auth.ts";
+import { useUsers } from "../queries/useUsers.ts";
 import { useSpeciesSearch } from "../queries/useSpeciesSearch.ts";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import {
   getRecentSpecies,
   rankSpeciesResults,
-  reverseGeocode,
   sortSpeciesAlphabetically,
   sortSpeciesByTaxonGroupAndName,
 } from "../lib/utils.ts";
+import { useReverseGeocode } from "../queries/useReverseGeocode.ts";
 import { LocationEditor } from "./LocationEditor.tsx";
 import { UserLocation } from "../types/location.ts";
 import { Modal } from "./ui/Modal.tsx";
@@ -33,6 +32,20 @@ const DATE_TIME_STORAGE_FORMAT = "YYYY-MM-DDTHH:mm:ssZ";
 
 // Session-level memory for the last used observer name (persists across form opens, cleared on page reload)
 let sessionObserverName: string | undefined = undefined;
+
+const LAST_UNCERTAINTY_RADIUS_KEY = "kikk-last-uncertainty-radius";
+
+const getLastUsedUncertaintyRadius = (): number | undefined => {
+  const stored = localStorage.getItem(LAST_UNCERTAINTY_RADIUS_KEY);
+  if (!stored) return undefined;
+  const value = Number(stored);
+  if (Number.isNaN(value) || value <= 0) return undefined;
+  return value;
+};
+
+const setLastUsedUncertaintyRadius = (value: number) => {
+  localStorage.setItem(LAST_UNCERTAINTY_RADIUS_KEY, String(value));
+};
 
 const hasTime = (value?: string) => {
   if (!value) return false;
@@ -141,17 +154,16 @@ const ObservationForm = ({
   const { addObservation, updateObservation, observations } = useObservations();
   const [searchTerm, setSearchTerm] = useState("");
   const [showResults, setShowResults] = useState(false);
-  const [loadingLocationName, setLoadingLocationName] = useState(
-    !observation && !presetLocation,
-  );
-  const [geocodingFailed, setGeocodingFailed] = useState(false);
   const [currentLocation, setCurrentLocation] = useState(location);
+  const [geocodeLocation, setGeocodeLocation] = useState(location);
+  const autoSuggestedNameRef = useRef<string | null>(null);
   const [successMessage, setSuccessMessage] = useState("");
   const [successTimeout, setSuccessTimeout] = useState<ReturnType<
     typeof setTimeout
   > | null>(null);
   const [visibleRecentSpeciesCount, setVisibleRecentSpeciesCount] =
     useState(10);
+  const [showInlineMap, setShowInlineMap] = useState(false);
 
   const [startTimeEnabled, setStartTimeEnabled] = useState(
     !observation || hasTime(observation.startDate),
@@ -160,11 +172,19 @@ const ObservationForm = ({
     hasTime(observation?.endDate),
   );
 
-  const supabaseConfigured = isRemoteStorageConfigured();
-  const { data: profiles = [] } = useProfiles({ enabled: supabaseConfigured });
-  const [showProfileResults, setShowProfileResults] = useState(false);
+  const { data: users = [] } = useUsers();
+  const [showUserResults, setShowUserResults] = useState(false);
 
   const { data: searchResults = [], isLoading } = useSpeciesSearch(searchTerm);
+  const {
+    data: geocodedName,
+    isLoading: isGeocodingLoading,
+    isError: isGeocodingError,
+  } = useReverseGeocode(
+    geocodeLocation.lat,
+    geocodeLocation.lng,
+    !observation && !presetLocation,
+  );
 
   // Build set of previously observed species IDs for ranking boost
   const previouslyObservedIds = useMemo(() => {
@@ -202,6 +222,7 @@ const ObservationForm = ({
       uncertaintyRadius:
         observation?.uncertaintyRadius ||
         presetLocation?.uncertaintyRadius ||
+        getLastUsedUncertaintyRadius() ||
         100,
       ...(!observation ? { observerName: sessionObserverName } : {}),
       ...(!observation && presetSpecies
@@ -246,27 +267,10 @@ const ObservationForm = ({
       );
 
       if (distance > 100) {
-        setLoadingLocationName(true);
-        setGeocodingFailed(false);
-        reverseGeocode(lat, lng)
-          .then((name) => {
-            if (name) {
-              setValue("locationName", name);
-              setGeocodingFailed(false);
-            } else {
-              setGeocodingFailed(true);
-            }
-          })
-          .catch((err) => {
-            console.error("Failed to get location name:", err);
-            setGeocodingFailed(true);
-          })
-          .finally(() => {
-            setLoadingLocationName(false);
-          });
+        setGeocodeLocation(newLocation);
       }
     },
-    [currentLocation, setValue, presetLocation],
+    [currentLocation, setValue, setGeocodeLocation, presetLocation],
   );
 
   // Cleanup success message timeout on unmount
@@ -287,34 +291,19 @@ const ObservationForm = ({
     }
   }, [observation, reset, getValues]);
 
-  // Fetch location name when form opens for a new observation
+  const loadingLocationName = isGeocodingLoading;
+  const geocodingFailed =
+    isGeocodingError || (geocodedName === null && !isGeocodingLoading);
+
+  // Apply reverse-geocoded location name for new observations
   useEffect(() => {
-    const currentLocationName = getValues("locationName");
-    // When a preset location is set, use its name
-    if (presetLocation) {
-      setValue("locationName", presetLocation.name, { shouldDirty: false });
-      return;
+    if (geocodedName == null || observation || presetLocation) return;
+    const current = getValues("locationName");
+    if (current === "" || current === autoSuggestedNameRef.current) {
+      setValue("locationName", geocodedName, { shouldDirty: false });
+      autoSuggestedNameRef.current = geocodedName;
     }
-    // Only fetch if this is a new observation, locationName is not yet set
-    if (!observation && currentLocationName === "") {
-      reverseGeocode(currentLocation.lat, currentLocation.lng)
-        .then((name) => {
-          if (name) {
-            setValue("locationName", name, { shouldDirty: false });
-            setGeocodingFailed(false);
-          } else {
-            setGeocodingFailed(true);
-          }
-        })
-        .catch((err) => {
-          console.error("Failed to get location name:", err);
-          setGeocodingFailed(true);
-        })
-        .finally(() => {
-          setLoadingLocationName(false);
-        });
-    }
-  }, [observation, currentLocation, setValue, getValues, presetLocation]);
+  }, [geocodedName, observation, presetLocation, getValues, setValue]);
 
   // Auto-update endDate when startDate changes
   useEffect(() => {
@@ -349,6 +338,7 @@ const ObservationForm = ({
           startDate,
           endDate,
         });
+        setLastUsedUncertaintyRadius(data.uncertaintyRadius);
         // Auto-activate kikkemodus when adding a new observation
         if (onActivateKikkemodus) {
           onActivateKikkemodus();
@@ -383,6 +373,7 @@ const ObservationForm = ({
         startDate,
         endDate,
       });
+      setLastUsedUncertaintyRadius(data.uncertaintyRadius);
 
       // Auto-activate kikkemodus when adding a new observation
       if (onActivateKikkemodus) {
@@ -725,65 +716,87 @@ const ObservationForm = ({
           />
 
           <div>
-            <Controller
-              name={"locationName"}
-              control={control}
-              render={({ field: { value, onChange } }) => (
-                <div>
-                  <Label
-                    htmlFor="locationName"
-                    className="text-bark dark:text-sand"
-                  >
-                    Lokalitet
-                  </Label>
-                  <div className="relative">
-                    {presetLocation && (
-                      <MapPinned
-                        size={18}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-violet-600 dark:text-violet-400"
-                      />
-                    )}
-                    <Input
-                      id="locationName"
-                      type="text"
-                      placeholder="F.eks. Oslo, Nordmarka"
-                      value={value}
-                      onChange={(e) => onChange(e.target.value)}
-                      className={twMerge("mt-1", presetLocation && "pl-8")}
-                      readOnly={!!presetLocation}
-                      disabled={!!presetLocation}
-                    />
-                    {loadingLocationName && (
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                        <div className="w-4 h-4 border-2 border-slate-border border-t-rust rounded-full animate-spin"></div>
+            <div className="flex gap-3 items-start">
+              <div className="w-full">
+                <Controller
+                  name={"locationName"}
+                  control={control}
+                  render={({ field: { value, onChange } }) => (
+                    <div className="flex-1">
+                      <Label
+                        htmlFor="locationName"
+                        className="text-bark dark:text-sand"
+                      >
+                        Lokalitet
+                      </Label>
+                      <div className="relative">
+                        {presetLocation && (
+                          <MapPinned
+                            size={18}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-violet-600 dark:text-violet-400"
+                          />
+                        )}
+                        <Input
+                          id="locationName"
+                          type="text"
+                          placeholder="F.eks. Oslo, Nordmarka"
+                          value={value}
+                          onChange={(e) => onChange(e.target.value)}
+                          className={twMerge("mt-1", presetLocation && "pl-8")}
+                          readOnly={!!presetLocation}
+                          disabled={!!presetLocation}
+                        />
+                        {loadingLocationName && (
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                            <div className="w-4 h-4 border-2 border-slate-border border-t-rust rounded-full animate-spin"></div>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                  <p className="text-xs text-slate mt-1">
-                    {geocodingFailed && !presetLocation
-                      ? "Kunne ikke hente stedsnavn automatisk. Vennligst fyll inn manuelt."
-                      : ""}
-                  </p>
+                      <p className="text-xs text-slate mt-1">
+                        {geocodingFailed && !presetLocation
+                          ? "Kunne ikke hente stedsnavn automatisk. Vennligst fyll inn manuelt."
+                          : ""}
+                      </p>
+                    </div>
+                  )}
+                />
+                {!presetLocation && onSaveAsLocation && (
+                  <button
+                    type="button"
+                    onClick={() => onSaveAsLocation(currentLocation)}
+                    className="mt-2 flex items-center gap-1.5 text-sm text-slate hover:text-bark dark:hover:text-sand transition-colors"
+                    aria-label="Lagre denne posisjonen som min lokalitet"
+                  >
+                    <MapPin size={14} />
+                    Lagre som min lokalitet
+                  </button>
+                )}
+              </div>
+              {!showInlineMap && (
+                <div className="w-40 flex-shrink-0 mt-6">
+                  <LocationEditor
+                    compact
+                    isPresetLocation={!!presetLocation}
+                    location={currentLocation}
+                    uncertaintyRadius={uncertaintyRadius}
+                    onLocationChange={handleLocationChange}
+                    zoom={zoom}
+                    onToggleExpandCallback={() => setShowInlineMap(true)}
+                  />
                 </div>
               )}
-            />
-            <LocationEditor
-              isPresetLocation={!!presetLocation}
-              location={currentLocation}
-              uncertaintyRadius={uncertaintyRadius}
-              onLocationChange={handleLocationChange}
-              zoom={zoom}
-            />
-            {!presetLocation && onSaveAsLocation && (
-              <button
-                type="button"
-                onClick={() => onSaveAsLocation(currentLocation)}
-                className="mt-2 flex items-center gap-1.5 text-sm text-slate hover:text-bark dark:hover:text-sand transition-colors"
-                aria-label="Lagre denne posisjonen som min lokalitet"
-              >
-                <MapPin size={14} />
-                Lagre som min lokalitet
-              </button>
+            </div>
+            {showInlineMap && (
+              <div className="mt-3">
+                <LocationEditor
+                  isPresetLocation={!!presetLocation}
+                  location={currentLocation}
+                  uncertaintyRadius={uncertaintyRadius}
+                  onLocationChange={handleLocationChange}
+                  zoom={zoom}
+                  onToggleExpandCallback={() => setShowInlineMap(false)}
+                />
+              </div>
             )}
           </div>
 
@@ -941,10 +954,10 @@ const ObservationForm = ({
             control={control}
             render={({ field: { value, onChange } }) => {
               const inputValue = value ?? "";
-              const filteredProfiles =
+              const filteredUsers =
                 inputValue.length >= 1
-                  ? profiles.filter((p) =>
-                      (p.display_name ?? p.email ?? "")
+                  ? users.filter((u) =>
+                      (u.name ?? u.email ?? "")
                         .toLowerCase()
                         .includes(inputValue.toLowerCase()),
                     )
@@ -971,13 +984,13 @@ const ObservationForm = ({
                       className={twMerge("pl-8", inputValue && "pr-8")}
                       onChange={(e) => {
                         onChange(e.target.value);
-                        setShowProfileResults(true);
+                        setShowUserResults(true);
                       }}
                       onFocus={() =>
-                        inputValue.length >= 1 && setShowProfileResults(true)
+                        inputValue.length >= 1 && setShowUserResults(true)
                       }
                       onBlur={() =>
-                        setTimeout(() => setShowProfileResults(false), 150)
+                        setTimeout(() => setShowUserResults(false), 150)
                       }
                     />
                     {inputValue && (
@@ -986,7 +999,7 @@ const ObservationForm = ({
                         onClick={() => {
                           onChange("");
                           sessionObserverName = undefined;
-                          setShowProfileResults(false);
+                          setShowUserResults(false);
                         }}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-slate hover:text-bark dark:hover:text-sand"
                         aria-label="Fjern observatør"
@@ -995,28 +1008,28 @@ const ObservationForm = ({
                       </button>
                     )}
                   </div>
-                  {showProfileResults && filteredProfiles.length > 0 && (
+                  {showUserResults && filteredUsers.length > 0 && (
                     <div className="absolute z-[1100] w-full mt-1 bg-white dark:bg-bark border-2 border-slate-border dark:border-slate rounded-md shadow-custom-lg overflow-hidden">
                       <div className="max-h-60 overflow-y-auto p-1">
-                        {filteredProfiles.map((p) => {
-                          const label = p.display_name ?? p.email ?? p.id;
+                        {filteredUsers.map((u) => {
+                          const label = u.name ?? u.email ?? u.id;
                           return (
                             <button
-                              key={p.id}
+                              key={u.id}
                               type="button"
                               onMouseDown={(e) => e.preventDefault()}
                               onClick={() => {
                                 onChange(label);
-                                setShowProfileResults(false);
+                                setShowUserResults(false);
                               }}
                               className="w-full text-left px-2 py-2 rounded-md hover:bg-sand dark:hover:bg-forest transition-colors"
                             >
                               <div className="font-medium text-sm text-bark dark:text-sand">
                                 {label}
                               </div>
-                              {p.display_name && p.email && (
+                              {u.name !== u.email && (
                                 <div className="text-xs text-slate">
-                                  {p.email}
+                                  {u.email}
                                 </div>
                               )}
                             </button>

@@ -1,5 +1,5 @@
--- Initial D1 schema for kikk data (observations, locations, profiles, user_accesses).
--- Run with: npx wrangler d1 migrations apply kikk-auth
+-- Initial D1 schema for kikk data (observations, locations, user_accesses).
+-- Run with: npx wrangler d1 migrations apply kikk-db
 
 CREATE TABLE IF NOT EXISTS observations (
   id TEXT PRIMARY KEY,
@@ -52,13 +52,6 @@ CREATE TABLE IF NOT EXISTS locations (
   description TEXT,
   createdAt TEXT NOT NULL,
   updatedAt TEXT NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS profiles (
-  id TEXT PRIMARY KEY,
-  email TEXT,
-  display_name TEXT,
-  updated_at TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS user_accesses (

@@ -5,7 +5,3 @@ export const betterAuthClient = createAuthClient({
     (import.meta.env.VITE_BETTER_AUTH_BASE_URL as string | undefined) ||
     window.location.origin,
 });
-
-export const isAuthConfigured = () => true;
-
-export const isRemoteStorageConfigured = () => true;

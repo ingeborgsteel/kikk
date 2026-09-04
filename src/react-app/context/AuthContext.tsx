@@ -1,11 +1,6 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  ReactNode,
-} from "react";
+import { createContext, useContext, useState, ReactNode } from "react";
 import type { User } from "better-auth";
-import { betterAuthClient, isAuthConfigured } from "../lib/auth";
+import { betterAuthClient } from "../lib/auth";
 import { useUserAccesses as useUserAccess } from "../queries/useUserAccesses";
 import { UserAccess } from "../types/user_access";
 
@@ -33,7 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [showLoginForm, setShowLoginForm] = useState(false);
   const { data, isPending } = betterAuthClient.useSession();
   const user = data?.user ?? null;
-  const loading = isAuthConfigured() ? isPending : false;
+  const loading = isPending;
 
   const { data: userAccess } = useUserAccess(user?.id || "", {
     enabled: !!user?.id,

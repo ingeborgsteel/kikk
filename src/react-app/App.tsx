@@ -24,7 +24,7 @@ import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { useMapPreferences } from "./context/MapPreferencesContext.tsx";
 import { useGeolocation } from "./context/GeolocationContext.tsx";
-import { CircleDashed, Navigation } from "lucide-react";
+import { CircleDashed, Grid3x3, Navigation } from "lucide-react";
 import Header from "./components/Header.tsx";
 import { useAuth } from "./context/AuthContext.tsx";
 
@@ -58,8 +58,12 @@ function App() {
   const { observations } = useObservations();
   const { locations } = useLocations();
   const { followMode, setFollowMode } = useGeolocation();
-  const { showUncertaintyOverlay, setShowUncertaintyOverlay } =
-    useMapPreferences();
+  const {
+    showUncertaintyOverlay,
+    setShowUncertaintyOverlay,
+    showAtlasSquares,
+    setShowAtlasSquares,
+  } = useMapPreferences();
   const { showLoginForm, setShowLoginForm } = useAuth();
 
   dayjs.extend(utc);
@@ -311,10 +315,9 @@ function App() {
           }
         />
       </Routes>
-      <LoginForm
-        closeLoginForm={() => setShowLoginForm(false)}
-        showLoginForm={showLoginForm}
-      />
+      {showLoginForm && (
+        <LoginForm closeLoginForm={() => setShowLoginForm(false)} />
+      )}
       <GitHubIssueForm
         onClose={() => setShowGitHubIssueForm(false)}
         showForm={showGitHubIssueForm}
@@ -352,6 +355,21 @@ function App() {
                 title="Nøyaktighet"
               >
                 <CircleDashed size={20} />
+              </Button>
+            </div>
+            <div className="relative group">
+              <span className="hidden md:block absolute right-full mr-3 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-md bg-sand/95 dark:bg-bark/95 px-3 py-1.5 text-sm font-medium text-bark dark:text-sand shadow-custom-lg border border-moss/30 opacity-0 translate-x-1 pointer-events-none transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0">
+                Atlas-ruter
+              </span>
+              <Button
+                onClick={() => setShowAtlasSquares(!showAtlasSquares)}
+                size="icon"
+                variant={showAtlasSquares ? "secondary" : "outline"}
+                className="h-10 w-10 box-border shadow-custom-xl hover:shadow-custom-2xl hover:translate-y-0 active:translate-y-0"
+                aria-label="Veksle Atlas-ruter"
+                title="Atlas-ruter"
+              >
+                <Grid3x3 size={20} />
               </Button>
             </div>
           </>

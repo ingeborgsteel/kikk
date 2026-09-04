@@ -3,6 +3,7 @@ import {
   generateExcelFromObservations,
   downloadExcelFile,
 } from "../api/exports";
+import { markObservationsAsExported } from "../api/observations.ts";
 import { Observation } from "../types/observation";
 
 /**
@@ -15,6 +16,11 @@ export function useExportObservations() {
       const fileName = `observations-export-${timestamp}.xlsx`;
       const blob = await generateExcelFromObservations(observations);
       downloadExcelFile(blob, fileName);
+
+      if (observations.length > 0) {
+        await markObservationsAsExported(observations.map((o) => o.id));
+      }
+
       return { fileName, blob };
     },
   });

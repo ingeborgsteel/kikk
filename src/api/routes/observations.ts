@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { drizzle } from "drizzle-orm/d1";
-import { eq, inArray, desc, isNull } from "drizzle-orm";
+import { eq, inArray, desc, isNull, sql } from "drizzle-orm";
 import * as schema from "../schema";
 
 type ObservationInput = Omit<
@@ -207,6 +207,32 @@ observationsApp.delete("/:id", async (c) => {
     .delete(schema.observations)
     .where(eq(schema.observations.id, id))
     .run();
+  return c.json({ success: true });
+});
+
+observationsApp.post("/export", async (c) => {
+  const db = drizzle(c.env.DB);
+  const { ids } = (await c.req.json()) as { ids?: string[] };
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return c.json(
+      { success: false, error: "No observation ids provided" },
+      400,
+    );
+  }
+
+  const now = new Date().toISOString();
+  for (const id of ids) {
+    await db
+      .update(schema.observations)
+      .set({
+        lastExportedAt: now,
+        exportCount: sql`COALESCE(${schema.observations.exportCount}, 0) + 1`,
+        updatedAt: now,
+      })
+      .where(eq(schema.observations.id, id))
+      .run();
+  }
+
   return c.json({ success: true });
 });
 

@@ -2,17 +2,10 @@ import { useEffect, useState } from "react";
 import { Lock } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "./ui/button";
-import { isAuthConfigured } from "../lib/auth";
 import { Input } from "./ui/input.tsx";
 import { Modal } from "./ui/Modal.tsx";
 
-export function LoginForm({
-  closeLoginForm,
-  showLoginForm,
-}: {
-  closeLoginForm: () => void;
-  showLoginForm: boolean;
-}) {
+export function LoginForm({ closeLoginForm }: { closeLoginForm: () => void }) {
   const { signInWithEmail, signUp } = useAuth();
 
   const [mode, setMode] = useState<"signin" | "signup">("signin");
@@ -24,7 +17,7 @@ export function LoginForm({
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && showLoginForm) {
+      if (e.key === "Escape") {
         e.preventDefault();
         e.stopPropagation();
         closeLoginForm();
@@ -33,21 +26,7 @@ export function LoginForm({
 
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
-  }, [closeLoginForm, showLoginForm]);
-
-  useEffect(() => {
-    if (showLoginForm) {
-      setMode("signin");
-      setName("");
-      setEmail("");
-      setPassword("");
-      setMessage("");
-    }
-  }, [showLoginForm]);
-
-  if (!isAuthConfigured()) {
-    return null;
-  }
+  }, [closeLoginForm]);
 
   const resetForm = () => {
     setName("");
@@ -101,10 +80,6 @@ export function LoginForm({
     setLoading(false);
   };
 
-  if (!showLoginForm) {
-    return null;
-  }
-
   const title = mode === "signup" ? "Registrer deg" : "Logg inn";
   const submitLabel = loading
     ? mode === "signup"
@@ -115,7 +90,7 @@ export function LoginForm({
       : "Logg inn";
 
   return (
-    <Modal onClose={closeLoginForm} isOpen={showLoginForm} title={title}>
+    <Modal onClose={closeLoginForm} isOpen={true} title={title}>
       <form onSubmit={handleSubmit} className="space-y-lg">
         {mode === "signup" && (
           <Input

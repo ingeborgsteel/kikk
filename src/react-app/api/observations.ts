@@ -56,3 +56,17 @@ export async function deleteObservation(observationId: string): Promise<void> {
   const res = await fetch(`${base}/${observationId}`, { method: "DELETE" });
   if (!res.ok) throw new Error(res.statusText);
 }
+
+export async function markObservationsAsExported(
+  observationIds: string[],
+): Promise<void> {
+  const res = await fetch(`${base}/export`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ids: observationIds }),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || res.statusText);
+  }
+}

@@ -1,7 +1,6 @@
 import { LogIn, LogOut, User } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "./ui/button";
-import { isAuthConfigured } from "../lib/auth";
 
 export function AuthButton({
   openProfilePage,
@@ -9,11 +8,6 @@ export function AuthButton({
   openProfilePage?: () => void;
 }) {
   const { user, signOut, setShowLoginForm } = useAuth();
-
-  // Don't render if auth is not configured
-  if (!isAuthConfigured()) {
-    return null;
-  }
 
   const handleSignOut = async () => {
     await signOut();

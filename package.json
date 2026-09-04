@@ -14,7 +14,6 @@
   "dependencies": {
     "@octokit/core": "^7.0.6",
     "@radix-ui/react-popover": "^1.1.23",
-    "@supabase/supabase-js": "^2.95.3",
     "@tanstack/query-persist-client-core": "^5.100.13",
     "@tanstack/query-sync-storage-persister": "^5.100.13",
     "@tanstack/react-query": "^5.90.20",
@@ -31,6 +30,7 @@
     "leaflet": "^1.9.4",
     "lucide-react": "^0.563.0",
     "prettier": "^3.8.1",
+    "proj4": "^2.22.0",
     "react": "19.2.1",
     "react-day-picker": "^10.0.1",
     "react-dom": "19.2.1",
@@ -42,6 +42,7 @@
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.15.3",
     "@eslint/js": "9.39.1",
+    "@playwright/test": "^1.62.1",
     "@types/node": "24.10.1",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
@@ -68,21 +69,13 @@
     "check": "tsc && vite build && wrangler deploy --dry-run",
     "deploy": "wrangler deploy",
     "dev": "vite",
-    "dev:local": "test -f .env.local.bak && mv .env.local.bak .env.local; vite",
-    "dev:remote": "trap 'test -f .env.local.bak && mv .env.local.bak .env.local' EXIT; test -f .env.local && mv .env.local .env.local.bak; vite",
     "lint": "eslint .",
     "format": "npx prettier --write .",
     "preview": "npm run build && vite preview",
-    "test": "vitest run",
-    "db:start": "set -a && . ./.env && set +a && npx -y supabase start",
-    "db:init": "npm run db:start && npm run db:reset && npm run db:env",
-    "db:env": "set -a && . ./.env && set +a && npx -y supabase status -o env | sed -n 's/^API_URL=/VITE_SUPABASE_URL=/p; s/^ANON_KEY=/VITE_SUPABASE_ANON_KEY=/p' | sed 's/\"//g' > .env.local",
-    "db:stop": "set -a && . ./.env && set +a && npx -y supabase stop",
-    "db:reset": "set -a && . ./.env && set +a && npx -y supabase db reset",
-    "db:link": "set -a && . ./.env && set +a && npx -y supabase link --project-ref $SUPABASE_PROJECT_ID",
-    "db:pull": "set -a && . ./.env && set +a && npx -y supabase db pull",
-    "db:push": "set -a && . ./.env && set +a && npx -y supabase db push",
-    "migration:repair": "set -a && . ./.env && set +a && npx -y supabase migration repair --status applied"
+    "test": "vitest run src",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:ci": "CI=true playwright test"
   },
   "type": "module"
 }

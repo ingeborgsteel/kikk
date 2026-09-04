@@ -66,14 +66,8 @@ function App() {
     showAtlasSquares,
     setShowAtlasSquares,
   } = useMapPreferences();
-  const {
-    showLoginForm,
-    setShowLoginForm,
-    isAdmin,
-    isImpersonating,
-    user,
-    stopImpersonating,
-  } = useAuth();
+  const { showLoginForm, setShowLoginForm, isAdmin, isImpersonating } =
+    useAuth();
 
   dayjs.extend(utc);
   dayjs.extend(timezone);
@@ -421,17 +415,6 @@ function App() {
           floating={false}
         />
       </div>
-      {isImpersonating && (
-        <div className="fixed top-16 left-0 right-0 z-[900] bg-rust text-sand px-4 py-2 flex items-center justify-between shadow-md">
-          <span className="font-medium text-sm">
-            Du ser kikk som {user?.name || user?.email}. Ingen endringer lagres.
-          </span>
-          <Button onClick={stopImpersonating} variant="secondary" size="sm">
-            Slutt å se som bruker
-          </Button>
-        </div>
-      )}
-
       {location.pathname !== "/reset-password" && (
         <BottomNav
           currentView={getCurrentView()}

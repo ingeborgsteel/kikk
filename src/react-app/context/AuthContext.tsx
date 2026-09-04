@@ -85,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const stopImpersonating = async () => {
     await betterAuthClient.admin.stopImpersonating();
-    window.location.reload();
+    window.location.href = "/admin";
   };
 
   return (

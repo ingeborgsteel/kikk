@@ -1,4 +1,4 @@
-import { BarChart3, Binoculars, Map, Shield, User } from "lucide-react";
+import { BarChart3, Binoculars, EyeOff, Map, Shield, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
@@ -9,7 +9,7 @@ interface BottomNavProps {
 
 export function BottomNav({ currentView, onLoginClick }: BottomNavProps) {
   const navigate = useNavigate();
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, isImpersonating, stopImpersonating } = useAuth();
 
   const handleProfileOrLogin = () => {
     if (user) {
@@ -52,7 +52,7 @@ export function BottomNav({ currentView, onLoginClick }: BottomNavProps) {
           <BarChart3 size={24} />
           <span className="text-xs font-medium">Statistikk</span>
         </button>
-        {isAdmin && (
+        {isAdmin && !isImpersonating && (
           <button
             onClick={() => navigate("/admin")}
             className={`flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors ${
@@ -64,18 +64,29 @@ export function BottomNav({ currentView, onLoginClick }: BottomNavProps) {
             <span className="text-xs font-medium">Admin</span>
           </button>
         )}
-        <button
-          onClick={handleProfileOrLogin}
-          className={`flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors ${
-            currentView === "profile" ? "text-sunlit" : "text-sand"
-          }`}
-          aria-label={user ? "Profil" : "Logg inn"}
-        >
-          <User size={24} />
-          <span className="text-xs font-medium">
-            {user ? "Profil" : "Logg inn"}
-          </span>
-        </button>
+        {isImpersonating ? (
+          <button
+            onClick={stopImpersonating}
+            className="flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors text-sunlit"
+            aria-label="Slutt å se som bruker"
+          >
+            <EyeOff size={24} />
+            <span className="text-xs font-medium">Slutt</span>
+          </button>
+        ) : (
+          <button
+            onClick={handleProfileOrLogin}
+            className={`flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors ${
+              currentView === "profile" ? "text-sunlit" : "text-sand"
+            }`}
+            aria-label={user ? "Profil" : "Logg inn"}
+          >
+            <User size={24} />
+            <span className="text-xs font-medium">
+              {user ? "Profil" : "Logg inn"}
+            </span>
+          </button>
+        )}
       </div>
     </nav>
   );

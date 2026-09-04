@@ -20,7 +20,7 @@ export const useImpersonateUser = () => {
   return useMutation({
     mutationFn: async (userId: string) => {
       await betterAuthClient.admin.impersonateUser({ userId });
-      window.location.reload();
+      window.location.href = "/";
     },
   });
 };

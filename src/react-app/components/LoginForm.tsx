@@ -234,7 +234,18 @@ export function LoginForm({ closeLoginForm }: { closeLoginForm: () => void }) {
         </div>
         {message && (
           <p className="text-xs mt-1 text-bark dark:text-sand break-all">
-            {message}
+            {message.startsWith("Tilbakestillingslenke: ") ? (
+              <a
+                href={message.replace("Tilbakestillingslenke: ", "")}
+                className="text-forest dark:text-sand underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {message.replace("Tilbakestillingslenke: ", "")}
+              </a>
+            ) : (
+              message
+            )}
           </p>
         )}
       </form>

@@ -41,7 +41,7 @@ app.post("/api/admin/reset-password-link", async (c) => {
     updatedAt: now,
   });
 
-  const url = `${new URL(c.req.url).origin}/api/auth/reset-password/${token}?callbackURL=${encodeURIComponent("/reset-password")}`;
+  const url = `${new URL(c.req.url).origin}/reset-password?token=${token}`;
   return c.json({ url });
 });
 

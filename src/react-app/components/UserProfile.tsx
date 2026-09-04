@@ -2,13 +2,8 @@ import { useMemo, useState } from "react";
 import { Button } from "./ui/button";
 import { useLocations } from "../context/LocationsContext";
 import { useObservations } from "../context/ObservationsContext";
-import {
-  Edit2,
-  MapPin,
-  Plus,
-  Trash2,
-  Binoculars,
-} from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { Edit2, MapPin, Plus, Trash2, Binoculars } from "lucide-react";
 import { UserLocation } from "../types/location";
 import { LocationForm } from "./LocationForm.tsx";
 import Header from "./Header.tsx";
@@ -20,6 +15,8 @@ interface UserProfileProps {
 export function UserProfile({ onBack }: UserProfileProps) {
   const { locations, deleteLocation } = useLocations();
   const { observations } = useObservations();
+  const { isImpersonating } = useAuth();
+  const readOnly = isImpersonating;
 
   // Count observations per location
   const locationObservationCounts = useMemo(() => {
@@ -41,6 +38,7 @@ export function UserProfile({ onBack }: UserProfileProps) {
   } | null>(null);
 
   const handleAddNew = () => {
+    if (readOnly) return;
     // Use Oslo coordinates as default for new locations
     setFormLocation({ lat: 59.9139, lng: 10.7522 });
     setEditingLocation(null);
@@ -48,12 +46,14 @@ export function UserProfile({ onBack }: UserProfileProps) {
   };
 
   const handleEdit = (location: UserLocation) => {
+    if (readOnly) return;
     setFormLocation(location.location);
     setEditingLocation(location);
     setShowLocationForm(true);
   };
 
   const handleDelete = (id: string) => {
+    if (readOnly) return;
     if (confirm("Er du sikker på at du vil slette denne lokaliteten?")) {
       deleteLocation(id);
     }
@@ -83,13 +83,15 @@ export function UserProfile({ onBack }: UserProfileProps) {
           <h2 className="text-2xl font-bold text-bark dark:text-sand mb-lg">
             Mine lokaliteter
           </h2>
-          <Button
-            onClick={handleAddNew}
-            className="mb-4 flex items-center gap-2"
-          >
-            <Plus size={20} />
-            Legg til ny lokalitet
-          </Button>
+          {!readOnly && (
+            <Button
+              onClick={handleAddNew}
+              className="mb-4 flex items-center gap-2"
+            >
+              <Plus size={20} />
+              Legg til ny lokalitet
+            </Button>
+          )}
 
           <div className="space-y-3">
             {locations.length === 0 ? (
@@ -105,7 +107,11 @@ export function UserProfile({ onBack }: UserProfileProps) {
                 <div
                   key={location.id}
                   onClick={() => handleEdit(location)}
-                  className="p-4 bg-white dark:bg-[#2c2c2c] rounded-lg border-2 border-moss/30 hover:border-moss transition-colors cursor-pointer"
+                  className={`p-4 bg-white dark:bg-[#2c2c2c] rounded-lg border-2 border-moss/30 ${
+                    readOnly
+                      ? ""
+                      : "hover:border-moss transition-colors cursor-pointer"
+                  }`}
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
@@ -135,37 +141,41 @@ export function UserProfile({ onBack }: UserProfileProps) {
                         </p>
                       )}
                     </div>
-                    <div className="flex gap-2 ml-4">
-                      <Button
-                        onClick={() => handleEdit(location)}
-                        variant={"ghost"}
-                        className={"px-2"}
-                        aria-label="Rediger"
-                      >
-                        <Edit2 size={18} className="text-bark dark:text-sand" />
-                      </Button>
-                      <Button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(location.id);
-                        }}
-                        variant={"ghost"}
-                        className={"px-2"}
-                        aria-label="Slett"
-                      >
-                        <Trash2 size={18} className="text-rust" />
-                      </Button>
-                    </div>
+                    {!readOnly && (
+                      <div className="flex gap-2 ml-4">
+                        <Button
+                          onClick={() => handleEdit(location)}
+                          variant={"ghost"}
+                          className={"px-2"}
+                          aria-label="Rediger"
+                        >
+                          <Edit2
+                            size={18}
+                            className="text-bark dark:text-sand"
+                          />
+                        </Button>
+                        <Button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(location.id);
+                          }}
+                          variant={"ghost"}
+                          className={"px-2"}
+                          aria-label="Slett"
+                        >
+                          <Trash2 size={18} className="text-rust" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))
             )}
           </div>
         </div>
-
       </div>
 
-      {formLocation && (
+      {formLocation && !readOnly && (
         <LocationForm
           isOpen={showLocationForm}
           initialLocation={formLocation}

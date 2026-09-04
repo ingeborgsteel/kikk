@@ -19,13 +19,14 @@ import { KikkemodusToggle } from "./components/KikkemodusToggle.tsx";
 import { GitHubSuggestionButton } from "./components/GitHubSuggestionButton.tsx";
 import { GitHubIssueForm } from "./components/GitHubIssueForm.tsx";
 import { StatsDashboard } from "./components/StatsDashboard.tsx";
+import { AdminDashboard } from "./components/AdminDashboard.tsx";
 import { UserLocation } from "./types/location.ts";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { useMapPreferences } from "./context/MapPreferencesContext.tsx";
 import { useGeolocation } from "./context/GeolocationContext.tsx";
-import { CircleDashed, Grid3x3, Navigation } from "lucide-react";
+import { CircleDashed, Grid3x3, Navigation, Shield } from "lucide-react";
 import Header from "./components/Header.tsx";
 import { useAuth } from "./context/AuthContext.tsx";
 
@@ -65,7 +66,8 @@ function App() {
     showAtlasSquares,
     setShowAtlasSquares,
   } = useMapPreferences();
-  const { showLoginForm, setShowLoginForm } = useAuth();
+  const { showLoginForm, setShowLoginForm, isAdmin, isImpersonating } =
+    useAuth();
 
   dayjs.extend(utc);
   dayjs.extend(timezone);
@@ -202,10 +204,16 @@ function App() {
     : undefined;
 
   // Determine current view from location pathname
-  const getCurrentView = (): "map" | "observations" | "stats" | "profile" => {
+  const getCurrentView = ():
+    | "map"
+    | "observations"
+    | "stats"
+    | "profile"
+    | "admin" => {
     if (location.pathname === "/observations") return "observations";
     if (location.pathname === "/stats") return "stats";
     if (location.pathname === "/profile") return "profile";
+    if (location.pathname === "/admin") return "admin";
     return "map";
   };
 
@@ -224,6 +232,10 @@ function App() {
         <Route
           path="/observations"
           element={<MyObservations onBack={() => navigate("/")} />}
+        />
+        <Route
+          path="/admin"
+          element={<AdminDashboard onBack={() => navigate("/")} />}
         />
         <Route
           path="/"
@@ -252,40 +264,62 @@ function App() {
                     >
                       Statistikk
                     </Button>
+                    {isAdmin && (
+                      <Button
+                        onClick={() => navigate("/admin")}
+                        variant="secondary"
+                      >
+                        <Shield size={16} />
+                        Admin
+                      </Button>
+                    )}
                   </>
                 }
               />
               <Map
-                onLocationSelect={handleLocationSelect}
+                onLocationSelect={
+                  isImpersonating ? undefined : handleLocationSelect
+                }
                 observations={observations}
-                onObservationClick={handleObservationClick}
+                onObservationClick={
+                  isImpersonating ? undefined : handleObservationClick
+                }
                 userLocations={locations}
-                onUserLocationClick={handleUserLocationClick}
+                onUserLocationClick={
+                  isImpersonating ? undefined : handleUserLocationClick
+                }
               />
 
-              {(editingObservation?.location || selectedLocation) && (
-                <ObservationForm
-                  isOpen={showAddForm}
-                  location={editingObservation?.location || selectedLocation!}
-                  zoom={selectedZoom}
-                  observation={editingObservation}
-                  presetLocation={presetLocation}
-                  onClose={onClose}
-                  onSaveAsLocation={handleSaveAsLocation}
-                  onActivateKikkemodus={() => setKikkemodusActive(true)}
-                />
-              )}
+              {(editingObservation?.location || selectedLocation) &&
+                !isImpersonating && (
+                  <ObservationForm
+                    isOpen={showAddForm}
+                    location={editingObservation?.location || selectedLocation!}
+                    zoom={selectedZoom}
+                    observation={editingObservation}
+                    presetLocation={presetLocation}
+                    onClose={onClose}
+                    onSaveAsLocation={handleSaveAsLocation}
+                    onActivateKikkemodus={() => setKikkemodusActive(true)}
+                  />
+                )}
               {showLocationObservations && selectedUserLocation && (
                 <LocationObservationsDialog
                   location={selectedUserLocation}
                   isOpen={showLocationObservations}
                   onClose={handleCloseLocationObservations}
-                  onAddObservation={handleLocationObservationAdd}
-                  onObservationClick={handleLocationObservationClick}
-                  onEditLocation={handleEditLocationFromDialog}
+                  onAddObservation={
+                    isImpersonating ? () => {} : handleLocationObservationAdd
+                  }
+                  onObservationClick={
+                    isImpersonating ? () => {} : handleLocationObservationClick
+                  }
+                  onEditLocation={
+                    isImpersonating ? () => {} : handleEditLocationFromDialog
+                  }
                 />
               )}
-              {showMapClickDialog && selectedLocation && (
+              {showMapClickDialog && selectedLocation && !isImpersonating && (
                 <MapClickDialog
                   zoom={selectedZoom}
                   location={selectedLocation}
@@ -295,7 +329,7 @@ function App() {
                   isOpen={showMapClickDialog}
                 />
               )}
-              {selectedLocation && (
+              {selectedLocation && !isImpersonating && (
                 <LocationForm
                   isOpen={showAddLocationForm}
                   initialLocation={selectedLocation}

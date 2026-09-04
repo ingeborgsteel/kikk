@@ -5,9 +5,26 @@ import { useUserAccesses as useUserAccess } from "../queries/useUserAccesses";
 import { UserAccess } from "../types/user_access";
 import { requestPasswordReset } from "../api/auth";
 
+interface AppUser extends User {
+  role?: string | null;
+}
+
+interface AppSession {
+  id: string;
+  token: string;
+  userId: string;
+  expiresAt: string | Date;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+  impersonatedBy?: string | null;
+}
+
 interface AuthContextType {
-  user: User | null;
+  user: AppUser | null;
+  session: AppSession | undefined;
   loading: boolean;
+  isAdmin: boolean;
+  isImpersonating: boolean;
   userAccess: UserAccess | undefined;
   signInWithEmail: (
     email: string,
@@ -20,6 +37,7 @@ interface AuthContextType {
   ) => Promise<{ error: Error | null }>;
   sendPasswordReset: (email: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
+  stopImpersonating: () => Promise<void>;
   showLoginForm: boolean;
   setShowLoginForm: (val: boolean) => void;
 }
@@ -29,8 +47,11 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [showLoginForm, setShowLoginForm] = useState(false);
   const { data, isPending } = betterAuthClient.useSession();
-  const user = data?.user ?? null;
+  const session = (data?.session as AppSession | undefined) ?? undefined;
+  const user = ((data?.user as AppUser | undefined) ?? null) as AppUser | null;
   const loading = isPending;
+  const isAdmin = user?.role === "admin";
+  const isImpersonating = !!session?.impersonatedBy;
 
   const { data: userAccess } = useUserAccess(user?.id || "", {
     enabled: !!user?.id,
@@ -62,15 +83,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await betterAuthClient.signOut();
   };
 
+  const stopImpersonating = async () => {
+    await betterAuthClient.admin.stopImpersonating();
+    window.location.reload();
+  };
+
   return (
     <AuthContext.Provider
       value={{
         user,
+        session,
         loading,
+        isAdmin,
+        isImpersonating,
         signInWithEmail,
         signUp,
         sendPasswordReset,
         signOut,
+        stopImpersonating,
         userAccess,
         showLoginForm,
         setShowLoginForm,

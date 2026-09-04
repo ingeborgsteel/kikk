@@ -12,6 +12,7 @@ import {
 import dayjs, { Dayjs } from "dayjs";
 import { useObservations } from "../context/ObservationsContext";
 import { useLocations } from "../context/LocationsContext";
+import { useAuth } from "../context/AuthContext";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input.tsx";
 import { DatePicker } from "./ui/date-picker.tsx";
@@ -37,6 +38,8 @@ function MyObservations({ onBack }: MyObservationsProps) {
   const [dateFrom, setDateFrom] = useState<Dayjs | null>(null);
   const [dateTo, setDateTo] = useState<Dayjs | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
+  const { isImpersonating } = useAuth();
+  const readOnly = isImpersonating;
   const view = searchParams.get("view") === "table" ? "table" : "list";
   const setView = (next: "list" | "table") => {
     setSearchParams(
@@ -294,7 +297,7 @@ function MyObservations({ onBack }: MyObservationsProps) {
               </button>
             </div>
 
-            {observations.length > 0 && (
+            {!readOnly && observations.length > 0 && (
               <Button onClick={() => setShowExportDialog(true)}>
                 <FileSpreadsheet size={20} className="mr-2" />
                 Eksporter til Excel
@@ -330,6 +333,7 @@ function MyObservations({ onBack }: MyObservationsProps) {
           <ObservationsTable
             observations={filteredObservations}
             onEdit={setEditingId}
+            readOnly={readOnly}
           />
         ) : (
           <div className="flex flex-col space-y-md">
@@ -341,13 +345,14 @@ function MyObservations({ onBack }: MyObservationsProps) {
                 onDelete={handleDelete}
                 formatDate={formatDate}
                 formatDateRange={formatDateRange}
+                readOnly={readOnly}
               />
             ))}
           </div>
         )}
       </div>
 
-      {editingId && editingObservation && (
+      {editingId && editingObservation && !readOnly && (
         <ObservationForm
           isOpen
           location={editingObservation.location}

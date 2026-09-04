@@ -89,6 +89,10 @@ export const user = sqliteTable("user", {
   image: text("image"),
   createdAt: timestamp("createdAt").notNull(),
   updatedAt: timestamp("updatedAt").notNull(),
+  role: text("role"),
+  banned: integer("banned", { mode: "boolean" }).default(false),
+  banReason: text("banReason"),
+  banExpires: timestamp("banExpires"),
 });
 
 export const session = sqliteTable("session", {
@@ -102,6 +106,7 @@ export const session = sqliteTable("session", {
   userId: text("userId")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
+  impersonatedBy: text("impersonatedBy"),
 });
 
 export const account = sqliteTable(
@@ -155,5 +160,6 @@ export type InsertSpecies = typeof species.$inferInsert;
 export type Location = typeof locations.$inferSelect;
 export type InsertLocation = typeof locations.$inferInsert;
 export type User = typeof user.$inferSelect;
+export type Session = typeof session.$inferSelect;
 export type UserAccess = typeof userAccesses.$inferSelect;
 export type InsertUserAccess = typeof userAccesses.$inferInsert;

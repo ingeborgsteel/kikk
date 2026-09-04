@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { Lock } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { getResetLink } from "../api/auth";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input.tsx";
 import { Modal } from "./ui/Modal.tsx";
 
 export function LoginForm({ closeLoginForm }: { closeLoginForm: () => void }) {
-  const { signInWithEmail, signUp, sendPasswordReset } = useAuth();
+  const { signInWithEmail, signUp } = useAuth();
 
   const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [name, setName] = useState("");
@@ -52,10 +53,11 @@ export function LoginForm({ closeLoginForm }: { closeLoginForm: () => void }) {
         error = signInResult.error;
       }
     } else if (mode === "forgot") {
-      const result = await sendPasswordReset(email);
-      error = result.error;
-      if (!error) {
-        setMessage("Sjekk e-posten din for en tilbakestillingslenke.");
+      const { url, error: linkError } = await getResetLink(email);
+      if (linkError) {
+        error = new Error(linkError);
+      } else {
+        setMessage(`Tilbakestillingslenke: ${url}`);
         setLoading(false);
         return;
       }
@@ -231,7 +233,9 @@ export function LoginForm({ closeLoginForm }: { closeLoginForm: () => void }) {
           </div>
         </div>
         {message && (
-          <p className="text-xs mt-1 text-bark dark:text-sand">{message}</p>
+          <p className="text-xs mt-1 text-bark dark:text-sand break-all">
+            {message}
+          </p>
         )}
       </form>
     </Modal>

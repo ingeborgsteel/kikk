@@ -129,7 +129,7 @@ for (const profile of profiles) {
 
   resetLinks.push({
     email,
-    url: `${baseURL}/reset-password?token=${token}`,
+    url: `${baseURL}/reset-password?token=${token}&email=${encodeURIComponent(email)}`,
   });
 }
 

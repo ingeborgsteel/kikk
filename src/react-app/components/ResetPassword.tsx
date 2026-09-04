@@ -4,13 +4,16 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input.tsx";
 import { Modal } from "./ui/Modal.tsx";
 import { resetPassword } from "../api/auth";
+import { betterAuthClient } from "../lib/auth";
 
 export function ResetPassword() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const token = searchParams.get("token");
   const error = searchParams.get("error");
+  const emailFromQuery = searchParams.get("email") || "";
 
+  const [email, setEmail] = useState(emailFromQuery);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -25,6 +28,10 @@ export function ResetPassword() {
     e.preventDefault();
     if (!token) return;
 
+    if (!email) {
+      setMessage("E-post mangler.");
+      return;
+    }
     if (password.length < 8) {
       setMessage("Passordet må være minst 8 tegn.");
       return;
@@ -40,11 +47,28 @@ export function ResetPassword() {
     const { error: resetError } = await resetPassword(password, token);
     if (resetError) {
       setMessage(resetError);
-    } else {
-      setSuccess(true);
+      setLoading(false);
+      return;
     }
 
+    setMessage("Passordet oppdatert. Logger inn...");
+
+    const { error: signInError } = await betterAuthClient.signIn.email({
+      email,
+      password,
+    });
+
+    if (signInError) {
+      setMessage(
+        "Passordet ble satt, men innloggingen mislyktes. Prøv å logge inn manuelt.",
+      );
+      setLoading(false);
+      return;
+    }
+
+    setSuccess(true);
     setLoading(false);
+    setTimeout(() => navigate("/"), 1500);
   };
 
   return (
@@ -57,7 +81,7 @@ export function ResetPassword() {
         {success ? (
           <div className="space-y-md">
             <p className="text-bark dark:text-sand">
-              Passordet ditt er oppdatert.
+              Passordet ditt er oppdatert og du er logget inn.
             </p>
             <Button onClick={() => navigate("/")} className="w-full">
               Gå til kartet
@@ -65,6 +89,15 @@ export function ResetPassword() {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-md">
+            <Input
+              type="email"
+              placeholder="din@epost.no"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="username"
+              name="email"
+              required
+            />
             <Input
               type="password"
               placeholder="Nytt passord"
@@ -88,7 +121,7 @@ export function ResetPassword() {
               disabled={loading || !token || !!error}
               className="w-full"
             >
-              {loading ? "Lagrer..." : "Lagre nytt passord"}
+              {loading ? "Lagrer..." : "Lagre og logg inn"}
             </Button>
             {message && (
               <p className="text-xs text-bark dark:text-sand">{message}</p>

@@ -3,17 +3,13 @@ import { Button } from "./ui/button";
 import { useLocations } from "../context/LocationsContext";
 import { useObservations } from "../context/ObservationsContext";
 import {
-  Download,
   Edit2,
-  History,
   MapPin,
   Plus,
   Trash2,
   Binoculars,
 } from "lucide-react";
 import { UserLocation } from "../types/location";
-import { useDownloadExport, useExportLogs } from "../queries/useExports";
-import { isSupabaseConfigured } from "../lib/supabase";
 import { LocationForm } from "./LocationForm.tsx";
 import Header from "./Header.tsx";
 
@@ -43,25 +39,6 @@ export function UserProfile({ onBack }: UserProfileProps) {
     lat: number;
     lng: number;
   } | null>(null);
-
-  const supabaseConfigured = isSupabaseConfigured();
-  const { data: exportLogs = [], isLoading: isLoadingLogs } = useExportLogs();
-  const { mutate: downloadExport, isPending: isDownloading } =
-    useDownloadExport();
-
-  const handleDownloadPrevious = (filePath: string, fileName: string) => {
-    downloadExport(
-      { filePath, fileName },
-      {
-        onSuccess: () => {
-          alert("Tidligere eksport lastet ned!");
-        },
-        onError: (error) => {
-          alert(`Feil ved nedlasting: ${error.message}`);
-        },
-      },
-    );
-  };
 
   const handleAddNew = () => {
     // Use Oslo coordinates as default for new locations
@@ -186,57 +163,6 @@ export function UserProfile({ onBack }: UserProfileProps) {
           </div>
         </div>
 
-        {/* Export History Section */}
-        {supabaseConfigured && exportLogs.length > 0 && (
-          <div>
-            <h2 className="text-2xl font-bold text-bark dark:text-sand mb-lg flex items-center gap-2">
-              <History size={24} />
-              Eksporthistorikk
-            </h2>
-            <div className="space-y-3">
-              {isLoadingLogs ? (
-                <div className="text-center py-8 text-bark/60 dark:text-sand/60">
-                  <p>Laster...</p>
-                </div>
-              ) : (
-                exportLogs.map((log) => (
-                  <div
-                    key={log.id}
-                    className="p-4 bg-white dark:bg-[#2c2c2c] rounded-lg border-2 border-moss/30"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-bark dark:text-sand">
-                          {log.fileName}
-                        </h3>
-                        <p className="text-sm text-bark/70 dark:text-sand/70 mt-1">
-                          {new Date(log.createdAt).toLocaleString("no-NO")}
-                        </p>
-                        <p className="text-xs text-bark/60 dark:text-sand/60 mt-1">
-                          {log.observationIds.length} observasjoner
-                        </p>
-                      </div>
-                      {log.filePath && (
-                        <Button
-                          onClick={() =>
-                            handleDownloadPrevious(log.filePath!, log.fileName)
-                          }
-                          disabled={isDownloading}
-                          variant="outline"
-                          size="sm"
-                          className="flex items-center gap-2"
-                        >
-                          <Download size={16} />
-                          Last ned
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        )}
       </div>
 
       {formLocation && (

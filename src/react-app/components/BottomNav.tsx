@@ -1,7 +1,6 @@
 import { BarChart3, Binoculars, Map, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { isSupabaseConfigured } from "../lib/supabase";
 
 interface BottomNavProps {
   currentView: "map" | "observations" | "stats" | "profile";
@@ -11,7 +10,6 @@ interface BottomNavProps {
 export function BottomNav({ currentView, onLoginClick }: BottomNavProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const supabaseConfigured = isSupabaseConfigured();
 
   const handleProfileOrLogin = () => {
     if (user) {
@@ -54,20 +52,18 @@ export function BottomNav({ currentView, onLoginClick }: BottomNavProps) {
           <BarChart3 size={24} />
           <span className="text-xs font-medium">Statistikk</span>
         </button>
-        {supabaseConfigured && (
-          <button
-            onClick={handleProfileOrLogin}
-            className={`flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors ${
-              currentView === "profile" ? "text-sunlit" : "text-sand"
-            }`}
-            aria-label={user ? "Profil" : "Logg inn"}
-          >
-            <User size={24} />
-            <span className="text-xs font-medium">
-              {user ? "Profil" : "Logg inn"}
-            </span>
-          </button>
-        )}
+        <button
+          onClick={handleProfileOrLogin}
+          className={`flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors ${
+            currentView === "profile" ? "text-sunlit" : "text-sand"
+          }`}
+          aria-label={user ? "Profil" : "Logg inn"}
+        >
+          <User size={24} />
+          <span className="text-xs font-medium">
+            {user ? "Profil" : "Logg inn"}
+          </span>
+        </button>
       </div>
     </nav>
   );

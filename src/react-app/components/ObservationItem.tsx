@@ -1,7 +1,5 @@
 import { useState } from "react";
 import {
-  ChevronDown,
-  ChevronUp,
   MapPin,
   Pencil,
   Sparkles,
@@ -9,6 +7,8 @@ import {
   MapPinned,
   User,
   Bird,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { Observation } from "../types/observation";
 import { Button } from "./ui/button";
@@ -34,7 +34,7 @@ function ObservationItem({
 
   return (
     <div
-      className={`bg-white rounded-lg shadow-custom border-2 transition-all ${
+      className={`relative bg-white rounded-lg shadow-custom border-2 transition-all ${
         !isExported ? "border-moss border-opacity-60" : "border-slate-border"
       }`}
     >
@@ -87,18 +87,6 @@ function ObservationItem({
               >
                 <MapPin size={12} />±{observation.uncertaintyRadius}m
               </span>
-              {isExported && (
-                <div
-                  className="ml-auto text-slate hover:text-bark transition-colors"
-                  aria-label={isExpanded ? "Collapse" : "Expand"}
-                >
-                  {isExpanded ? (
-                    <ChevronUp size={18} />
-                  ) : (
-                    <ChevronDown size={18} />
-                  )}
-                </div>
-              )}
             </div>
 
             {/* Coordinates with icon */}
@@ -171,6 +159,19 @@ function ObservationItem({
           </div>
         </div>
       </div>
+
+      {isExported && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="absolute top-3 right-3 h-auto w-auto p-1 text-slate hover:text-bark z-10"
+          aria-label={isExpanded ? "Collapse" : "Expand"}
+          onClick={() => setIsExpanded(!isExpanded)}
+        >
+          {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+        </Button>
+      )}
 
       {/* Collapsible content */}
       {isExpanded && (

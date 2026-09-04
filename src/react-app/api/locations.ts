@@ -1,75 +1,50 @@
-import { supabase } from "../lib/supabase.ts";
 import { UserLocation } from "../types/location.ts";
 
-export async function fetchUserLocations(
-  userId?: string,
-): Promise<UserLocation[]> {
-  let query = supabase
-    .from("locations")
-    .select("*")
-    .order("createdAt", { ascending: false });
-
-  if (userId) {
-    query = query.eq("userId", userId);
-  } else {
-    query = query.is("userId", null);
-  }
-
-  const { data, error } = await query;
-
-  if (error) throw error;
-
-  return data;
-}
+const base = "/api/locations";
 
 export type CreateUserLocation = Omit<
   UserLocation,
   "id" | "createdAt" | "updatedAt"
 >;
 
+async function getJson<T>(res: Response): Promise<T> {
+  if (!res.ok) throw new Error(res.statusText);
+  return res.json() as Promise<T>;
+}
+
+export async function fetchUserLocations(
+  userId?: string,
+): Promise<UserLocation[]> {
+  const url = userId ? `${base}?userId=${encodeURIComponent(userId)}` : base;
+  const res = await fetch(url);
+  return getJson<UserLocation[]>(res);
+}
+
 export async function createUserLocation(
   location: CreateUserLocation,
   user: { id: string } | null = null,
 ): Promise<UserLocation> {
-  const { data, error } = await supabase
-    .from("locations")
-    .insert({
-      ...location,
-      userId: user?.id,
-    })
-    .select()
-    .single();
-
-  if (error) throw error;
-  if (!data) throw new Error("Failed to insert user location");
-
-  return data;
+  const res = await fetch(base, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...location, userId: user?.id }),
+  });
+  return getJson<UserLocation>(res);
 }
 
 export async function updateUserLocation(
   location: UserLocation,
 ): Promise<UserLocation> {
-  const { data, error } = await supabase
-    .from("locations")
-    .update({
-      ...location,
-      updatedAt: new Date().toISOString(),
-    })
-    .eq("id", location.id)
-    .select()
-    .single();
-
-  if (error) throw error;
-  if (!data) throw new Error("Failed to update user location");
-
-  return data;
+  const { id, ...body } = location;
+  const res = await fetch(`${base}/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  return getJson<UserLocation>(res);
 }
 
 export async function deleteUserLocation(locationId: string): Promise<void> {
-  const { error } = await supabase
-    .from("locations")
-    .delete()
-    .eq("id", locationId);
-
-  if (error) throw error;
+  const res = await fetch(`${base}/${locationId}`, { method: "DELETE" });
+  if (!res.ok) throw new Error(res.statusText);
 }

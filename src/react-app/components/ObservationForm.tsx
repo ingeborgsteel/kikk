@@ -6,8 +6,7 @@ import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { useObservations } from "../context/ObservationsContext";
 import { Observation, Species } from "../types/observation";
-import { useProfiles } from "../queries/useProfiles.ts";
-import { isSupabaseConfigured } from "../lib/supabase.ts";
+import { useUsers } from "../queries/useUsers.ts";
 import { useSpeciesSearch } from "../queries/useSpeciesSearch.ts";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import {
@@ -173,9 +172,8 @@ const ObservationForm = ({
     hasTime(observation?.endDate),
   );
 
-  const supabaseConfigured = isSupabaseConfigured();
-  const { data: profiles = [] } = useProfiles({ enabled: supabaseConfigured });
-  const [showProfileResults, setShowProfileResults] = useState(false);
+  const { data: users = [] } = useUsers();
+  const [showUserResults, setShowUserResults] = useState(false);
 
   const { data: searchResults = [], isLoading } = useSpeciesSearch(searchTerm);
   const {
@@ -956,10 +954,10 @@ const ObservationForm = ({
             control={control}
             render={({ field: { value, onChange } }) => {
               const inputValue = value ?? "";
-              const filteredProfiles =
+              const filteredUsers =
                 inputValue.length >= 1
-                  ? profiles.filter((p) =>
-                      (p.display_name ?? p.email ?? "")
+                  ? users.filter((u) =>
+                      (u.name ?? u.email ?? "")
                         .toLowerCase()
                         .includes(inputValue.toLowerCase()),
                     )
@@ -986,13 +984,13 @@ const ObservationForm = ({
                       className={twMerge("pl-8", inputValue && "pr-8")}
                       onChange={(e) => {
                         onChange(e.target.value);
-                        setShowProfileResults(true);
+                        setShowUserResults(true);
                       }}
                       onFocus={() =>
-                        inputValue.length >= 1 && setShowProfileResults(true)
+                        inputValue.length >= 1 && setShowUserResults(true)
                       }
                       onBlur={() =>
-                        setTimeout(() => setShowProfileResults(false), 150)
+                        setTimeout(() => setShowUserResults(false), 150)
                       }
                     />
                     {inputValue && (
@@ -1001,7 +999,7 @@ const ObservationForm = ({
                         onClick={() => {
                           onChange("");
                           sessionObserverName = undefined;
-                          setShowProfileResults(false);
+                          setShowUserResults(false);
                         }}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-slate hover:text-bark dark:hover:text-sand"
                         aria-label="Fjern observatør"
@@ -1010,28 +1008,28 @@ const ObservationForm = ({
                       </button>
                     )}
                   </div>
-                  {showProfileResults && filteredProfiles.length > 0 && (
+                  {showUserResults && filteredUsers.length > 0 && (
                     <div className="absolute z-[1100] w-full mt-1 bg-white dark:bg-bark border-2 border-slate-border dark:border-slate rounded-md shadow-custom-lg overflow-hidden">
                       <div className="max-h-60 overflow-y-auto p-1">
-                        {filteredProfiles.map((p) => {
-                          const label = p.display_name ?? p.email ?? p.id;
+                        {filteredUsers.map((u) => {
+                          const label = u.name ?? u.email ?? u.id;
                           return (
                             <button
-                              key={p.id}
+                              key={u.id}
                               type="button"
                               onMouseDown={(e) => e.preventDefault()}
                               onClick={() => {
                                 onChange(label);
-                                setShowProfileResults(false);
+                                setShowUserResults(false);
                               }}
                               className="w-full text-left px-2 py-2 rounded-md hover:bg-sand dark:hover:bg-forest transition-colors"
                             >
                               <div className="font-medium text-sm text-bark dark:text-sand">
                                 {label}
                               </div>
-                              {p.display_name && p.email && (
+                              {u.name !== u.email && (
                                 <div className="text-xs text-slate">
-                                  {p.email}
+                                  {u.email}
                                 </div>
                               )}
                             </button>

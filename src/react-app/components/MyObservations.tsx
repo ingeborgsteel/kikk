@@ -12,6 +12,7 @@ import {
 import dayjs, { Dayjs } from "dayjs";
 import { useObservations } from "../context/ObservationsContext";
 import { useLocations } from "../context/LocationsContext";
+import { useAuth } from "../context/AuthContext";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input.tsx";
 import { DatePicker } from "./ui/date-picker.tsx";
@@ -37,8 +38,15 @@ function MyObservations({ onBack }: MyObservationsProps) {
   const [dateFrom, setDateFrom] = useState<Dayjs | null>(null);
   const [dateTo, setDateTo] = useState<Dayjs | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
-  const view = searchParams.get("view") === "table" ? "table" : "list";
+  const { isImpersonating } = useAuth();
+  const readOnly = isImpersonating;
+  const view = readOnly
+    ? "list"
+    : searchParams.get("view") === "table"
+      ? "table"
+      : "list";
   const setView = (next: "list" | "table") => {
+    if (readOnly) return;
     setSearchParams(
       (prev) => {
         const params = new URLSearchParams(prev);
@@ -261,40 +269,42 @@ function MyObservations({ onBack }: MyObservationsProps) {
           </div>
 
           <div className="flex items-center gap-2 ml-auto">
-            <div className="flex items-center border-2 border-moss rounded-md overflow-hidden">
-              <button
-                type="button"
-                onClick={() => setView("list")}
-                aria-pressed={view === "list"}
-                className={twMerge(
-                  "p-2 transition-colors",
-                  view === "list"
-                    ? "bg-moss text-white"
-                    : "bg-white dark:bg-bark text-bark dark:text-sand hover:bg-sand dark:hover:bg-forest",
-                )}
-                aria-label="Listevisning"
-                title="Listevisning"
-              >
-                <LayoutList size={18} />
-              </button>
-              <button
-                type="button"
-                onClick={() => setView("table")}
-                aria-pressed={view === "table"}
-                className={twMerge(
-                  "p-2 transition-colors",
-                  view === "table"
-                    ? "bg-moss text-white"
-                    : "bg-white dark:bg-bark text-bark dark:text-sand hover:bg-sand dark:hover:bg-forest",
-                )}
-                aria-label="Tabellvisning"
-                title="Tabellvisning"
-              >
-                <Table2 size={18} />
-              </button>
-            </div>
+            {!readOnly && (
+              <div className="flex items-center border-2 border-moss rounded-md overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setView("list")}
+                  aria-pressed={view === "list"}
+                  className={twMerge(
+                    "p-2 transition-colors",
+                    view === "list"
+                      ? "bg-moss text-white"
+                      : "bg-white dark:bg-bark text-bark dark:text-sand hover:bg-sand dark:hover:bg-forest",
+                  )}
+                  aria-label="Listevisning"
+                  title="Listevisning"
+                >
+                  <LayoutList size={18} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setView("table")}
+                  aria-pressed={view === "table"}
+                  className={twMerge(
+                    "p-2 transition-colors",
+                    view === "table"
+                      ? "bg-moss text-white"
+                      : "bg-white dark:bg-bark text-bark dark:text-sand hover:bg-sand dark:hover:bg-forest",
+                  )}
+                  aria-label="Tabellvisning"
+                  title="Tabellvisning"
+                >
+                  <Table2 size={18} />
+                </button>
+              </div>
+            )}
 
-            {observations.length > 0 && (
+            {!readOnly && observations.length > 0 && (
               <Button onClick={() => setShowExportDialog(true)}>
                 <FileSpreadsheet size={20} className="mr-2" />
                 Eksporter til Excel
@@ -341,13 +351,14 @@ function MyObservations({ onBack }: MyObservationsProps) {
                 onDelete={handleDelete}
                 formatDate={formatDate}
                 formatDateRange={formatDateRange}
+                readOnly={readOnly}
               />
             ))}
           </div>
         )}
       </div>
 
-      {editingId && editingObservation && (
+      {editingId && editingObservation && !readOnly && (
         <ObservationForm
           isOpen
           location={editingObservation.location}

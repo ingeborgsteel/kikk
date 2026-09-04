@@ -1,15 +1,15 @@
-import { BarChart3, Binoculars, Map, User } from "lucide-react";
+import { BarChart3, Binoculars, Map, Shield, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 interface BottomNavProps {
-  currentView: "map" | "observations" | "stats" | "profile";
+  currentView: "map" | "observations" | "stats" | "profile" | "admin";
   onLoginClick: () => void;
 }
 
 export function BottomNav({ currentView, onLoginClick }: BottomNavProps) {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
 
   const handleProfileOrLogin = () => {
     if (user) {
@@ -52,6 +52,18 @@ export function BottomNav({ currentView, onLoginClick }: BottomNavProps) {
           <BarChart3 size={24} />
           <span className="text-xs font-medium">Statistikk</span>
         </button>
+        {isAdmin && (
+          <button
+            onClick={() => navigate("/admin")}
+            className={`flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors ${
+              currentView === "admin" ? "text-sunlit" : "text-sand"
+            }`}
+            aria-label="Admin"
+          >
+            <Shield size={24} />
+            <span className="text-xs font-medium">Admin</span>
+          </button>
+        )}
         <button
           onClick={handleProfileOrLogin}
           className={`flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors ${

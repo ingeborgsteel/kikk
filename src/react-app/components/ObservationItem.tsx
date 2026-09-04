@@ -19,6 +19,7 @@ interface ObservationItemProps {
   onDelete: (id: string) => void;
   formatDate: (dateString: string) => string;
   formatDateRange: (startDate?: string, endDate?: string) => string;
+  readOnly?: boolean;
 }
 
 function ObservationItem({
@@ -26,6 +27,7 @@ function ObservationItem({
   onEdit,
   onDelete,
   formatDate,
+  readOnly,
 }: ObservationItemProps) {
   // Automatically collapse exported observations
   const [isExpanded, setIsExpanded] = useState(!observation.lastExportedAt);
@@ -133,30 +135,32 @@ function ObservationItem({
               </p>
             )}
           </div>
-          <div className="flex gap-sm">
-            <Button
-              variant={"accent"}
-              size={"icon"}
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(observation.id);
-              }}
-              aria-label="Edit observation"
-            >
-              <Pencil size={18} />
-            </Button>
-            <Button
-              variant={"accent"}
-              size={"icon"}
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(observation.id);
-              }}
-              aria-label="Delete observation"
-            >
-              <Trash2 size={18} />
-            </Button>
-          </div>
+          {!readOnly && (
+            <div className="flex gap-sm">
+              <Button
+                variant={"accent"}
+                size={"icon"}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(observation.id);
+                }}
+                aria-label="Edit observation"
+              >
+                <Pencil size={18} />
+              </Button>
+              <Button
+                variant={"accent"}
+                size={"icon"}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(observation.id);
+                }}
+                aria-label="Delete observation"
+              >
+                <Trash2 size={18} />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 

@@ -17,6 +17,7 @@ import {
 import { useObservations } from "../context/ObservationsContext";
 import { useLocations } from "../context/LocationsContext";
 import { useGeolocation } from "../context/GeolocationContext";
+import { useAuth } from "../context/AuthContext";
 import { Button } from "./ui/button";
 import { Observation } from "../types/observation";
 import { UserLocation } from "../types/location";
@@ -211,6 +212,8 @@ export function StatsDashboard({ onBack }: StatsDashboardProps) {
   const { observations } = useObservations();
   const { locations } = useLocations();
   const { requestCurrentPosition } = useGeolocation();
+  const { isImpersonating } = useAuth();
+  const readOnly = isImpersonating;
   const navigate = useNavigate();
 
   // State for "add observation" from stats
@@ -321,6 +324,7 @@ export function StatsDashboard({ onBack }: StatsDashboardProps) {
   }, [lifeList]);
 
   const handleAddAtLocation = (stat: LocationStat) => {
+    if (readOnly) return;
     const userLocation = stat.locationId
       ? locations.find((l) => l.id === stat.locationId)
       : undefined;
@@ -330,6 +334,7 @@ export function StatsDashboard({ onBack }: StatsDashboardProps) {
   };
 
   const handleAddFromSpecies = async (species: TaxonRecord) => {
+    if (readOnly) return;
     const position = await requestCurrentPosition();
     if (!position) {
       navigate("/");
@@ -507,6 +512,7 @@ export function StatsDashboard({ onBack }: StatsDashboardProps) {
                   key={entry.species.Id}
                   entry={entry}
                   onAdd={handleAddFromSpecies}
+                  readOnly={readOnly}
                 />
               ))}
             </div>
@@ -589,16 +595,18 @@ export function StatsDashboard({ onBack }: StatsDashboardProps) {
                       {stat.count}{" "}
                       {stat.count === 1 ? "observasjon" : "observasjoner"}
                     </span>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleAddAtLocation(stat)}
-                      aria-label={`Ny observasjon på ${stat.locationName}`}
-                      title="Ny observasjon her"
-                      className="text-moss hover:text-rust shrink-0"
-                    >
-                      <Plus size={18} />
-                    </Button>
+                    {!readOnly && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleAddAtLocation(stat)}
+                        aria-label={`Ny observasjon på ${stat.locationName}`}
+                        title="Ny observasjon her"
+                        className="text-moss hover:text-rust shrink-0"
+                      >
+                        <Plus size={18} />
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -608,7 +616,7 @@ export function StatsDashboard({ onBack }: StatsDashboardProps) {
       </div>
 
       {/* Observation form for adding from stats */}
-      {addFormLocation && (
+      {addFormLocation && !readOnly && (
         <ObservationForm
           isOpen={addFormOpen}
           location={addFormLocation}
@@ -654,9 +662,11 @@ function SortButton({
 function LifeListItem({
   entry,
   onAdd,
+  readOnly,
 }: {
   entry: LifeListEntry;
   onAdd: (species: TaxonRecord) => void;
+  readOnly?: boolean;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const statusBadge = getStatusBadge(entry.species.Status);
@@ -694,19 +704,21 @@ function LifeListItem({
             </div>
             <div className="text-xs text-bark/60 dark:text-sand/60">obs.</div>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              onAdd(entry.species);
-            }}
-            aria-label={`Legg til observasjon av ${entry.species.PrefferedPopularname || entry.species.ValidScientificName}`}
-            title="Ny observasjon"
-            className="text-moss hover:text-rust shrink-0"
-          >
-            <Plus size={18} />
-          </Button>
+          {!readOnly && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation();
+                onAdd(entry.species);
+              }}
+              aria-label={`Legg til observasjon av ${entry.species.PrefferedPopularname || entry.species.ValidScientificName}`}
+              title="Ny observasjon"
+              className="text-moss hover:text-rust shrink-0"
+            >
+              <Plus size={18} />
+            </Button>
+          )}
           <span className="text-bark/40 dark:text-sand/40 text-sm">
             {isExpanded ? "▲" : "▼"}
           </span>

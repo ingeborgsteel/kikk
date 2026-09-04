@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   generateExcelFromObservations,
   downloadExcelFile,
@@ -10,6 +10,8 @@ import { Observation } from "../types/observation";
  * Hook to export observations to Excel
  */
 export function useExportObservations() {
+  const qc = useQueryClient();
+
   return useMutation({
     mutationFn: async ({ observations }: { observations: Observation[] }) => {
       const timestamp = new Date().toISOString();
@@ -22,6 +24,9 @@ export function useExportObservations() {
       }
 
       return { fileName, blob };
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["observations"] });
     },
   });
 }

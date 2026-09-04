@@ -23,9 +23,6 @@ app.all("/api/auth/*", async (c) => {
     emailAndPassword: {
       enabled: true,
       sendResetPassword: async ({ user, url }) => {
-        const message = `Password reset for ${user.email}: ${url}`;
-        console.log(message);
-
         const apiKey = c.env.RESEND_API_KEY;
         const fromEmail = c.env.RESEND_FROM_EMAIL;
         if (apiKey && fromEmail) {
@@ -55,9 +52,7 @@ app.all("/api/auth/*", async (c) => {
           }
         }
       },
-      onPasswordReset: async ({ user }) => {
-        console.log(`Password reset completed for ${user.email}`);
-      },
+      onPasswordReset: async () => {},
     },
   });
   return auth.handler(c.req.raw);

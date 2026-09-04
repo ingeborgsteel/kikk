@@ -38,10 +38,24 @@ observationsApp.get("/", async (c) => {
   }
 
   const ids = observations.map((o) => o.id);
-  const species = await db
-    .select()
-    .from(schema.species)
-    .where(inArray(schema.species.observationId, ids));
+
+  function chunk<T>(arr: T[], size: number): T[][] {
+    const out: T[][] = [];
+    for (let i = 0; i < arr.length; i += size) {
+      out.push(arr.slice(i, i + size));
+    }
+    return out;
+  }
+
+  const speciesBatches = await Promise.all(
+    chunk(ids, 100).map((batch) =>
+      db
+        .select()
+        .from(schema.species)
+        .where(inArray(schema.species.observationId, batch)),
+    ),
+  );
+  const species = speciesBatches.flat();
 
   return c.json(
     observations.map((o) => ({

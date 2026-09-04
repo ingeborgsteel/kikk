@@ -69,6 +69,7 @@
     "check": "tsc && vite build && wrangler deploy --dry-run",
     "deploy": "wrangler deploy",
     "dev": "vite",
+    "db:migrate:local": "wrangler d1 migrations apply kikk-db --local",
     "lint": "eslint .",
     "format": "npx prettier --write .",
     "preview": "npm run build && vite preview",

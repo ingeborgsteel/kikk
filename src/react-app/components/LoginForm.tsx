@@ -6,9 +6,9 @@ import { Input } from "./ui/input.tsx";
 import { Modal } from "./ui/Modal.tsx";
 
 export function LoginForm({ closeLoginForm }: { closeLoginForm: () => void }) {
-  const { signInWithEmail, signUp } = useAuth();
+  const { signInWithEmail, signUp, sendPasswordReset } = useAuth();
 
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -51,6 +51,14 @@ export function LoginForm({ closeLoginForm }: { closeLoginForm: () => void }) {
         const signInResult = await signInWithEmail(email, password);
         error = signInResult.error;
       }
+    } else if (mode === "forgot") {
+      const result = await sendPasswordReset(email);
+      error = result.error;
+      if (!error) {
+        setMessage("Sjekk e-posten din for en tilbakestillingslenke.");
+        setLoading(false);
+        return;
+      }
     } else {
       const result = await signInWithEmail(email, password);
       error = result.error;
@@ -80,17 +88,31 @@ export function LoginForm({ closeLoginForm }: { closeLoginForm: () => void }) {
     setLoading(false);
   };
 
-  const title = mode === "signup" ? "Registrer deg" : "Logg inn";
-  const submitLabel = loading
-    ? mode === "signup"
-      ? "Registrerer..."
-      : "Logger inn..."
-    : mode === "signup"
-      ? "Registrer deg"
-      : "Logg inn";
+  const getTitle = () => {
+    switch (mode) {
+      case "signup":
+        return "Registrer deg";
+      case "forgot":
+        return "Glemt passord";
+      default:
+        return "Logg inn";
+    }
+  };
+
+  const getSubmitLabel = () => {
+    if (loading) return "Sender...";
+    switch (mode) {
+      case "signup":
+        return "Registrer deg";
+      case "forgot":
+        return "Send tilbakestillingslenke";
+      default:
+        return "Logg inn";
+    }
+  };
 
   return (
-    <Modal onClose={closeLoginForm} isOpen={true} title={title}>
+    <Modal onClose={closeLoginForm} isOpen={true} title={getTitle()}>
       <form onSubmit={handleSubmit} className="space-y-lg">
         {mode === "signup" && (
           <Input
@@ -112,42 +134,30 @@ export function LoginForm({ closeLoginForm }: { closeLoginForm: () => void }) {
           name="email"
           required
         />
-        <div className="relative">
-          <Lock
-            size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-bark/50 dark:text-sand/50"
-          />
-          <Input
-            type="password"
-            placeholder="Passord"
-            className={"pl-8"}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete={
-              mode === "signup" ? "new-password" : "current-password"
-            }
-            name="password"
-            required
-          />
-        </div>
+        {mode !== "forgot" && (
+          <div className="relative">
+            <Lock
+              size={16}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-bark/50 dark:text-sand/50"
+            />
+            <Input
+              type="password"
+              placeholder="Passord"
+              className={"pl-8"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete={
+                mode === "signup" ? "new-password" : "current-password"
+              }
+              name="password"
+              required
+            />
+          </div>
+        )}
         <div className="flex flex-col gap-md pt-md">
-          <p className="text-sm text-bark dark:text-sand">
-            {mode === "signup" ? (
-              <>
-                Har du allerede en konto?{" "}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMode("signin");
-                    setMessage("");
-                  }}
-                  className="underline hover:text-forest dark:hover:text-sand"
-                >
-                  Logg inn
-                </button>
-              </>
-            ) : (
-              <>
+          {mode === "signin" && (
+            <>
+              <p className="text-sm text-bark dark:text-sand">
                 Har du ikke konto?{" "}
                 <button
                   type="button"
@@ -159,9 +169,50 @@ export function LoginForm({ closeLoginForm }: { closeLoginForm: () => void }) {
                 >
                   Registrer deg
                 </button>
-              </>
-            )}
-          </p>
+              </p>
+              <p className="text-sm text-bark dark:text-sand">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("forgot");
+                    setMessage("");
+                  }}
+                  className="underline hover:text-forest dark:hover:text-sand"
+                >
+                  Glemt passord?
+                </button>
+              </p>
+            </>
+          )}
+          {mode === "signup" && (
+            <p className="text-sm text-bark dark:text-sand">
+              Har du allerede en konto?{" "}
+              <button
+                type="button"
+                onClick={() => {
+                  setMode("signin");
+                  setMessage("");
+                }}
+                className="underline hover:text-forest dark:hover:text-sand"
+              >
+                Logg inn
+              </button>
+            </p>
+          )}
+          {mode === "forgot" && (
+            <p className="text-sm text-bark dark:text-sand">
+              <button
+                type="button"
+                onClick={() => {
+                  setMode("signin");
+                  setMessage("");
+                }}
+                className="underline hover:text-forest dark:hover:text-sand"
+              >
+                Tilbake til innlogging
+              </button>
+            </p>
+          )}
           <div className="flex gap-md justify-end">
             <Button
               type="button"
@@ -175,7 +226,7 @@ export function LoginForm({ closeLoginForm }: { closeLoginForm: () => void }) {
               Avbryt
             </Button>
             <Button type="submit" disabled={loading} size="sm">
-              {submitLabel}
+              {getSubmitLabel()}
             </Button>
           </div>
         </div>

@@ -3,6 +3,7 @@ import type { User } from "better-auth";
 import { betterAuthClient } from "../lib/auth";
 import { useUserAccesses as useUserAccess } from "../queries/useUserAccesses";
 import { UserAccess } from "../types/user_access";
+import { requestPasswordReset } from "../api/auth";
 
 interface AuthContextType {
   user: User | null;
@@ -17,6 +18,7 @@ interface AuthContextType {
     password: string,
     name: string,
   ) => Promise<{ error: Error | null }>;
+  sendPasswordReset: (email: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   showLoginForm: boolean;
   setShowLoginForm: (val: boolean) => void;
@@ -51,6 +53,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error ? new Error(error.message) : null };
   };
 
+  const sendPasswordReset = async (email: string) => {
+    const { error } = await requestPasswordReset(email);
+    return { error: error ? new Error(error) : null };
+  };
+
   const signOut = async () => {
     await betterAuthClient.signOut();
   };
@@ -62,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         signInWithEmail,
         signUp,
+        sendPasswordReset,
         signOut,
         userAccess,
         showLoginForm,

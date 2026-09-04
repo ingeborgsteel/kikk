@@ -9,6 +9,7 @@ import { useObservations } from "./context/ObservationsContext";
 import { useLocations } from "./context/LocationsContext";
 import ObservationForm from "./components/ObservationForm.tsx";
 import { LoginForm } from "./components/LoginForm.tsx";
+import { ResetPassword } from "./components/ResetPassword.tsx";
 import { BottomNav } from "./components/BottomNav";
 import { UserProfile } from "./components/UserProfile.tsx";
 import { MapClickDialog } from "./components/MapClickDialog.tsx";
@@ -211,6 +212,7 @@ function App() {
   return (
     <>
       <Routes>
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route
           path="/profile"
           element={<UserProfile onBack={() => navigate("/")} />}
@@ -379,10 +381,12 @@ function App() {
           floating={false}
         />
       </div>
-      <BottomNav
-        currentView={getCurrentView()}
-        onLoginClick={() => setShowLoginForm(true)}
-      />
+      {location.pathname !== "/reset-password" && (
+        <BottomNav
+          currentView={getCurrentView()}
+          onLoginClick={() => setShowLoginForm(true)}
+        />
+      )}
     </>
   );
 }

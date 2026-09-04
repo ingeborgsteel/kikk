@@ -196,6 +196,8 @@ const speciesRows: (string | number | null | undefined)[][] = speciesData.map(
   ],
 );
 
+const useTransaction = target === "local";
+
 const sql = [
   "-- Reset-password tokens and application data migrated from Supabase CSVs",
   'DELETE FROM "species";',
@@ -205,7 +207,7 @@ const sql = [
   'DELETE FROM "account";',
   'DELETE FROM "session";',
   'DELETE FROM "user";',
-  "BEGIN TRANSACTION;",
+  useTransaction ? "BEGIN TRANSACTION;" : "",
   buildInsert(
     "user",
     ["id", "name", "email", "emailVerified", "image", "createdAt", "updatedAt"],
@@ -278,8 +280,10 @@ const sql = [
     ],
     speciesRows,
   ),
-  "COMMIT;",
-].join("\n");
+  useTransaction ? "COMMIT;" : "",
+]
+  .filter((s) => s !== "")
+  .join("\n");
 
 writeFileSync(OUTPUT_SQL, sql, "utf-8");
 

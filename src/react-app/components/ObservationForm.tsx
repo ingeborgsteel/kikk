@@ -47,6 +47,24 @@ const setLastUsedUncertaintyRadius = (value: number) => {
   localStorage.setItem(LAST_UNCERTAINTY_RADIUS_KEY, String(value));
 };
 
+const parseDate = (value?: string): string | undefined => {
+  if (!value) return undefined;
+  const parsed = dayjs(value);
+  if (!parsed.isValid()) return undefined;
+  return parsed.toISOString();
+};
+
+const toStorageDateTimeValue = (
+  value?: string,
+  includeTime?: boolean,
+): string | undefined => {
+  if (!value) return undefined;
+  const parsed = dayjs(value);
+  if (!parsed.isValid()) return undefined;
+  const base = includeTime ? parsed : parsed.hour(0).minute(0).second(0);
+  return base.format(DATE_TIME_STORAGE_FORMAT);
+};
+
 const hasTime = (value?: string) => {
   if (!value) return false;
   const d = dayjs(value);
@@ -133,24 +151,6 @@ const ObservationForm = ({
   onSaveAsLocation,
   onActivateKikkemodus,
 }: ObservationFormProps) => {
-  const parseDate = (value?: string): string | undefined => {
-    if (!value) return undefined;
-    const parsed = dayjs(value);
-    if (!parsed.isValid()) return undefined;
-    return parsed.toISOString();
-  };
-
-  const toStorageDateTimeValue = (
-    value?: string,
-    includeTime?: boolean,
-  ): string | undefined => {
-    if (!value) return undefined;
-    const parsed = dayjs(value);
-    if (!parsed.isValid()) return undefined;
-    const base = includeTime ? parsed : parsed.hour(0).minute(0).second(0);
-    return base.format(DATE_TIME_STORAGE_FORMAT);
-  };
-
   const { addObservation, updateObservation, observations } = useObservations();
   const [searchTerm, setSearchTerm] = useState("");
   const [showResults, setShowResults] = useState(false);
@@ -313,6 +313,62 @@ const ObservationForm = ({
     }
   }, [startDate, setValue, observation]);
 
+  // Apply a preset location that arrives while the form is already open
+  // (e.g. after "Lagre som min lokalitet" returns from the location form).
+  // When editing an existing observation, save it right away so it is
+  // linked to the new location without requiring another "Lagre" click.
+  const appliedPresetLocationId = useRef<string | null>(
+    presetLocation?.id ?? null,
+  );
+  useEffect(() => {
+    if (!presetLocation) {
+      appliedPresetLocationId.current = null;
+      return;
+    }
+    if (appliedPresetLocationId.current === presetLocation.id) return;
+    appliedPresetLocationId.current = presetLocation.id;
+    setValue("location", presetLocation.location, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    setValue("locationName", presetLocation.name, { shouldDirty: true });
+    if (presetLocation.uncertaintyRadius != null) {
+      setValue("uncertaintyRadius", presetLocation.uncertaintyRadius, {
+        shouldDirty: true,
+      });
+    }
+
+    if (observation) {
+      const data = getValues();
+      const startDate =
+        toStorageDateTimeValue(data.startDate, startTimeEnabled) ||
+        dayjs().format(DATE_TIME_STORAGE_FORMAT);
+      const endDate = toStorageDateTimeValue(data.endDate, endTimeEnabled);
+      updateObservation({
+        ...data,
+        species: sortSpeciesByTaxonGroupAndName(data.species),
+        locationId: presetLocation.id,
+        startDate,
+        endDate,
+      });
+      // The current form values are now persisted — clear dirty state
+      reset(getValues(), { keepValues: true });
+    }
+  }, [
+    presetLocation,
+    setValue,
+    observation,
+    getValues,
+    reset,
+    updateObservation,
+    startTimeEnabled,
+    endTimeEnabled,
+  ]);
+
+  // When a preset location is selected, its position is locked — display
+  // its coordinates rather than the (stale) map-editor state
+  const displayedLocation = presetLocation?.location ?? currentLocation;
+
   const save = useCallback(
     (data: Observation) => {
       const startDate =
@@ -352,7 +408,6 @@ const ObservationForm = ({
       addObservation,
       presetLocation,
       onActivateKikkemodus,
-      toStorageDateTimeValue,
       startTimeEnabled,
       endTimeEnabled,
     ],
@@ -391,7 +446,7 @@ const ObservationForm = ({
         startDate: newStartDate,
         endDate: newStartDate,
         locationName: getValues("locationName"),
-        location: currentLocation,
+        location: presetLocation?.location ?? currentLocation,
         uncertaintyRadius: getValues("uncertaintyRadius"),
         observerName: sessionObserverName,
         species: [],
@@ -408,7 +463,6 @@ const ObservationForm = ({
       currentLocation,
       successTimeout,
       onActivateKikkemodus,
-      toStorageDateTimeValue,
       startTimeEnabled,
       endTimeEnabled,
     ],
@@ -763,7 +817,7 @@ const ObservationForm = ({
                 {!presetLocation && onSaveAsLocation && (
                   <button
                     type="button"
-                    onClick={() => onSaveAsLocation(currentLocation)}
+                    onClick={() => onSaveAsLocation(displayedLocation)}
                     className="mt-2 flex items-center gap-1.5 text-sm text-slate hover:text-bark dark:hover:text-sand transition-colors"
                     aria-label="Lagre denne posisjonen som min lokalitet"
                   >
@@ -777,7 +831,7 @@ const ObservationForm = ({
                   <LocationEditor
                     compact
                     isPresetLocation={!!presetLocation}
-                    location={currentLocation}
+                    location={displayedLocation}
                     uncertaintyRadius={uncertaintyRadius}
                     onLocationChange={handleLocationChange}
                     zoom={zoom}
@@ -790,7 +844,7 @@ const ObservationForm = ({
               <div className="mt-3">
                 <LocationEditor
                   isPresetLocation={!!presetLocation}
-                  location={currentLocation}
+                  location={displayedLocation}
                   uncertaintyRadius={uncertaintyRadius}
                   onLocationChange={handleLocationChange}
                   zoom={zoom}

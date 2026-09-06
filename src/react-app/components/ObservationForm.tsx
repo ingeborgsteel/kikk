@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { Combobox } from "./ui/combobox";
+import { Combobox, ComboboxOption } from "./ui/combobox";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { useObservations } from "../context/ObservationsContext";
+import { useLocations } from "../context/LocationsContext";
 import { Observation, Species } from "../types/observation";
 import { useUsers } from "../queries/useUsers.ts";
 import { useSpeciesSearch } from "../queries/useSpeciesSearch.ts";
@@ -22,7 +23,7 @@ import { Modal } from "./ui/Modal.tsx";
 import { TaxonRecord } from "../types/artsdatabanken.ts";
 import { CreateSpecies } from "../api/observations.ts";
 import SpeciesItem from "./SpeciesItem.tsx";
-import { Check, MapPin, MapPinned, Search, User } from "lucide-react";
+import { Check, MapPinned, Search, User } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 import dayjs from "dayjs";
 import { DatePicker } from "./ui/date-picker.tsx";
@@ -70,6 +71,24 @@ const hasTime = (value?: string) => {
   const d = dayjs(value);
   return d.isValid() && (d.hour() !== 0 || d.minute() !== 0);
 };
+
+const NEW_LOCALITY_VALUE = "__new_locality__";
+const NO_LOCALITY_VALUE = "__no_locality__";
+
+const distanceMeters = (
+  from: { lat: number; lng: number },
+  to: { lat: number; lng: number },
+): number => {
+  const dLat = (to.lat - from.lat) * 111000;
+  const dLng =
+    (to.lng - from.lng) * 111000 * Math.cos((from.lat * Math.PI) / 180);
+  return Math.sqrt(dLat * dLat + dLng * dLng);
+};
+
+const formatDistance = (meters: number): string =>
+  meters < 1000
+    ? `${Math.round(meters)} m`
+    : `${(meters / 1000).toLocaleString("no-NO", { maximumFractionDigits: 1 })} km`;
 
 interface RecentSpeciesPickerProps {
   observations: Observation[];
@@ -152,6 +171,7 @@ const ObservationForm = ({
   onActivateKikkemodus,
 }: ObservationFormProps) => {
   const { addObservation, updateObservation, observations } = useObservations();
+  const { locations } = useLocations();
   const [searchTerm, setSearchTerm] = useState("");
   const [showResults, setShowResults] = useState(false);
   const [currentLocation, setCurrentLocation] = useState(location);
@@ -164,6 +184,14 @@ const ObservationForm = ({
   const [visibleRecentSpeciesCount, setVisibleRecentSpeciesCount] =
     useState(10);
   const [showInlineMap, setShowInlineMap] = useState(false);
+  const [linkedLocation, setLinkedLocation] = useState<UserLocation | null>(
+    presetLocation ?? null,
+  );
+  const [prevPresetLocation, setPrevPresetLocation] = useState(presetLocation);
+  if (presetLocation !== prevPresetLocation) {
+    setPrevPresetLocation(presetLocation);
+    setLinkedLocation(presetLocation ?? null);
+  }
 
   const [startTimeEnabled, setStartTimeEnabled] = useState(
     !observation || hasTime(observation.startDate),
@@ -183,7 +211,7 @@ const ObservationForm = ({
   } = useReverseGeocode(
     geocodeLocation.lat,
     geocodeLocation.lng,
-    !observation && !presetLocation,
+    !observation && !linkedLocation,
   );
 
   // Build set of previously observed species IDs for ranking boost
@@ -217,11 +245,11 @@ const ObservationForm = ({
         parseDate(observation?.startDate) ??
         (!observation ? dayjs().toISOString() : undefined),
       endDate: parseDate(observation?.endDate),
-      locationName: observation?.locationName || presetLocation?.name || "",
+      locationName: observation?.locationName || linkedLocation?.name || "",
       location: currentLocation,
       uncertaintyRadius:
         observation?.uncertaintyRadius ||
-        presetLocation?.uncertaintyRadius ||
+        linkedLocation?.uncertaintyRadius ||
         getLastUsedUncertaintyRadius() ||
         100,
       ...(!observation ? { observerName: sessionObserverName } : {}),
@@ -239,12 +267,13 @@ const ObservationForm = ({
 
   // Watch startDate to auto-update endDate
   const startDate = useWatch({ control, name: "startDate" });
+  const formLocationId = useWatch({ control, name: "locationId" });
 
   // Handle location change from map editor
   const handleLocationChange = useCallback(
     (lat: number, lng: number) => {
       // Don't allow location changes if we have a preset location name (locked)
-      if (presetLocation) {
+      if (linkedLocation) {
         return;
       }
 
@@ -270,7 +299,7 @@ const ObservationForm = ({
         setGeocodeLocation(newLocation);
       }
     },
-    [currentLocation, setValue, setGeocodeLocation, presetLocation],
+    [currentLocation, setValue, setGeocodeLocation, linkedLocation],
   );
 
   // Cleanup success message timeout on unmount
@@ -297,13 +326,13 @@ const ObservationForm = ({
 
   // Apply reverse-geocoded location name for new observations
   useEffect(() => {
-    if (geocodedName == null || observation || presetLocation) return;
+    if (geocodedName == null || observation || linkedLocation) return;
     const current = getValues("locationName");
     if (current === "" || current === autoSuggestedNameRef.current) {
       setValue("locationName", geocodedName, { shouldDirty: false });
       autoSuggestedNameRef.current = geocodedName;
     }
-  }, [geocodedName, observation, presetLocation, getValues, setValue]);
+  }, [geocodedName, observation, linkedLocation, getValues, setValue]);
 
   // Auto-update endDate when startDate changes
   useEffect(() => {
@@ -318,22 +347,22 @@ const ObservationForm = ({
   // When editing an existing observation, save it right away so it is
   // linked to the new location without requiring another "Lagre" click.
   const appliedPresetLocationId = useRef<string | null>(
-    presetLocation?.id ?? null,
+    linkedLocation?.id ?? null,
   );
   useEffect(() => {
-    if (!presetLocation) {
+    if (!linkedLocation) {
       appliedPresetLocationId.current = null;
       return;
     }
-    if (appliedPresetLocationId.current === presetLocation.id) return;
-    appliedPresetLocationId.current = presetLocation.id;
-    setValue("location", presetLocation.location, {
+    if (appliedPresetLocationId.current === linkedLocation.id) return;
+    appliedPresetLocationId.current = linkedLocation.id;
+    setValue("location", linkedLocation.location, {
       shouldDirty: true,
       shouldValidate: true,
     });
-    setValue("locationName", presetLocation.name, { shouldDirty: true });
-    if (presetLocation.uncertaintyRadius != null) {
-      setValue("uncertaintyRadius", presetLocation.uncertaintyRadius, {
+    setValue("locationName", linkedLocation.name, { shouldDirty: true });
+    if (linkedLocation.uncertaintyRadius != null) {
+      setValue("uncertaintyRadius", linkedLocation.uncertaintyRadius, {
         shouldDirty: true,
       });
     }
@@ -347,7 +376,7 @@ const ObservationForm = ({
       updateObservation({
         ...data,
         species: sortSpeciesByTaxonGroupAndName(data.species),
-        locationId: presetLocation.id,
+        locationId: linkedLocation.id,
         startDate,
         endDate,
       });
@@ -355,7 +384,7 @@ const ObservationForm = ({
       reset(getValues(), { keepValues: true });
     }
   }, [
-    presetLocation,
+    linkedLocation,
     setValue,
     observation,
     getValues,
@@ -367,7 +396,79 @@ const ObservationForm = ({
 
   // When a preset location is selected, its position is locked — display
   // its coordinates rather than the (stale) map-editor state
-  const displayedLocation = presetLocation?.location ?? currentLocation;
+  const displayedLocation = linkedLocation?.location ?? currentLocation;
+
+  const localityOptions = useMemo<ComboboxOption[]>(() => {
+    const linkedId = linkedLocation?.id ?? formLocationId;
+    const sorted = [...locations].sort(
+      (a, b) =>
+        distanceMeters(displayedLocation, a.location) -
+        distanceMeters(displayedLocation, b.location),
+    );
+    return [
+      ...(onSaveAsLocation
+        ? [{ value: NEW_LOCALITY_VALUE, label: "Opprett ny lokalitet…" }]
+        : []),
+      ...(linkedId
+        ? [{ value: NO_LOCALITY_VALUE, label: "Ingen lokalitet" }]
+        : []),
+      ...sorted.map((loc) => ({
+        value: loc.id,
+        label: `${loc.name} · ${formatDistance(distanceMeters(displayedLocation, loc.location))}`,
+        group: "Mine lokaliteter",
+      })),
+    ];
+  }, [
+    locations,
+    displayedLocation,
+    linkedLocation,
+    formLocationId,
+    onSaveAsLocation,
+  ]);
+
+  // Immediately persist a link change when editing an existing observation,
+  // mirroring the auto-save when a preset location is applied.
+  const persistLocationLink = useCallback(
+    (locationId: string | undefined) => {
+      if (!observation) return;
+      const data = getValues();
+      const start =
+        toStorageDateTimeValue(data.startDate, startTimeEnabled) ||
+        dayjs().format(DATE_TIME_STORAGE_FORMAT);
+      const end = toStorageDateTimeValue(data.endDate, endTimeEnabled);
+      updateObservation({
+        ...data,
+        species: sortSpeciesByTaxonGroupAndName(data.species),
+        locationId,
+        startDate: start,
+        endDate: end,
+      });
+      reset(getValues(), { keepValues: true });
+    },
+    [
+      observation,
+      getValues,
+      reset,
+      updateObservation,
+      startTimeEnabled,
+      endTimeEnabled,
+    ],
+  );
+
+  const handleLocalitySelect = (value: string) => {
+    if (value === NEW_LOCALITY_VALUE) {
+      onSaveAsLocation?.(displayedLocation);
+      return;
+    }
+    if (value === NO_LOCALITY_VALUE) {
+      setLinkedLocation(null);
+      setValue("locationId", undefined, { shouldDirty: true });
+      persistLocationLink(undefined);
+      return;
+    }
+    const selected = locations.find((loc) => loc.id === value);
+    if (selected) setLinkedLocation(selected);
+  };
 
   const save = useCallback(
     (data: Observation) => {
@@ -381,7 +482,7 @@ const ObservationForm = ({
         updateObservation({
           ...data,
           species,
-          locationId: presetLocation?.id ?? data.locationId,
+          locationId: linkedLocation?.id ?? data.locationId,
           startDate,
           endDate,
         });
@@ -390,7 +491,7 @@ const ObservationForm = ({
         addObservation({
           ...data,
           species,
-          locationId: presetLocation?.id,
+          locationId: linkedLocation?.id,
           startDate,
           endDate,
         });
@@ -406,7 +507,7 @@ const ObservationForm = ({
       onClose,
       updateObservation,
       addObservation,
-      presetLocation,
+      linkedLocation,
       onActivateKikkemodus,
       startTimeEnabled,
       endTimeEnabled,
@@ -424,7 +525,7 @@ const ObservationForm = ({
       addObservation({
         ...data,
         species: sortSpeciesByTaxonGroupAndName(data.species),
-        locationId: presetLocation?.id,
+        locationId: linkedLocation?.id,
         startDate,
         endDate,
       });
@@ -446,7 +547,7 @@ const ObservationForm = ({
         startDate: newStartDate,
         endDate: newStartDate,
         locationName: getValues("locationName"),
-        location: presetLocation?.location ?? currentLocation,
+        location: linkedLocation?.location ?? currentLocation,
         uncertaintyRadius: getValues("uncertaintyRadius"),
         observerName: sessionObserverName,
         species: [],
@@ -457,7 +558,7 @@ const ObservationForm = ({
     },
     [
       addObservation,
-      presetLocation,
+      linkedLocation,
       reset,
       getValues,
       currentLocation,
@@ -784,7 +885,7 @@ const ObservationForm = ({
                         Lokalitet
                       </Label>
                       <div className="relative">
-                        {presetLocation && (
+                        {linkedLocation && (
                           <MapPinned
                             size={18}
                             className="absolute left-3 top-1/2 -translate-y-1/2 text-violet-600 dark:text-violet-400"
@@ -796,9 +897,9 @@ const ObservationForm = ({
                           placeholder="F.eks. Oslo, Nordmarka"
                           value={value}
                           onChange={(e) => onChange(e.target.value)}
-                          className={twMerge("mt-1", presetLocation && "pl-8")}
-                          readOnly={!!presetLocation}
-                          disabled={!!presetLocation}
+                          className={twMerge("mt-1", linkedLocation && "pl-8")}
+                          readOnly={!!linkedLocation}
+                          disabled={!!linkedLocation}
                         />
                         {loadingLocationName && (
                           <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -807,30 +908,38 @@ const ObservationForm = ({
                         )}
                       </div>
                       <p className="text-xs text-slate mt-1">
-                        {geocodingFailed && !presetLocation
+                        {geocodingFailed && !linkedLocation
                           ? "Kunne ikke hente stedsnavn automatisk. Vennligst fyll inn manuelt."
                           : ""}
                       </p>
                     </div>
                   )}
                 />
-                {!presetLocation && onSaveAsLocation && (
-                  <button
-                    type="button"
-                    onClick={() => onSaveAsLocation(displayedLocation)}
-                    className="mt-2 flex items-center gap-1.5 text-sm text-slate hover:text-bark dark:hover:text-sand transition-colors"
-                    aria-label="Lagre denne posisjonen som min lokalitet"
-                  >
-                    <MapPin size={14} />
-                    Lagre som min lokalitet
-                  </button>
+                {localityOptions.length > 0 && (
+                  <div className="mt-2">
+                    <Combobox
+                      value={
+                        linkedLocation?.id ??
+                        (locations.some((loc) => loc.id === formLocationId)
+                          ? formLocationId
+                          : undefined) ??
+                        ""
+                      }
+                      onChange={handleLocalitySelect}
+                      options={localityOptions}
+                      placeholder="Knytt til min lokalitet…"
+                      searchPlaceholder="Søk etter lokalitet…"
+                      emptyText="Ingen lokaliteter funnet"
+                      allowCustomEntry={false}
+                    />
+                  </div>
                 )}
               </div>
               {!showInlineMap && (
                 <div className="w-40 flex-shrink-0 mt-6">
                   <LocationEditor
                     compact
-                    isPresetLocation={!!presetLocation}
+                    isPresetLocation={!!linkedLocation}
                     location={displayedLocation}
                     uncertaintyRadius={uncertaintyRadius}
                     onLocationChange={handleLocationChange}
@@ -843,7 +952,7 @@ const ObservationForm = ({
             {showInlineMap && (
               <div className="mt-3">
                 <LocationEditor
-                  isPresetLocation={!!presetLocation}
+                  isPresetLocation={!!linkedLocation}
                   location={displayedLocation}
                   uncertaintyRadius={uncertaintyRadius}
                   onLocationChange={handleLocationChange}

@@ -10,7 +10,7 @@ import { CreateUserLocation } from "../api/locations.ts";
 
 interface LocationsContextType {
   locations: UserLocation[];
-  addLocation: (location: CreateUserLocation) => UserLocation;
+  addLocation: (location: CreateUserLocation) => Promise<UserLocation>;
   updateLocation: (location: UserLocation) => void;
   deleteLocation: (id: string) => void;
 }
@@ -26,19 +26,8 @@ export function LocationsProvider({ children }: { children: ReactNode }) {
   const { mutateAsync: remove } = useDeleteUserLocation();
   const { mutateAsync: update } = useUpdateUserLocation();
 
-  const addLocation = (location: CreateUserLocation): UserLocation => {
-    const newLocation: UserLocation = {
-      ...location,
-      id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    // Note: Server will assign its own ID; the returned local ID is optimistic.
+  const addLocation = (location: CreateUserLocation): Promise<UserLocation> =>
     create(location);
-
-    return newLocation;
-  };
 
   const updateLocation = (updatedLocation: UserLocation) => {
     update(updatedLocation);

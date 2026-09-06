@@ -405,12 +405,22 @@ const ObservationForm = ({
         distanceMeters(displayedLocation, a.location) -
         distanceMeters(displayedLocation, b.location),
     );
+    const sortedIds = new Set(sorted.map((loc) => loc.id));
     return [
       ...(onSaveAsLocation
         ? [{ value: NEW_LOCALITY_VALUE, label: "Opprett ny lokalitet…" }]
         : []),
       ...(linkedId
         ? [{ value: NO_LOCALITY_VALUE, label: "Ingen lokalitet" }]
+        : []),
+      ...(linkedLocation && !sortedIds.has(linkedLocation.id)
+        ? [
+            {
+              value: linkedLocation.id,
+              label: linkedLocation.name,
+              group: "Mine lokaliteter",
+            },
+          ]
         : []),
       ...sorted.map((loc) => ({
         value: loc.id,

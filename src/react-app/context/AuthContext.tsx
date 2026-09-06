@@ -4,6 +4,7 @@ import { betterAuthClient } from "../lib/auth";
 import { useUserAccesses as useUserAccess } from "../queries/useUserAccesses";
 import { UserAccess } from "../types/user_access";
 import { requestPasswordReset } from "../api/auth";
+import { isLoginRequired } from "../lib/guestMode";
 
 interface AppUser extends User {
   role?: string | null;
@@ -25,6 +26,7 @@ interface AuthContextType {
   loading: boolean;
   isAdmin: boolean;
   isImpersonating: boolean;
+  isGuest: boolean;
   userAccess: UserAccess | undefined;
   signInWithEmail: (
     email: string,
@@ -40,15 +42,48 @@ interface AuthContextType {
   stopImpersonating: () => Promise<void>;
   showLoginForm: boolean;
   setShowLoginForm: (val: boolean) => void;
+  bypassGuestLogin: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const GUEST_USER_ID_KEY = "kikk-guest-user-id";
+
+function makeGuestUser(id: string): AppUser {
+  return {
+    id,
+    email: "gjest@kikk",
+    name: "Gjest",
+    emailVerified: false,
+    image: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    role: null,
+  } as AppUser;
+}
+
+function loadSavedGuestId(): string | null {
+  if (typeof window === "undefined" || isLoginRequired()) return null;
+  try {
+    return localStorage.getItem(GUEST_USER_ID_KEY);
+  } catch {
+    return null;
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [showLoginForm, setShowLoginForm] = useState(false);
+  const savedGuestId = loadSavedGuestId();
+  const [isGuest, setIsGuest] = useState(!!savedGuestId);
+  const [guestUser, setGuestUser] = useState<AppUser | null>(
+    savedGuestId ? makeGuestUser(savedGuestId) : null,
+  );
+
   const { data, isPending } = betterAuthClient.useSession();
   const session = (data?.session as AppSession | undefined) ?? undefined;
-  const user = ((data?.user as AppUser | undefined) ?? null) as AppUser | null;
+  const authUser = ((data?.user as AppUser | undefined) ??
+    null) as AppUser | null;
+  const user = authUser ?? (isGuest ? guestUser : null);
   const loading = isPending;
   const isAdmin = user?.role === "admin";
   const isImpersonating = !!session?.impersonatedBy;
@@ -71,7 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password,
       name,
     });
-    return { error: error ? new Error(error.message) : null };
+    return { error: error ? new Error(error.message ?? String(error)) : null };
   };
 
   const sendPasswordReset = async (email: string) => {
@@ -80,12 +115,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    if (isGuest) {
+      setIsGuest(false);
+      setGuestUser(null);
+      try {
+        localStorage.removeItem(GUEST_USER_ID_KEY);
+      } catch {
+        // ignore
+      }
+      return;
+    }
+
     await betterAuthClient.signOut();
+    setIsGuest(false);
+    setGuestUser(null);
+    try {
+      localStorage.removeItem(GUEST_USER_ID_KEY);
+    } catch {
+      // ignore
+    }
   };
 
   const stopImpersonating = async () => {
     await betterAuthClient.admin.stopImpersonating();
     window.location.reload();
+  };
+
+  const bypassGuestLogin = () => {
+    if (isLoginRequired()) return;
+    let id: string;
+    try {
+      id = localStorage.getItem(GUEST_USER_ID_KEY) || crypto.randomUUID();
+      localStorage.setItem(GUEST_USER_ID_KEY, id);
+    } catch {
+      id = crypto.randomUUID();
+    }
+    setIsGuest(true);
+    setGuestUser(makeGuestUser(id));
   };
 
   return (
@@ -96,6 +162,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         isAdmin,
         isImpersonating,
+        isGuest,
         signInWithEmail,
         signUp,
         sendPasswordReset,
@@ -104,6 +171,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         userAccess,
         showLoginForm,
         setShowLoginForm,
+        bypassGuestLogin,
       }}
     >
       {children}

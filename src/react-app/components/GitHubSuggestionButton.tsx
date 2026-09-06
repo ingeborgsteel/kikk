@@ -5,18 +5,22 @@ interface GitHubSuggestionButtonProps {
   onClick: () => void;
   className?: string;
   floating?: boolean;
+  showTooltip?: boolean;
 }
 
 export function GitHubSuggestionButton({
   onClick,
   className,
   floating = true,
+  showTooltip = true,
 }: GitHubSuggestionButtonProps) {
   return (
     <div className="relative group">
-      <span className="hidden md:block absolute right-full mr-3 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-md bg-sand/95 dark:bg-bark/95 px-3 py-1.5 text-sm font-medium text-bark dark:text-sand shadow-custom-lg border border-moss/30 opacity-0 translate-x-1 pointer-events-none transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0">
-        Forslag
-      </span>
+      {showTooltip && (
+        <span className="hidden md:block absolute right-full mr-3 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-md bg-sand/95 dark:bg-bark/95 px-3 py-1.5 text-sm font-medium text-bark dark:text-sand shadow-custom-lg border border-moss/30 opacity-0 translate-x-1 pointer-events-none transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0">
+          Forslag
+        </span>
+      )}
       <Button
         onClick={onClick}
         size="icon"

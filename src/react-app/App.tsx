@@ -65,7 +65,7 @@ function App() {
     showAtlasSquares,
     setShowAtlasSquares,
   } = useMapPreferences();
-  const { setShowLoginForm, isAdmin, isImpersonating } = useAuth();
+  const { isAdmin, isImpersonating } = useAuth();
 
   dayjs.extend(utc);
   dayjs.extend(timezone);
@@ -411,10 +411,7 @@ function App() {
         />
       </div>
       {location.pathname !== "/reset-password" && (
-        <BottomNav
-          currentView={getCurrentView()}
-          onLoginClick={() => setShowLoginForm(true)}
-        />
+        <BottomNav currentView={getCurrentView()} />
       )}
     </>
   );

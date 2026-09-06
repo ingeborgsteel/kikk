@@ -40,8 +40,6 @@ interface AuthContextType {
   sendPasswordReset: (email: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   stopImpersonating: () => Promise<void>;
-  showLoginForm: boolean;
-  setShowLoginForm: (val: boolean) => void;
   bypassGuestLogin: () => void;
 }
 
@@ -71,10 +69,16 @@ function loadSavedGuestId(): string | null {
   }
 }
 
+function clearGuest() {
+  try {
+    localStorage.removeItem(GUEST_USER_ID_KEY);
+  } catch {
+    // ignore
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [showLoginForm, setShowLoginForm] = useState(false);
   const savedGuestId = loadSavedGuestId();
-  const [isGuest, setIsGuest] = useState(!!savedGuestId);
   const [guestUser, setGuestUser] = useState<AppUser | null>(
     savedGuestId ? makeGuestUser(savedGuestId) : null,
   );
@@ -83,7 +87,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const session = (data?.session as AppSession | undefined) ?? undefined;
   const authUser = ((data?.user as AppUser | undefined) ??
     null) as AppUser | null;
-  const user = authUser ?? (isGuest ? guestUser : null);
+  const user = authUser ?? guestUser;
+  const isGuest = !session && !!guestUser;
   const loading = isPending;
   const isAdmin = user?.role === "admin";
   const isImpersonating = !!session?.impersonatedBy;
@@ -115,25 +120,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    if (isGuest) {
-      setIsGuest(false);
-      setGuestUser(null);
-      try {
-        localStorage.removeItem(GUEST_USER_ID_KEY);
-      } catch {
-        // ignore
-      }
-      return;
+    if (session) {
+      await betterAuthClient.signOut();
     }
-
-    await betterAuthClient.signOut();
-    setIsGuest(false);
+    clearGuest();
     setGuestUser(null);
-    try {
-      localStorage.removeItem(GUEST_USER_ID_KEY);
-    } catch {
-      // ignore
-    }
   };
 
   const stopImpersonating = async () => {
@@ -150,7 +141,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       id = crypto.randomUUID();
     }
-    setIsGuest(true);
     setGuestUser(makeGuestUser(id));
   };
 
@@ -163,14 +153,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAdmin,
         isImpersonating,
         isGuest,
+        userAccess,
         signInWithEmail,
         signUp,
         sendPasswordReset,
         signOut,
         stopImpersonating,
-        userAccess,
-        showLoginForm,
-        setShowLoginForm,
         bypassGuestLogin,
       }}
     >

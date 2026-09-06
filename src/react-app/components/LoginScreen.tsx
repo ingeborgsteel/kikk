@@ -68,7 +68,7 @@ export function LoginScreen({ allowBypass, onBypass }: LoginScreenProps) {
           øyne.
         </p>
 
-        <div className="bg-white dark:bg-[#2c2c2c] rounded-lg border-2 border-moss/30 shadow-custom-lg p-6">
+        <div className="bg-white dark:bg-dark-bg rounded-lg border-2 border-moss/30 shadow-custom-lg p-6">
           <LoginForm inline />
         </div>
       </div>

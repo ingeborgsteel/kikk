@@ -13,7 +13,7 @@ kikk is a nature observation tracking application built with React, TypeScript, 
 - **UI Components**: shadcn/ui pattern (Radix primitives + Tailwind, copied into `components/ui/`, not an npm package) — the standard for all UI primitives going forward
 - **Backend**: Hono (lightweight framework) running on Cloudflare Workers
 - **Maps**: Leaflet for interactive mapping, with offline PWA tile caching
-- **Authentication**: Supabase (optional)
+- **Authentication**: Better Auth (required in production; local development and branch previews can use a hidden guest bypass)
 - **State Management**: React Context API and TanStack Query
 - **Forms**: React Hook Form
 
@@ -47,7 +47,7 @@ src/
 
 ## State Management Decision Tree
 
-- **React Context** for domain state shared across components (observations, locations, auth) and client-side data needing dual-mode storage (Supabase + localStorage fallback), plus user preferences (theme, map layer)
+- **React Context** for domain state shared across components (observations, locations, auth, user preferences). Auth state now uses Better Auth with a guest-mode fallback for local development; observations/locations still fall back to localStorage when offline.
 - **TanStack Query** for server-fetched data with caching, calls to external services (Artsdatabanken, GitHub), and data needing automatic refetching
 - **Component State** for ephemeral UI state (form values, toggles, modals)
 
@@ -55,7 +55,7 @@ Context providers:
 
 - `ObservationsContext` – CRUD for nature observations
 - `LocationsContext` – CRUD for saved user locations
-- `AuthContext` – Supabase authentication state
+- `AuthContext` – Better Auth session and guest-mode state
 - `ThemeContext` – Light/dark mode toggle
 - `MapPreferencesContext` – Selected map layer (standard/topo/aerial)
 
@@ -100,19 +100,17 @@ Every context must expose a custom hook (e.g., `useObservations()`) that throws 
 
 ## Dual-Mode Operation (Critical)
 
-Supabase authentication is optional — the app must work fully with local storage alone.
+Production builds require users to sign in via Better Auth. Local development and feature-branch previews can use a hidden guest bypass (triple-click the login logo) so the app remains usable without real credentials.
 
-```typescript
-if (isSupabaseConfigured()) {
-  // Use Supabase
-} else {
-  // Fallback to localStorage
-}
-```
+The app still stores observations and locations in `localStorage` for offline use and as a lightweight fallback, but the auth boundary is now always active:
 
-localStorage keys: `kikk_observations`, `kikk_user_locations`, `kikk_theme`, `kikk-map-layer`
+- `LoginGate` blocks the app until a Better Auth session or a deliberate guest session is present.
+- `isLoginRequired()` returns `true` in production builds unless `VITE_FORCE_LOGIN=false` or `VITE_ALLOW_GUEST_BYPASS=true` is set.
+- `bypassGuestLogin()` creates an isolated guest session that does not mix with authenticated users' data.
 
-Never store sensitive data (tokens, passwords) in localStorage or Context — rely on Supabase session handling.
+localStorage keys: `kikk-guest-user-id`, `kikk_observations`, `kikk_user_locations`, `kikk_theme`, `kikk-map-layer`
+
+Never store sensitive data (tokens, passwords) in localStorage or Context.
 
 ## PWA & Offline Features
 
@@ -124,7 +122,7 @@ Never store sensitive data (tokens, passwords) in localStorage or Context — re
 
 - **Artsdatabanken API**: species search (`api/artsdatabanken.ts`) — handle errors gracefully, implement loading states
 - **GitHub**: issue submission (component-level), minimal-scope token (`public_repo`)
-- **Supabase**: CRUD operations (`api/observations.ts`, etc.)
+- **Better Auth**: session, sign-in, sign-up, and password reset
 
 ## When Making Changes
 
@@ -143,7 +141,7 @@ Never store sensitive data (tokens, passwords) in localStorage or Context — re
 ## Common Pitfalls to Avoid
 
 1. Breaking localStorage — always test data migration
-2. Hardcoding Supabase dependencies — check `isSupabaseConfigured()`
+2. Hardcoding Better Auth dependencies without verifying the environment is configured
 3. Creating new modal components instead of using the unified Modal
 4. Custom marker icons instead of `lib/markerIcons.ts`
 5. Inline styles instead of Tailwind classes
@@ -160,7 +158,7 @@ Unit tests use Vitest (`src/**/*.test.ts`). Critical UI flows are covered by Pla
 3. Map interactions — click-to-select location, marker display, layer switching
 4. Form submissions — observation form, location form, species search
 5. Data persistence — localStorage read/write, page reload retention
-6. With and without Supabase configured
+6. With login enforced and with the guest bypass enabled
 7. Backward compatibility — existing saved observations must still load correctly
 8. Offline functionality
 9. Playwright smoke tests pass (`npx playwright test`) for any map, form, or navigation change
@@ -177,7 +175,7 @@ Document manual test steps in the PR description when adding new features.
 - New UI primitives follow the shadcn/ui pattern (Radix + Tailwind, copied source in `components/ui/`) rather than a new one-off or a third-party component library
 - Check new state uses the correct mechanism (Context vs. TanStack Query)
 - Look for regressions in localStorage data handling
-- Confirm Supabase-dependent features degrade gracefully when Supabase is not configured
+- Confirm the login gate, guest bypass, and sign-out flows work in both production and development builds
 
 ## Issue Writing Guidelines
 

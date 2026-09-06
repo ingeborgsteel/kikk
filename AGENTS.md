@@ -105,7 +105,7 @@ Production builds require users to sign in via Better Auth. Local development an
 The app still stores observations and locations in `localStorage` for offline use and as a lightweight fallback, but the auth boundary is now always active:
 
 - `LoginGate` blocks the app until a Better Auth session or a deliberate guest session is present.
-- `isLoginRequired()` returns `true` in production builds unless `VITE_FORCE_LOGIN=false` or `VITE_ALLOW_GUEST_BYPASS=true` is set.
+- `isLoginRequired()` returns `true` in production builds unless `VITE_FORCE_LOGIN=false` is set.
 - `bypassGuestLogin()` creates an isolated guest session that does not mix with authenticated users' data.
 
 localStorage keys: `kikk-guest-user-id`, `kikk_observations`, `kikk_user_locations`, `kikk_theme`, `kikk-map-layer`

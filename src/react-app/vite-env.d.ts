@@ -2,7 +2,6 @@
 
 interface ImportMetaEnv {
   readonly VITE_FORCE_LOGIN?: string;
-  readonly VITE_ALLOW_GUEST_BYPASS?: string;
   // Existing variables used throughout the app
   readonly VITE_BETTER_AUTH_BASE_URL?: string;
   readonly VITE_GITHUB_TOKEN?: string;

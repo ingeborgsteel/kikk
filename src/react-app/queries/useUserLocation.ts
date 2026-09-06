@@ -14,7 +14,7 @@ export function useFetchUserLocations(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ["user-locations", user?.id],
     queryFn: () => fetchUserLocations(user?.id),
-    ...options,
+    enabled: options?.enabled ?? !!user,
   });
 }
 

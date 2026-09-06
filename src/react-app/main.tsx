@@ -13,6 +13,7 @@ import { AuthProvider } from "./context/AuthContext.tsx";
 import { LocationsProvider } from "./context/LocationsContext.tsx";
 import { MapPreferencesProvider } from "./context/MapPreferencesContext.tsx";
 import { GeolocationProvider } from "./context/GeolocationContext.tsx";
+import { LoginGate } from "./components/LoginGate.tsx";
 import "dayjs/locale/nb";
 
 const queryClient = new QueryClient({
@@ -38,17 +39,19 @@ createRoot(document.getElementById("root")!).render(
     >
       <AuthProvider>
         <ThemeProvider>
-          <GeolocationProvider>
-            <MapPreferencesProvider>
-              <LocationsProvider>
-                <ObservationsProvider>
-                  <BrowserRouter>
-                    <App />
-                  </BrowserRouter>
-                </ObservationsProvider>
-              </LocationsProvider>
-            </MapPreferencesProvider>
-          </GeolocationProvider>
+          <BrowserRouter>
+            <LoginGate>
+              <GeolocationProvider>
+                <MapPreferencesProvider>
+                  <LocationsProvider>
+                    <ObservationsProvider>
+                      <App />
+                    </ObservationsProvider>
+                  </LocationsProvider>
+                </MapPreferencesProvider>
+              </GeolocationProvider>
+            </LoginGate>
+          </BrowserRouter>
         </ThemeProvider>
       </AuthProvider>
     </PersistQueryClientProvider>

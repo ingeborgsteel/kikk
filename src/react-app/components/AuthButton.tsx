@@ -1,4 +1,4 @@
-import { LogIn, LogOut, User, EyeOff } from "lucide-react";
+import { LogOut, User, EyeOff } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "./ui/button";
 
@@ -7,30 +7,10 @@ export function AuthButton({
 }: {
   openProfilePage?: () => void;
 }) {
-  const {
-    user,
-    signOut,
-    setShowLoginForm,
-    isImpersonating,
-    stopImpersonating,
-  } = useAuth();
-
-  const handleSignOut = async () => {
-    await signOut();
-    setShowLoginForm(false);
-  };
+  const { user, signOut, isImpersonating, stopImpersonating } = useAuth();
 
   if (!user) {
-    return (
-      <Button
-        onClick={() => setShowLoginForm(true)}
-        variant="secondary"
-        className="flex items-center gap-2"
-      >
-        <LogIn size={16} />
-        Logg inn
-      </Button>
-    );
+    return null;
   }
 
   if (isImpersonating) {
@@ -61,7 +41,7 @@ export function AuthButton({
 
   return (
     <Button
-      onClick={handleSignOut}
+      onClick={signOut}
       variant="secondary"
       className="flex items-center gap-2"
     >

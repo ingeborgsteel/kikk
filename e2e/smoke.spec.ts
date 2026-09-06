@@ -24,10 +24,16 @@ test.beforeEach(async ({ page }) => {
     route.fulfill({ status: 200, body: "" }),
   );
 
+  // Mock backend user access so guest smoke tests don't hit unseeded data.
+  await page.route("**/api/user-accesses**", (route) =>
+    route.fulfill({ status: 200, body: JSON.stringify({}) }),
+  );
+
   const resetKey = `__e2e_reset=${Date.now()}`;
-  await page.addInitScript(() => {
+  await page.addInitScript(`
     localStorage.clear();
-  });
+    localStorage.setItem("kikk-guest-user-id", "e2e-guest");
+  `);
   await page.goto(`/?${resetKey}`);
 });
 

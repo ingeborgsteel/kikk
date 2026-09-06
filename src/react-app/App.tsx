@@ -8,7 +8,6 @@ import { Button } from "./components/ui/button";
 import { useObservations } from "./context/ObservationsContext";
 import { useLocations } from "./context/LocationsContext";
 import ObservationForm from "./components/ObservationForm.tsx";
-import { LoginForm } from "./components/LoginForm.tsx";
 import { ResetPassword } from "./components/ResetPassword.tsx";
 import { BottomNav } from "./components/BottomNav";
 import { UserProfile } from "./components/UserProfile.tsx";
@@ -66,8 +65,7 @@ function App() {
     showAtlasSquares,
     setShowAtlasSquares,
   } = useMapPreferences();
-  const { showLoginForm, setShowLoginForm, isAdmin, isImpersonating } =
-    useAuth();
+  const { isAdmin, isImpersonating } = useAuth();
 
   dayjs.extend(utc);
   dayjs.extend(timezone);
@@ -351,9 +349,6 @@ function App() {
           }
         />
       </Routes>
-      {showLoginForm && (
-        <LoginForm closeLoginForm={() => setShowLoginForm(false)} />
-      )}
       <GitHubIssueForm
         onClose={() => setShowGitHubIssueForm(false)}
         showForm={showGitHubIssueForm}
@@ -416,10 +411,7 @@ function App() {
         />
       </div>
       {location.pathname !== "/reset-password" && (
-        <BottomNav
-          currentView={getCurrentView()}
-          onLoginClick={() => setShowLoginForm(true)}
-        />
+        <BottomNav currentView={getCurrentView()} />
       )}
     </>
   );

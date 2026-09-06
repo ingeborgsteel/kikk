@@ -351,12 +351,25 @@ const ObservationForm = ({
   const appliedPresetLocationId = useRef<string | null>(
     linkedLocation?.id ?? null,
   );
+  const preLinkSnapshot = useRef<{
+    location: { lat: number; lng: number };
+    locationName: string;
+    uncertaintyRadius: number;
+  } | null>(null);
   useEffect(() => {
     if (!linkedLocation) {
       appliedPresetLocationId.current = null;
       return;
     }
     if (appliedPresetLocationId.current === linkedLocation.id) return;
+    if (appliedPresetLocationId.current === null) {
+      const current = getValues();
+      preLinkSnapshot.current = {
+        location: current.location,
+        locationName: current.locationName ?? "",
+        uncertaintyRadius: current.uncertaintyRadius,
+      };
+    }
     appliedPresetLocationId.current = linkedLocation.id;
     setValue("location", linkedLocation.location, {
       shouldDirty: true,
@@ -450,6 +463,27 @@ const ObservationForm = ({
     if (value === NO_LOCALITY_VALUE) {
       setLinkedFromPicker(true);
       setLinkedLocation(null);
+      const restore =
+        preLinkSnapshot.current ??
+        (observation
+          ? {
+              location: observation.location,
+              locationName: observation.locationName ?? "",
+              uncertaintyRadius: observation.uncertaintyRadius,
+            }
+          : null);
+      preLinkSnapshot.current = null;
+      if (restore) {
+        setCurrentLocation(restore.location);
+        setValue("location", restore.location, {
+          shouldDirty: true,
+          shouldValidate: true,
+        });
+        setValue("locationName", restore.locationName, { shouldDirty: true });
+        setValue("uncertaintyRadius", restore.uncertaintyRadius, {
+          shouldDirty: true,
+        });
+      }
       setValue("locationId", undefined, { shouldDirty: true });
       return;
     }
@@ -459,6 +493,10 @@ const ObservationForm = ({
       setLinkedLocation(selected);
     }
   };
+
+  const linkedDistance = linkedLocation
+    ? distanceMeters(location, linkedLocation.location)
+    : 0;
 
   const save = useCallback(
     (data: Observation) => {
@@ -923,6 +961,12 @@ const ObservationForm = ({
                       allowCustomEntry={false}
                     />
                   </div>
+                )}
+                {linkedDistance >= 1 && (
+                  <p className="text-xs text-slate mt-1">
+                    Flyttes {formatDistance(linkedDistance)} fra opprinnelig
+                    posisjon
+                  </p>
                 )}
               </div>
               {!showInlineMap && (

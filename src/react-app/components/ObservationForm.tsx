@@ -188,9 +188,11 @@ const ObservationForm = ({
     presetLocation ?? null,
   );
   const [prevPresetLocation, setPrevPresetLocation] = useState(presetLocation);
+  const [linkedFromPicker, setLinkedFromPicker] = useState(false);
   if (presetLocation !== prevPresetLocation) {
     setPrevPresetLocation(presetLocation);
     setLinkedLocation(presetLocation ?? null);
+    setLinkedFromPicker(false);
   }
 
   const [startTimeEnabled, setStartTimeEnabled] = useState(
@@ -367,7 +369,10 @@ const ObservationForm = ({
       });
     }
 
-    if (observation) {
+    // Auto-save only when the link came from the create-new-locality flow
+    // (presetLocation prop). Links picked from the locality dropdown stay
+    // dirty so the user confirms with "Lagre".
+    if (observation && !linkedFromPicker) {
       const data = getValues();
       const startDate =
         toStorageDateTimeValue(data.startDate, startTimeEnabled) ||
@@ -385,6 +390,7 @@ const ObservationForm = ({
     }
   }, [
     linkedLocation,
+    linkedFromPicker,
     setValue,
     observation,
     getValues,
@@ -436,48 +442,22 @@ const ObservationForm = ({
     onSaveAsLocation,
   ]);
 
-  // Immediately persist a link change when editing an existing observation,
-  // mirroring the auto-save when a preset location is applied.
-  const persistLocationLink = useCallback(
-    (locationId: string | undefined) => {
-      if (!observation) return;
-      const data = getValues();
-      const start =
-        toStorageDateTimeValue(data.startDate, startTimeEnabled) ||
-        dayjs().format(DATE_TIME_STORAGE_FORMAT);
-      const end = toStorageDateTimeValue(data.endDate, endTimeEnabled);
-      updateObservation({
-        ...data,
-        species: sortSpeciesByTaxonGroupAndName(data.species),
-        locationId,
-        startDate: start,
-        endDate: end,
-      });
-      reset(getValues(), { keepValues: true });
-    },
-    [
-      observation,
-      getValues,
-      reset,
-      updateObservation,
-      startTimeEnabled,
-      endTimeEnabled,
-    ],
-  );
-
   const handleLocalitySelect = (value: string) => {
     if (value === NEW_LOCALITY_VALUE) {
       onSaveAsLocation?.(displayedLocation);
       return;
     }
     if (value === NO_LOCALITY_VALUE) {
+      setLinkedFromPicker(true);
       setLinkedLocation(null);
       setValue("locationId", undefined, { shouldDirty: true });
-      persistLocationLink(undefined);
       return;
     }
     const selected = locations.find((loc) => loc.id === value);
-    if (selected) setLinkedLocation(selected);
+    if (selected) {
+      setLinkedFromPicker(true);
+      setLinkedLocation(selected);
+    }
   };
 
   const save = useCallback(

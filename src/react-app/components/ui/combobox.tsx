@@ -26,6 +26,8 @@ interface ComboboxProps {
   defaultOpen?: boolean;
   /** Fires whenever the popover opens/closes, so a caller can e.g. exit edit mode on close. */
   onOpenChange?: (open: boolean) => void;
+  /** Allow committing arbitrary free-text input as an option (default true). */
+  allowCustomEntry?: boolean;
 }
 
 const Combobox = ({
@@ -41,6 +43,7 @@ const Combobox = ({
   variant = "default",
   defaultOpen = false,
   onOpenChange,
+  allowCustomEntry = true,
 }: ComboboxProps) => {
   const [open, setOpen] = React.useState(defaultOpen);
   const [search, setSearch] = React.useState("");
@@ -58,7 +61,8 @@ const Combobox = ({
   const exactMatch = options.some(
     (opt) => opt.value.toLowerCase() === trimmedSearch.toLowerCase(),
   );
-  const showCustomEntry = trimmedSearch.length > 0 && !exactMatch;
+  const showCustomEntry =
+    allowCustomEntry && trimmedSearch.length > 0 && !exactMatch;
 
   const groups = React.useMemo(() => {
     const map = new Map<string | undefined, ComboboxOption[]>();

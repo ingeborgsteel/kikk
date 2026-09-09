@@ -83,7 +83,7 @@ export function LocationForm({
     setValue("lng", lng.toString());
   };
 
-  const onSubmit = (data: LocationFormData) => {
+  const onSubmit = async (data: LocationFormData) => {
     const lat = parseFloat(data.lat);
     const lng = parseFloat(data.lng);
 
@@ -111,12 +111,16 @@ export function LocationForm({
         uncertaintyRadius: data.uncertaintyRadius,
         description: data.description,
       };
-      const savedLocation = addLocation(newLocation);
+      try {
+        const savedLocation = await addLocation(newLocation);
 
-      if (onSaved) {
-        onSaved(savedLocation);
-      } else {
-        onClose();
+        if (onSaved) {
+          onSaved(savedLocation);
+        } else {
+          onClose();
+        }
+      } catch {
+        alert("Kunne ikke lagre lokaliteten. Prøv igjen.");
       }
     }
   };

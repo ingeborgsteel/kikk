@@ -67,6 +67,7 @@
   "private": true,
   "scripts": {
     "build": "tsc -b && vite build",
+    "build:preview": "CLOUDFLARE_ENV=preview VITE_FORCE_LOGIN=false npm run build",
     "cf-typegen": "wrangler types",
     "check": "tsc && vite build && wrangler deploy --dry-run --env=\"\"",
     "deploy": "wrangler deploy --env=\"\"",
@@ -74,7 +75,7 @@
     "db:migrate:local": "wrangler d1 migrations apply kikk-db --local",
     "db:migrate:preview": "wrangler d1 migrations apply DB --remote --env preview",
     "db:migrate:prod": "wrangler d1 migrations apply kikk-db --remote",
-    "deploy:preview": "CLOUDFLARE_ENV=preview VITE_FORCE_LOGIN=false npm run build && npm run db:migrate:preview && npx wrangler versions upload --env preview",
+    "deploy:preview": "npm run build:preview && npm run db:migrate:preview && npx wrangler versions upload --env preview",
     "migrate:supabase-to-d1:local": "tsx scripts/migrate-supabase-to-d1.ts --local --apply",
     "migrate:supabase-to-d1:remote": "tsx scripts/migrate-supabase-to-d1.ts --remote --apply",
     "lint": "eslint .",

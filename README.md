@@ -133,18 +133,25 @@ Production deployments and branch previews are handled by Cloudflare Workers Bui
 - Top-level `DB` binding with `database_id` → `kikk-db` (production traffic)
 - `env.preview.DB` binding with `database_id` → `kikk-db-test` (branch previews)
 
-For **branch previews** to use the test database, the build must be made with `CLOUDFLARE_ENV=preview`. The default `npx wrangler versions upload` then picks up the built `env.preview` configuration and binds `env.DB` to `kikk-db-test`. No custom deploy command is required.
+For **branch previews** to use the test database, the build must be made with `CLOUDFLARE_ENV=preview`. The dashboard has two command fields:
+
+- **Build/deploy command** — runs on `main` (production)
+- **Version command** — runs on every non-`main` branch (previews)
+
+The preview build also needs `VITE_FORCE_LOGIN=false` so branch previews allow the hidden guest bypass.
 
 ### Cloudflare Workers Builds settings
 
 Set these in the Cloudflare dashboard under **Workers & Pages → kikk → Settings → Builds**:
 
-| Trigger                       | Build command                                                 | Deploy command                                                                          |
-| ----------------------------- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| Production (`main`)           | `npm run build`                                               | `npm run db:migrate:prod && npm run deploy` (or keep the default `npx wrangler deploy`) |
-| Non-production branches / PRs | `CLOUDFLARE_ENV=preview VITE_FORCE_LOGIN=false npm run build` | `npx wrangler versions upload` (default)                                                |
+| Field                                     | Command                                                               |
+| ----------------------------------------- | --------------------------------------------------------------------- |
+| Build/deploy command (production, `main`) | `npm run build && npm run deploy`                                     |
+| Version command (branch previews / PRs)   | `npm run build:preview && npx wrangler versions upload --env preview` |
 
-The `VITE_FORCE_LOGIN=false` env var enables the hidden guest bypass in branch previews. If you prefer, you can keep the default build command and instead set `CLOUDFLARE_ENV=preview` and `VITE_FORCE_LOGIN=false` as build environment variables for the preview trigger.
+`npm run build:preview` sets `CLOUDFLARE_ENV=preview` and `VITE_FORCE_LOGIN=false`, which builds against `env.preview`. The upload uses `--env preview` so the preview version is bound to `kikk-db-test`.
+
+If the dashboard lets you set build environment variables per trigger, you can keep the default build commands and set `CLOUDFLARE_ENV=preview` and `VITE_FORCE_LOGIN=false` there instead.
 
 ### Migrations
 

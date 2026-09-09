@@ -132,6 +132,16 @@ Deploy your project to Cloudflare Workers:
 npm run deploy
 ```
 
+### Test deployments
+
+Feature branches are deployed to a separate test Worker (`kikk-test`) with its own D1 database (`kikk-db-test`), isolated from production.
+
+```bash
+CLOUDFLARE_ENV=test VITE_FORCE_LOGIN=false npm run deploy:test
+```
+
+The first run creates the `kikk-db-test` database automatically and applies all pending migrations. Pushing to any branch other than `main` also triggers the test deployment workflow in `.github/workflows/deploy-test.yml`.
+
 Monitor your deployed worker:
 
 ```bash

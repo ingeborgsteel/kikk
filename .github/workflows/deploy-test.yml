@@ -1,14 +1,16 @@
-name: Deploy
+name: Deploy test environment
 
 on:
   push:
-    branches: [main]
+    branches-ignore:
+      - main
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  deploy:
+  deploy-test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -23,19 +25,25 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build
-        run: npm run build
+      - name: Ensure test D1 database
+        run: npx tsx scripts/ensure-test-db.ts
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
-      - name: Apply D1 migrations
+      - name: Build for test environment
+        run: CLOUDFLARE_ENV=test VITE_FORCE_LOGIN=false npm run build
+
+      - name: Apply D1 migrations to test DB
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: d1 migrations apply kikk-db --remote
+          command: d1 migrations apply DB --remote --env test
 
-      - name: Deploy to Cloudflare Workers
+      - name: Deploy to test environment
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy --env=""
+          command: deploy --env test

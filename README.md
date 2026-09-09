@@ -126,13 +126,55 @@ npm run preview
 
 ## Deployment
 
-Deploy your project to Cloudflare Workers:
+Production deployments and branch previews are handled by Cloudflare Workers Builds (the `Workers Builds: kikk` check). The GitHub Actions workflows that previously ran `wrangler deploy` are no longer needed because Cloudflare already builds and deploys after each push.
+
+`wrangler.json` defines:
+
+- Top-level `DB` binding with `database_id` → `kikk-db` (production traffic)
+- `env.preview.DB` binding with `database_id` → `kikk-db-test` (branch previews)
+
+For **branch previews** to use the test database, the build must be made with `CLOUDFLARE_ENV=preview`. The dashboard has two command fields:
+
+- **Build/deploy command** — runs on `main` (production)
+- **Version command** — runs on every non-`main` branch (previews)
+
+The preview build also needs `VITE_FORCE_LOGIN=false` so branch previews allow the hidden guest bypass.
+
+### Cloudflare Workers Builds settings
+
+Set these in the Cloudflare dashboard under **Workers & Pages → kikk → Settings → Builds**:
+
+| Field                                     | Command                                                               |
+| ----------------------------------------- | --------------------------------------------------------------------- |
+| Build/deploy command (production, `main`) | `npm run build && npm run deploy`                                     |
+| Version command (branch previews / PRs)   | `npm run build:preview && npx wrangler versions upload --env preview` |
+
+`npm run build:preview` sets `CLOUDFLARE_ENV=preview` and `VITE_FORCE_LOGIN=false`, which builds against `env.preview`. The upload uses `--env preview` so the preview version is bound to `kikk-db-test`.
+
+If the dashboard lets you set build environment variables per trigger, you can keep the default build commands and set `CLOUDFLARE_ENV=preview` and `VITE_FORCE_LOGIN=false` there instead.
+
+### Migrations
+
+Migrations run as separate GitHub Actions workflows so they are visible in the PR / `main` checks:
+
+- `.github/workflows/migrate-preview.yml` runs on PRs and `main` pushes, applying migrations to `kikk-db-test` via `wrangler d1 migrations apply DB --remote --env preview`.
+- `.github/workflows/migrate-prod.yml` runs on `main` pushes, applying migrations to `kikk-db`.
+
+### Manual commands
+
+Deploy to production locally (use with care):
 
 ```bash
-npm run deploy
+npm run db:migrate:prod && npm run deploy
 ```
 
-Monitor your deployed worker:
+Create a one-off preview version bound to the test database:
+
+```bash
+npm run deploy:preview
+```
+
+Monitor a deployed worker:
 
 ```bash
 npx wrangler tail

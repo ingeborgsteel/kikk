@@ -23,8 +23,26 @@
       "binding": "DB",
       "database_name": "kikk-db",
       "database_id": "8be1edcf-1c04-43e9-8e5e-3ef59eed5967",
-      "preview_database_id": "kikk-db-preview",
+      "preview_database_id": "afcde3ed-721b-4d0b-b33d-67b7eb01b0f6",
       "migrations_dir": "migrations"
     }
-  ]
+  ],
+  "env": {
+    "preview": {
+      "compatibility_date": "2025-10-08",
+      "compatibility_flags": ["nodejs_compat"],
+      "assets": {
+        "directory": "./dist/client",
+        "not_found_handling": "single-page-application"
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "kikk-db-test",
+          "migrations_dir": "migrations",
+          "database_id": "afcde3ed-721b-4d0b-b33d-67b7eb01b0f6"
+        }
+      ]
+    }
+  }
 }

@@ -97,7 +97,7 @@ export function UserProfile({ onBack }: UserProfileProps) {
             {locations.length === 0 ? (
               <div className="text-center py-8 text-bark/60 dark:text-sand/60">
                 <MapPin size={48} className="mx-auto mb-2 opacity-50" />
-                <p>Ingen lokalitet lagt til ennå</p>
+                <p>Ingen faste lokaliteter lagt til ennå</p>
                 <p className="text-sm mt-1">
                   Klikk på "Legg til ny lokalitet" for å komme i gang
                 </p>

@@ -249,7 +249,7 @@ export const LocationEditor = ({
       <div
         className={cn(
           "w-full rounded-md overflow-hidden border-2 border-moss relative flex-1",
-          compact ? "h-16" : hidden ? "h-[60px]" : "h-[300px]",
+          compact ? "h-24" : hidden ? "h-[60px]" : "h-[300px]",
         )}
       >
         <Button

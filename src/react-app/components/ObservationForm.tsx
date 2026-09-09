@@ -417,6 +417,19 @@ const ObservationForm = ({
   // its coordinates rather than the (stale) map-editor state
   const displayedLocation = linkedLocation?.location ?? currentLocation;
 
+  const selectedLocalityId =
+    linkedLocation?.id ??
+    (locations.some((loc) => loc.id === formLocationId)
+      ? formLocationId
+      : undefined);
+  const isLocalitySelected = selectedLocalityId != null;
+  const locationIcon = useMemo(
+    () => (
+      <MapPinned size={16} className="text-violet-600 dark:text-violet-400" />
+    ),
+    [],
+  );
+
   const localityOptions = useMemo<ComboboxOption[]>(() => {
     const linkedId = linkedLocation?.id ?? formLocationId;
     const sorted = [...locations].sort(
@@ -427,10 +440,10 @@ const ObservationForm = ({
     const sortedIds = new Set(sorted.map((loc) => loc.id));
     return [
       ...(onSaveAsLocation
-        ? [{ value: NEW_LOCALITY_VALUE, label: "Opprett ny lokalitet…" }]
+        ? [{ value: NEW_LOCALITY_VALUE, label: "Opprett ny fast lokalitet…" }]
         : []),
       ...(linkedId
-        ? [{ value: NO_LOCALITY_VALUE, label: "Ingen lokalitet" }]
+        ? [{ value: NO_LOCALITY_VALUE, label: "Ingen fast lokalitet" }]
         : []),
       ...(linkedLocation && !sortedIds.has(linkedLocation.id)
         ? [
@@ -438,13 +451,15 @@ const ObservationForm = ({
               value: linkedLocation.id,
               label: linkedLocation.name,
               group: "Mine lokaliteter",
+              icon: locationIcon,
             },
           ]
         : []),
       ...sorted.map((loc) => ({
         value: loc.id,
-        label: `${loc.name} · ${formatDistance(distanceMeters(displayedLocation, loc.location))}`,
+        label: loc.name,
         group: "Mine lokaliteter",
+        icon: locationIcon,
       })),
     ];
   }, [
@@ -453,6 +468,7 @@ const ObservationForm = ({
     linkedLocation,
     formLocationId,
     onSaveAsLocation,
+    locationIcon,
   ]);
 
   const handleLocalitySelect = (value: string) => {
@@ -899,7 +915,7 @@ const ObservationForm = ({
           />
 
           <div>
-            <div className="flex gap-3 items-start">
+            <div className="flex gap-3 items-stretch">
               <div className="w-full">
                 <Controller
                   name={"locationName"}
@@ -913,21 +929,13 @@ const ObservationForm = ({
                         Lokalitet
                       </Label>
                       <div className="relative">
-                        {linkedLocation && (
-                          <MapPinned
-                            size={18}
-                            className="absolute left-3 top-1/2 -translate-y-1/2 text-violet-600 dark:text-violet-400"
-                          />
-                        )}
                         <Input
                           id="locationName"
                           type="text"
                           placeholder="F.eks. Oslo, Nordmarka"
                           value={value}
                           onChange={(e) => onChange(e.target.value)}
-                          className={twMerge("mt-1", linkedLocation && "pl-8")}
-                          readOnly={!!linkedLocation}
-                          disabled={!!linkedLocation}
+                          className="mt-1"
                         />
                         {loadingLocationName && (
                           <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -946,19 +954,14 @@ const ObservationForm = ({
                 {localityOptions.length > 0 && (
                   <div className="mt-2">
                     <Combobox
-                      value={
-                        linkedLocation?.id ??
-                        (locations.some((loc) => loc.id === formLocationId)
-                          ? formLocationId
-                          : undefined) ??
-                        ""
-                      }
+                      value={selectedLocalityId ?? ""}
                       onChange={handleLocalitySelect}
                       options={localityOptions}
-                      placeholder="Knytt til min lokalitet…"
+                      placeholder="Knytt til fast lokalitet…"
                       searchPlaceholder="Søk etter lokalitet…"
-                      emptyText="Ingen lokaliteter funnet"
+                      emptyText="Ingen faste lokaliteter funnet"
                       allowCustomEntry={false}
+                      prefixIcon={isLocalitySelected ? locationIcon : undefined}
                     />
                   </div>
                 )}

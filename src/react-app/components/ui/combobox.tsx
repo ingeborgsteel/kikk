@@ -8,6 +8,7 @@ export interface ComboboxOption {
   value: string;
   label: string;
   group?: string;
+  icon?: React.ReactNode;
 }
 
 interface ComboboxProps {
@@ -20,6 +21,8 @@ interface ComboboxProps {
   emptyText?: string;
   customEntryLabel?: (input: string) => string;
   className?: string;
+  /** Optional icon shown to the left of the trigger label when a value is selected. */
+  prefixIcon?: React.ReactNode;
   /** Render without the boxy trigger chrome, for use inside dense contexts like table cells. */
   variant?: "default" | "ghost";
   /** Open the popover as soon as this mounts, e.g. for click-to-edit table cells. */
@@ -44,6 +47,7 @@ const Combobox = ({
   defaultOpen = false,
   onOpenChange,
   allowCustomEntry = true,
+  prefixIcon,
 }: ComboboxProps) => {
   const [open, setOpen] = React.useState(defaultOpen);
   const [search, setSearch] = React.useState("");
@@ -97,8 +101,12 @@ const Combobox = ({
             className,
           )}
         >
+          {prefixIcon && <span className="mr-2 shrink-0">{prefixIcon}</span>}
           <span
-            className={cn("truncate text-left", !displayLabel && "text-slate")}
+            className={cn(
+              "truncate text-left flex-1",
+              !displayLabel && "text-slate",
+            )}
           >
             {displayLabel || placeholder}
           </span>
@@ -141,7 +149,12 @@ const Combobox = ({
                         onSelect={() => commit(opt.value)}
                         className="flex items-center justify-between px-2 py-2 text-sm rounded-md cursor-pointer text-bark dark:text-sand data-[selected=true]:bg-sand dark:data-[selected=true]:bg-forest"
                       >
-                        <span>{opt.label}</span>
+                        <span className="flex items-center gap-2 min-w-0">
+                          {opt.icon && (
+                            <span className="shrink-0">{opt.icon}</span>
+                          )}
+                          <span className="truncate">{opt.label}</span>
+                        </span>
                         {opt.value === value && (
                           <Check size={14} className="shrink-0" />
                         )}

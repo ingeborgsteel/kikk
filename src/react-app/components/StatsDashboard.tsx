@@ -567,7 +567,7 @@ export function StatsDashboard({ onBack }: StatsDashboardProps) {
           </h2>
           {locationStats.length === 0 ? (
             <p className="text-sm text-bark/60 dark:text-sand/60">
-              Ingen lokaliteter registrert ennå.
+              Ingen faste lokaliteter registrert ennå.
             </p>
           ) : (
             <div className="space-y-sm">

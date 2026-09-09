@@ -4,18 +4,15 @@ import { useAuth } from "../context/AuthContext";
 
 interface BottomNavProps {
   currentView: "map" | "observations" | "stats" | "profile" | "admin";
-  onLoginClick: () => void;
 }
 
-export function BottomNav({ currentView, onLoginClick }: BottomNavProps) {
+export function BottomNav({ currentView }: BottomNavProps) {
   const navigate = useNavigate();
   const { user, isAdmin, isImpersonating, stopImpersonating } = useAuth();
 
-  const handleProfileOrLogin = () => {
+  const handleProfile = () => {
     if (user) {
       navigate("/profile");
-    } else {
-      onLoginClick();
     }
   };
 
@@ -75,16 +72,14 @@ export function BottomNav({ currentView, onLoginClick }: BottomNavProps) {
           </button>
         ) : (
           <button
-            onClick={handleProfileOrLogin}
+            onClick={handleProfile}
             className={`flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors ${
               currentView === "profile" ? "text-sunlit" : "text-sand"
             }`}
-            aria-label={user ? "Profil" : "Logg inn"}
+            aria-label="Profil"
           >
             <User size={24} />
-            <span className="text-xs font-medium">
-              {user ? "Profil" : "Logg inn"}
-            </span>
+            <span className="text-xs font-medium">Profil</span>
           </button>
         )}
       </div>

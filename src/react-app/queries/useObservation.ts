@@ -19,7 +19,7 @@ export const useFetchObservations = (options?: { enabled?: boolean }) => {
   return useQuery<Observation[]>({
     queryFn: () => fetchObservations(user?.id),
     queryKey: ["observations", user?.id],
-    enabled: options?.enabled ?? true,
+    enabled: options?.enabled ?? !!user,
     // Keep showing the last successful data (instead of clearing to
     // undefined/loading) while a refetch is in flight, e.g. after an
     // invalidation triggered by a mutation.
@@ -82,8 +82,7 @@ export function useUpdateObservation() {
 
       qc.setQueriesData<Observation[]>(
         { queryKey: ["observations"] },
-        (old) =>
-          old?.map((obs) => (obs.id === input.id ? input : obs)) ?? old,
+        (old) => old?.map((obs) => (obs.id === input.id ? input : obs)) ?? old,
       );
 
       return { previous };

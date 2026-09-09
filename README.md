@@ -126,26 +126,43 @@ npm run preview
 
 ## Deployment
 
-Deploy your project to Cloudflare Workers:
+Production deployments and branch previews are handled by Cloudflare Workers Builds (the `Workers Builds: kikk` check). The GitHub Actions workflow that previously ran `wrangler deploy` is no longer needed because Cloudflare already deploys after each push.
+
+The `wrangler.json` file defines:
+
+- Top-level `DB` binding → `kikk-db` (production)
+- `env.preview.DB` binding → `kikk-db-test` (branch previews)
+
+### Cloudflare Workers Builds settings
+
+Set these in the Cloudflare dashboard under **Workers & Pages → kikk → Settings → Builds**:
+
+| Trigger                       | Build command                                                 | Deploy command                                                             |
+| ----------------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Production (`main`)           | `npm run build`                                               | `npm run db:migrate:prod && npm run deploy`                                |
+| Non-production branches / PRs | `CLOUDFLARE_ENV=preview VITE_FORCE_LOGIN=false npm run build` | `npm run db:migrate:preview && npx wrangler versions upload --env preview` |
+
+The preview deploy command uploads a new **version** of the `kikk` Worker that is bound to the test D1 database. It does not affect production traffic, but it does run migrations against `kikk-db-test`, so preview branches see the latest schema.
+
+### Manual commands
+
+Deploy to production locally (use with care):
 
 ```bash
-npm run deploy
+npm run db:migrate:prod && npm run deploy
 ```
 
-### Test deployments
-
-Feature branches are deployed to a separate test Worker (`kikk-test`) with its own D1 database (`kikk-db-test`), isolated from production.
+Create a one-off preview version bound to the test database:
 
 ```bash
-CLOUDFLARE_ENV=test VITE_FORCE_LOGIN=false npm run deploy:test
+npm run deploy:preview
 ```
 
-The first run creates the `kikk-db-test` database automatically and applies all pending migrations. Pushing to any branch other than `main` also triggers the test deployment workflow in `.github/workflows/deploy-test.yml`.
-
-Monitor your deployed worker:
+Monitor a deployed worker:
 
 ```bash
 npx wrangler tail
+npx wrangler tail --env preview
 ```
 
 ## Usage

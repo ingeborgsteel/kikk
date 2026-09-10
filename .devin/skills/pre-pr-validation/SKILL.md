@@ -20,7 +20,7 @@ Run this skill before you create a PR, push a feature branch to `origin`, or mer
    - Uncommitted changes: `git status --short`
    - Committed branch vs `main`: `git diff --name-only main...HEAD`
 2. For each changed file, decide whether it is **instruction-worthy** using the mapping below.
-3. If a change is instruction-worthy, update the relevant `AGENTS.md`, `ARCHITECTURE.md`, `.devin/skills/*`, `.windsurf/*`, or `.github/copilot-instructions.md` section. Do not add noise for pure implementation-only changes.
+3. If a change is instruction-worthy, update the relevant `AGENTS.md`, `ARCHITECTURE.md`, `.devin/skills/*`, or `.github/copilot-instructions.md` section. Do not add noise for pure implementation-only changes.
 4. After updating docs, run a focused consistency check: re-read the changed source-of-truth files and the affected instruction files, and confirm they agree.
 5. Only proceed with the PR, push, or merge once the doc ownership is correct.
 
@@ -37,7 +37,7 @@ Run this skill before you create a PR, push a feature branch to `origin`, or mer
 | `src/react-app/api/*` or new external service integration                                                 | `ARCHITECTURE.md` API integration, `.devin/skills/feature-development/SKILL.md`                       |
 | `src/react-app/types/*` or domain model change                                                            | `ARCHITECTURE.md` conventions, `AGENTS.md` types                                                      |
 | `src/react-app/Map.tsx` or map/offline changes                                                            | `AGENTS.md` PWA & Offline Features, `ARCHITECTURE.md` map patterns                                    |
-| New `.devin/skills/*` or `.windsurf/workflows/*`                                                          | `.windsurf/README.md`, `.windsurf/project-guide.md`, `AGENTS.md` if skills are referenced             |
+| New `.devin/skills/*`                                                                                     | `AGENTS.md` if skills are referenced                                                                  |
 | `tailwind.config.js` / tokens or styling changes                                                          | `AGENTS.md` styling / design tokens                                                                   |
 | CI files (`.github/workflows/*`)                                                                          | `.devin/skills/code-review/SKILL.md`, `AGENTS.md` testing approach                                    |
 | `README.md` or user-facing docs                                                                           | Usually no agent instruction update unless it reveals a changed pattern                               |
@@ -48,10 +48,9 @@ For any instruction file you touched, confirm:
 
 - **Auth** — matches `AuthContext.tsx`, `lib/auth.ts`, `lib/guestMode.ts`, `package.json` dependencies, and `.env.example`.
 - **Worker / backend** — matches `wrangler.json` and `src/api/index.ts`. No `src/worker/index.ts` unless it exists.
-- **Env vars** — match `.env.example`. No `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` unless reintroduced.
+- **Env vars** — match `.env.example`.
 - **PWA & offline** — match `vite.config.ts`, `public/manifest.json`, `src/react-app/main.tsx`, `src/react-app/Map.tsx`.
 - **localStorage keys** — include `kikk-guest-user-id`, `kikk_observations`, `kikk_user_locations`, `kikk_theme`, `kikk-map-layer`, `kikk-query-cache` as applicable.
-- **`.windsurf` slash commands** — if referenced, corresponding `.windsurf/workflows/<command>.md` files exist.
 
 ## Agent rule
 

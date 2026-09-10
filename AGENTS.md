@@ -1,6 +1,6 @@
 # Agent Instructions for kikk
 
-This is the canonical instructions file for AI coding agents working on **kikk** — framework-agnostic guidance that applies regardless of which tool you're using (Claude Code, GitHub Copilot, Windsurf, Cursor, or others). Tool-specific entry points (`.github/copilot-instructions.md`, `.windsurf/`, `CLAUDE.md`) point back here and should only contain content specific to that tool's mechanics (slash commands, hook config, etc.).
+This is the canonical instructions file for AI coding agents working on **kikk** — framework-agnostic guidance that applies regardless of which tool you're using (Claude Code, GitHub Copilot, Windsurf, Cursor, or others). Tool-specific entry points (`.github/copilot-instructions.md`, `.devin/`, `CLAUDE.md`) point back here and should only contain content specific to that tool's mechanics (slash commands, hook config, etc.).
 
 ## Project Overview
 
@@ -222,7 +222,7 @@ Document manual test steps in the PR description when adding new features.
 
 ## Pre-PR / Pre-Merge Validation
 
-Before creating a PR, pushing a feature branch to `origin`, or merging directly to `main`, invoke the `pre-pr-validation` skill (`.devin/skills/pre-pr-validation/SKILL.md`). The agent should review the changed files in the PR/merge, decide whether any of them need to be reflected in `AGENTS.md`, `ARCHITECTURE.md`, a `.devin/skills/*` file, `.windsurf/`, or `.github/copilot-instructions.md`, update the relevant instruction files, and run a focused consistency check against the source of truth (`package.json`, `wrangler.json`, `vite.config.ts`, `src/api/index.ts`, `src/react-app/context/AuthContext.tsx`, `src/react-app/lib/guestMode.ts`, and other relevant code).
+Before creating a PR, pushing a feature branch to `origin`, or merging directly to `main`, invoke the `pre-pr-validation` skill (`.devin/skills/pre-pr-validation/SKILL.md`). The agent should review the changed files in the PR/merge, decide whether any of them need to be reflected in `AGENTS.md`, `ARCHITECTURE.md`, a `.devin/skills/*` file, or `.github/copilot-instructions.md`, update the relevant instruction files, and run a focused consistency check against the source of truth (`package.json`, `wrangler.json`, `vite.config.ts`, `src/api/index.ts`, `src/react-app/context/AuthContext.tsx`, `src/react-app/lib/guestMode.ts`, and other relevant code).
 
 Do not finalize a PR or push to `main` until every instruction-worthy change has a corresponding instruction update and the focused consistency check passes.
 

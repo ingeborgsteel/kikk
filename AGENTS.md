@@ -220,6 +220,10 @@ Document manual test steps in the PR description when adding new features.
 - Cloudflare-specific packages required for Workers deployment
 - Avoid adding unnecessary dependencies
 
+## Post-Feature Retrospective
+
+At the end of every feature, run the `feature-retrospective` skill (`.devin/skills/feature-retrospective/SKILL.md`). The agent should reflect on friction, missing guidance, outdated examples, or new patterns that should be captured in `AGENTS.md`, `ARCHITECTURE.md`, a `.devin/skills/*` file, or `.github/copilot-instructions.md`. Update the relevant instruction files before moving on.
+
 ## Pre-PR / Pre-Merge Validation
 
 Before creating a PR, pushing a feature branch to `origin`, or merging directly to `main`, invoke the `pre-pr-validation` skill (`.devin/skills/pre-pr-validation/SKILL.md`). The agent should review the changed files in the PR/merge, decide whether any of them need to be reflected in `AGENTS.md`, `ARCHITECTURE.md`, a `.devin/skills/*` file, or `.github/copilot-instructions.md`, update the relevant instruction files, and run a focused consistency check against the source of truth (`package.json`, `wrangler.json`, `vite.config.ts`, `src/api/index.ts`, `src/react-app/context/AuthContext.tsx`, `src/react-app/lib/guestMode.ts`, and other relevant code).

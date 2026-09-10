@@ -254,6 +254,18 @@ Before considering a feature complete:
 - [ ] Data persistence verified
 - [ ] Backward compatibility maintained
 - [ ] Documentation updated
+- [ ] Feature retrospective completed (`.devin/skills/feature-retrospective/SKILL.md`)
+
+## Feature Retrospective
+
+Before moving to pre-PR validation, run the `feature-retrospective` skill:
+
+```bash
+# Reflect on friction, missing skills, or outdated instructions
+# and update AGENTS.md, ARCHITECTURE.md, or a .devin/skills file if needed.
+```
+
+This captures gaps that made the feature harder than it should have been, so the next feature benefits.
 
 ## Troubleshooting
 

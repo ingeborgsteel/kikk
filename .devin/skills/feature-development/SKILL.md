@@ -1,4 +1,5 @@
 ---
+name: feature-development
 description: Step-by-step guide for adding new features to kikk
 ---
 
@@ -150,12 +151,11 @@ npm run dev
 2. **Test dual-mode operation**
 
    ```bash
-   # Test without Supabase
-   unset VITE_SUPABASE_URL VITE_SUPABASE_ANON_KEY
+   # Test with guest bypass (default local development)
    npm run dev
 
-   # Test with Supabase
-   # Set environment variables and test again
+   # Test with login enforced (production-like)
+   VITE_FORCE_LOGIN=true npm run dev
    ```
 
 3. **Verify all requirements**
@@ -163,11 +163,11 @@ npm run dev
    - [ ] Light and dark mode work
    - [ ] Map interactions (if applicable)
    - [ ] Form validation and submission
-   - [ ] Data persistence (localStorage/Supabase)
+   - [ ] Data persistence (localStorage / Better Auth session)
    - [ ] Offline functionality
    - [ ] Backward compatibility
 
-## 6. Code Quality Checks
+## 7. Code Quality Checks
 
 ```bash
 # Run all checks before submitting
@@ -177,7 +177,7 @@ npm run check     # Full validation
 npm run format    # Ensure consistent formatting
 ```
 
-## 7. Documentation
+## 8. Documentation
 
 1. **Update relevant documentation**
    - README.md (if user-facing feature)
@@ -219,17 +219,20 @@ try {
 }
 ```
 
-### Dual-Mode Storage Pattern
+### Guest Mode & Auth Considerations
 
 ```typescript
 const saveData = async (data: YourType) => {
-  if (isSupabaseConfigured()) {
-    // Use Supabase
-    return await saveToSupabase(data);
-  } else {
-    // Use localStorage
+  const { isGuest, user } = useAuth();
+  if (!user) throw new Error("User not authenticated");
+
+  if (isGuest) {
+    // Use localStorage for guest sessions
     localStorage.setItem("kikk_your_feature", JSON.stringify(data));
     return data;
+  } else {
+    // Use authenticated API via Better Auth
+    return await saveYourFeature(data);
   }
 };
 ```
@@ -251,6 +254,18 @@ Before considering a feature complete:
 - [ ] Data persistence verified
 - [ ] Backward compatibility maintained
 - [ ] Documentation updated
+- [ ] Feature retrospective completed (`.devin/skills/feature-retrospective/SKILL.md`)
+
+## Feature Retrospective
+
+Before moving to pre-PR validation, run the `feature-retrospective` skill:
+
+```bash
+# Reflect on friction, missing skills, or outdated instructions
+# and update AGENTS.md, ARCHITECTURE.md, or a .devin/skills file if needed.
+```
+
+This captures gaps that made the feature harder than it should have been, so the next feature benefits.
 
 ## Troubleshooting
 
@@ -279,4 +294,4 @@ npx eslint src/react-app/your-file.tsx
 npm run format
 ```
 
-Remember: Always test both with and without Supabase configured to ensure the app works in all scenarios!
+Remember: Always test both with the guest bypass enabled and with login enforced to ensure the app works in all scenarios!

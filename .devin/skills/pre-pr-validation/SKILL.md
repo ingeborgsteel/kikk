@@ -3,59 +3,56 @@ name: pre-pr-validation
 description: Validate that AI instruction files and project docs are in sync with the codebase before a PR or merge
 ---
 
-# Pre-PR / Pre-Merge AI Instruction Validation
+# Pre-PR / Pre-Merge Doc-Ownership Validation
 
-Use this validation before finishing a pull request or merging directly to `main`. It prevents stale references, structural drift, and tool-specific inconsistencies from landing in the canonical docs.
+Run this skill before you create a PR, push a feature branch to `origin`, or merge directly to `main`. It makes sure that any change that should be reflected in the project's canonical instructions is updated before it lands.
 
 ## When to run
 
 - Before you create a pull request.
 - Before you push a feature branch to `origin` for the first time.
-- Before you merge a branch directly into `main` (especially fast-forward or `git push` merges).
-- Whenever you update `wrangler.json`, `package.json`, the auth stack, or the worker directory structure.
+- Before you merge a branch directly into `main`.
+- Whenever you touch code that defines patterns, architecture, dependencies, auth, environment, PWA/offline behavior, or agent-facing workflows.
 
 ## How to run
 
-The agent performs this analysis directly:
+1. Identify the files that are part of the PR/merge:
+   - Uncommitted changes: `git status --short`
+   - Committed branch vs `main`: `git diff --name-only main...HEAD`
+2. For each changed file, decide whether it is **instruction-worthy** using the mapping below.
+3. If a change is instruction-worthy, update the relevant `AGENTS.md`, `ARCHITECTURE.md`, `.devin/skills/*`, `.windsurf/*`, or `.github/copilot-instructions.md` section. Do not add noise for pure implementation-only changes.
+4. After updating docs, run a focused consistency check: re-read the changed source-of-truth files and the affected instruction files, and confirm they agree.
+5. Only proceed with the PR, push, or merge once the doc ownership is correct.
 
-1. Read the **source-of-truth** files for the area you are validating:
-   - `package.json` for dependencies and scripts
-   - `wrangler.json` for the worker entry point, D1, compatibility date, and asset configuration
-   - `vite.config.ts` for PWA / service worker settings
-   - `.env.example` for environment variables
-   - `src/api/index.ts` for the Hono worker routes
-   - `src/react-app/context/AuthContext.tsx` and `src/react-app/lib/guestMode.ts` for auth behavior
-   - `src/react-app/main.tsx` for provider hierarchy and query cache persistence
-   - `src/react-app/Map.tsx` for offline / tile-download UI
-2. Read the **instruction files**: `AGENTS.md`, `ARCHITECTURE.md`, `CLAUDE.md`, `.github/copilot-instructions.md`, `.windsurf/README.md`, `.windsurf/project-guide.md`, and every `.devin/skills/*/SKILL.md`.
-3. Compare the two sets. Use `grep`, `grep -R`, or direct file reads to verify the checks below.
-4. If you find drift, update the instruction files (not the source-of-truth code, unless the code itself is wrong) and re-read the updated files to confirm consistency.
-5. Only after the analysis passes should you finalize the PR, push the branch, or merge to `main`.
+## Instruction-worthiness mapping
 
-## What to check
+| Changed file(s)                                                                                           | Instruction file(s) to consider                                                                       |
+| --------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `package.json` (deps/scripts)                                                                             | `AGENTS.md` (tech stack / dev commands), `ARCHITECTURE.md` (key patterns), relevant `.devin/skills/*` |
+| `wrangler.json` or `src/api/index.ts`                                                                     | `ARCHITECTURE.md`, `AGENTS.md` project structure, `.devin/skills/deployment/SKILL.md`                 |
+| `vite.config.ts` or `public/manifest.json`                                                                | `AGENTS.md` PWA & Offline Features                                                                    |
+| `src/react-app/context/AuthContext.tsx`, `src/react-app/lib/auth.ts`, or `src/react-app/lib/guestMode.ts` | `AGENTS.md` Dual-Mode Operation, `ARCHITECTURE.md` auth/provider hierarchy, skills that mention auth  |
+| `.env.example`                                                                                            | `AGENTS.md`, `.github/copilot-instructions.md`, `.devin/skills/deployment/SKILL.md`                   |
+| `src/react-app/components/ui/*` or new shadcn-style primitive                                             | `AGENTS.md` UI Components / shadcn pattern, relevant skills                                           |
+| `src/react-app/api/*` or new external service integration                                                 | `ARCHITECTURE.md` API integration, `.devin/skills/feature-development/SKILL.md`                       |
+| `src/react-app/types/*` or domain model change                                                            | `ARCHITECTURE.md` conventions, `AGENTS.md` types                                                      |
+| `src/react-app/Map.tsx` or map/offline changes                                                            | `AGENTS.md` PWA & Offline Features, `ARCHITECTURE.md` map patterns                                    |
+| New `.devin/skills/*` or `.windsurf/workflows/*`                                                          | `.windsurf/README.md`, `.windsurf/project-guide.md`, `AGENTS.md` if skills are referenced             |
+| `tailwind.config.js` / tokens or styling changes                                                          | `AGENTS.md` styling / design tokens                                                                   |
+| CI files (`.github/workflows/*`)                                                                          | `.devin/skills/code-review/SKILL.md`, `AGENTS.md` testing approach                                    |
+| `README.md` or user-facing docs                                                                           | Usually no agent instruction update unless it reveals a changed pattern                               |
 
-1. **Required files exist** — `AGENTS.md`, `ARCHITECTURE.md`, `CLAUDE.md`, `.github/copilot-instructions.md`, `.windsurf/README.md`, `.windsurf/project-guide.md`, and every `.devin/skills/*/SKILL.md` file.
-2. **Auth stack** — instruction files must match the current auth implementation:
-   - If the code uses Better Auth (see `AuthContext.tsx` and `package.json` `better-auth`), the docs must describe `Better Auth`, `LoginGate`, `bypassGuestLogin`, `isLoginRequired`, and `VITE_FORCE_LOGIN`.
-   - The docs must not describe Supabase, `isSupabaseConfigured()`, `VITE_SUPABASE_URL`, or `VITE_SUPABASE_ANON_KEY` unless those are still in use.
-3. **Worker / backend** — instruction files must match `wrangler.json` and the actual source tree:
-   - The worker entry point in `wrangler.json` `main` must appear in `AGENTS.md`, `ARCHITECTURE.md`, and `.devin/skills/deployment/SKILL.md`.
-   - Docs must not reference `src/worker/index.ts` unless that path still exists.
-4. **Environment variables** — docs must match `.env.example`:
-   - Current keys: `VITE_BETTER_AUTH_BASE_URL`, `VITE_GITHUB_TOKEN`, `VITE_ENABLE_CLOUDFLARE_LOGGING`, `VITE_FORCE_LOGIN`.
-   - Reject stale keys like `VITE_SUPABASE_URL` or `VITE_SUPABASE_ANON_KEY` unless they reappear in `.env.example`.
-5. **PWA & offline** — docs must match `vite.config.ts`, `public/manifest.json`, `src/react-app/main.tsx`, and `src/react-app/Map.tsx`:
-   - Mention `vite-plugin-pwa`, service worker runtime caching, query cache persistence, offline banner, tile download, and manifest icons as appropriate.
-6. **localStorage keys** — docs must list the keys the code actually uses:
-   - `kikk-guest-user-id`, `kikk_observations`, `kikk_user_locations`, `kikk_theme`, `kikk-map-layer`, `kikk-query-cache`.
-7. **`.windsurf` slash command consistency** — if `.windsurf/README.md` or `project-guide.md` reference a slash command like `/feature-development`, the corresponding `.windsurf/workflows/<command>.md` file must exist.
+## Consistency checks after doc updates
 
-## What to fix if it fails
+For any instruction file you touched, confirm:
 
-- **Stale auth / backend references** → update `AGENTS.md`, `ARCHITECTURE.md`, and any affected `.devin/skills/*/SKILL.md` or `.github/copilot-instructions.md` files to match the current `AuthContext.tsx`, `wrangler.json`, and `package.json`.
-- **Missing worker path** → ensure the directory tree and worker references in `AGENTS.md`, `ARCHITECTURE.md`, and the deployment skill point to the same path as `wrangler.json` `main`.
-- **Missing slash command file** → either add the matching workflow file in `.windsurf/workflows/` or remove the slash command reference from the Windsurf docs.
+- **Auth** — matches `AuthContext.tsx`, `lib/auth.ts`, `lib/guestMode.ts`, `package.json` dependencies, and `.env.example`.
+- **Worker / backend** — matches `wrangler.json` and `src/api/index.ts`. No `src/worker/index.ts` unless it exists.
+- **Env vars** — match `.env.example`. No `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` unless reintroduced.
+- **PWA & offline** — match `vite.config.ts`, `public/manifest.json`, `src/react-app/main.tsx`, `src/react-app/Map.tsx`.
+- **localStorage keys** — include `kikk-guest-user-id`, `kikk_observations`, `kikk_user_locations`, `kikk_theme`, `kikk-map-layer`, `kikk-query-cache` as applicable.
+- **`.windsurf` slash commands** — if referenced, corresponding `.windsurf/workflows/<command>.md` files exist.
 
 ## Agent rule
 
-An agent must refuse to finalize a PR, push a branch to `origin`, or merge directly to `main` until this skill's analysis passes. If you find drift, update the relevant instruction files and re-run the analysis before proceeding.
+Do not create a PR, push a branch to `origin`, or merge to `main` until every instruction-worthy change in the diff has a corresponding doc/skill update and the focused consistency check passes. If a change is not instruction-worthy, briefly note why in your own reasoning and proceed.

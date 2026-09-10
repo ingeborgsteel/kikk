@@ -1,4 +1,5 @@
 ---
+name: code-review
 description: Comprehensive code review guidelines for kikk pull requests
 ---
 
@@ -9,6 +10,7 @@ This workflow provides guidelines for reviewing pull requests in the kikk codeba
 ## 1. Initial Review Checklist
 
 ### PR Quality
+
 - [ ] PR title matches or closely follows the issue title
 - [ ] PR description references related issues (e.g., "Closes #42")
 - [ ] Summary of changes is clear and concise
@@ -16,6 +18,7 @@ This workflow provides guidelines for reviewing pull requests in the kikk codeba
 - [ ] Screenshots included for UI changes
 
 ### Automated Checks
+
 - [ ] All CI checks pass (ESLint, TypeScript, build)
 - [ ] Code is properly formatted (`npm run format`)
 - [ ] No merge conflicts
@@ -23,6 +26,7 @@ This workflow provides guidelines for reviewing pull requests in the kikk codeba
 ## 2. Code Quality Review
 
 ### TypeScript Compliance
+
 ```typescript
 // Look for these issues:
 ❌ const data: any = response.data;
@@ -33,6 +37,7 @@ This workflow provides guidelines for reviewing pull requests in the kikk codeba
 ```
 
 **Checklist:**
+
 - [ ] No `any` types used
 - [ ] Proper interfaces defined in `types/` directory
 - [ ] Function return types specified
@@ -40,6 +45,7 @@ This workflow provides guidelines for reviewing pull requests in the kikk codeba
 - [ ] Strict TypeScript compilation passes
 
 ### React Patterns
+
 ```typescript
 // Correct patterns:
 ✅ Functional components with hooks
@@ -53,6 +59,7 @@ This workflow provides guidelines for reviewing pull requests in the kikk codeba
 ```
 
 **Checklist:**
+
 - [ ] Functional components only
 - [ ] React Hook Form used for forms
 - [ ] Proper hook usage (no rules violations)
@@ -62,6 +69,7 @@ This workflow provides guidelines for reviewing pull requests in the kikk codeba
 ## 3. Architecture & Patterns Review
 
 ### State Management
+
 ```typescript
 // Correct usage:
 ✅ Context for shared domain state
@@ -73,6 +81,7 @@ This workflow provides guidelines for reviewing pull requests in the kikk codeba
 ```
 
 **Checklist:**
+
 - [ ] State management follows decision tree
 - [ ] Context providers have proper error boundaries
 - [ ] Custom hooks throw errors when used outside providers
@@ -80,6 +89,7 @@ This workflow provides guidelines for reviewing pull requests in the kikk codeba
 - [ ] No mixing of state management patterns
 
 ### Directory Structure
+
 ```
 src/react-app/
 ├── components/          # Feature components
@@ -92,6 +102,7 @@ src/react-app/
 ```
 
 **Checklist:**
+
 - [ ] Files placed in correct directories
 - [ ] `api/` files have no React imports
 - [ ] `queries/` files wrap `api/` functions
@@ -101,6 +112,7 @@ src/react-app/
 ## 4. Unified Components Compliance
 
 ### Modal Component
+
 ```typescript
 // Always use the unified Modal:
 ✅ <Modal title="Title" maxWidth="md">
@@ -113,11 +125,13 @@ src/react-app/
 ```
 
 **Checklist:**
+
 - [ ] Unified Modal component used for all dialogs
 - [ ] Proper title and maxWidth props
 - [ ] Consistent styling with existing modals
 
 ### Map Components
+
 ```typescript
 // Correct usage:
 ✅ Map.tsx for full-page maps
@@ -130,6 +144,7 @@ src/react-app/
 ```
 
 **Checklist:**
+
 - [ ] Appropriate map component used
 - [ ] Layer preferences shared via Context
 - [ ] Marker icons from `lib/markerIcons.ts`
@@ -138,6 +153,7 @@ src/react-app/
 ## 5. Styling & Responsive Design
 
 ### Tailwind CSS Compliance
+
 ```typescript
 // Correct patterns:
 ✅ Tailwind utility classes only
@@ -151,6 +167,7 @@ src/react-app/
 ```
 
 **Checklist:**
+
 - [ ] Only Tailwind classes used
 - [ ] Custom design tokens used consistently
 - [ ] Mobile-first responsive breakpoints
@@ -158,6 +175,7 @@ src/react-app/
 - [ ] No inline styles or CSS files
 
 ### Responsive Design
+
 ```typescript
 // Check these breakpoints:
 ✅ sm: 640px+ (small tablets)
@@ -167,6 +185,7 @@ src/react-app/
 ```
 
 **Checklist:**
+
 - [ ] Layout works on mobile (default)
 - [ ] Responsive breakpoints used appropriately
 - [ ] No horizontal scroll on mobile
@@ -174,33 +193,40 @@ src/react-app/
 
 ## 6. Dual-Mode Operation Review
 
-### Supabase Integration
-```typescript
-// Always check configuration:
-✅ if (isSupabaseConfigured()) { ... }
-✅ Graceful fallback to localStorage
-✅ No hard dependencies on Supabase
+### Better Auth & Guest Mode
 
-❌ Direct Supabase calls without checks
-❌ Breaking functionality without Supabase
+```typescript
+// Correct patterns:
+✅ Production builds require Better Auth sign-in
+✅ Hidden guest bypass for local development / branch previews (triple-click logo)
+✅ Guest data isolated from authenticated users
+✅ Better Auth client used from `lib/auth.ts` and `AuthContext`
+
+❌ Hardcoding legacy auth provider logic
+❌ Breaking local-only / guest functionality
 ```
 
 **Checklist:**
-- [ ] `isSupabaseConfigured()` checks present
-- [ ] localStorage fallbacks implemented
-- [ ] App works without environment variables
-- [ ] No Supabase-specific UI without configuration
+
+- [ ] `LoginGate` blocks the app until a Better Auth session or guest session is present
+- [ ] `bypassGuestLogin()` only works when `isLoginRequired()` is `false`
+- [ ] App works with the hidden guest bypass enabled
+- [ ] No auth-specific UI without proper `useAuth` checks
 
 ### Data Persistence
+
 ```typescript
 // localStorage keys:
+✅ kikk-guest-user-id
 ✅ kikk_observations
 ✅ kikk_user_locations
 ✅ kikk_theme
 ✅ kikk-map-layer
+✅ kikk-query-cache
 ```
 
 **Checklist:**
+
 - [ ] Correct localStorage keys used
 - [ ] Data properly serialized/deserialized
 - [ ] Error handling for corrupted data
@@ -209,6 +235,7 @@ src/react-app/
 ## 7. Error Handling & Edge Cases
 
 ### API Error Handling
+
 ```typescript
 // Proper pattern:
 ✅ try/catch blocks with user-friendly messages
@@ -220,12 +247,14 @@ src/react-app/
 ```
 
 **Checklist:**
+
 - [ ] API calls have proper error handling
 - [ ] User-friendly error messages
 - [ ] Loading states for async operations
 - [ ] Graceful fallbacks for failures
 
 ### Form Validation
+
 ```typescript
 // React Hook Form patterns:
 ✅ Proper validation rules
@@ -236,6 +265,7 @@ src/react-app/
 ```
 
 **Checklist:**
+
 - [ ] Forms use React Hook Form validation
 - [ ] Error messages are user-friendly
 - [ ] Validation is comprehensive
@@ -244,12 +274,14 @@ src/react-app/
 ## 8. Performance & Security
 
 ### Performance
+
 - [ ] No unnecessary re-renders
 - [ ] Proper memoization where needed
 - [ ] Efficient data fetching
 - [ ] No memory leaks in useEffect
 
 ### Security
+
 - [ ] No sensitive data in localStorage
 - [ ] Proper authentication checks
 - [ ] Input validation and sanitization
@@ -258,18 +290,20 @@ src/react-app/
 ## 9. Testing Requirements
 
 ### Manual Testing Verification
+
 - [ ] Desktop viewport tested
 - [ ] Mobile viewport tested
 - [ ] Light mode tested
 - [ ] Dark mode tested
-- [ ] With Supabase tested
-- [ ] Without Supabase tested
+- [ ] With login enforced tested
+- [ ] With guest bypass tested
 - [ ] Map interactions tested (if applicable)
 - [ ] Form submissions tested
 - [ ] Data persistence tested
 - [ ] Page reload tested
 
 ### Regression Testing
+
 - [ ] Existing functionality still works
 - [ ] No breaking changes to APIs
 - [ ] Backward compatibility maintained
@@ -278,12 +312,14 @@ src/react-app/
 ## 10. Documentation Review
 
 ### Code Documentation
+
 - [ ] Complex functions have JSDoc comments
 - [ ] Component props are documented
 - [ ] Business logic is explained
 - [ ] API endpoints are documented
 
 ### README/Architecture Updates
+
 - [ ] README updated for user-facing features
 - [ ] ARCHITECTURE.md updated for structural changes
 - [ ] New patterns documented
@@ -292,8 +328,10 @@ src/react-app/
 ## 11. Review Feedback Template
 
 ### Positive Feedback
+
 ```markdown
 👍 **Good practices observed:**
+
 - Proper TypeScript typing throughout
 - Consistent use of unified components
 - Comprehensive error handling
@@ -301,17 +339,21 @@ src/react-app/
 ```
 
 ### Issues to Address
+
 ```markdown
 🔧 **Required changes:**
+
 - Replace `any` types with proper interfaces
 - Add dark mode variants to Tailwind classes
-- Include `isSupabaseConfigured()` check
+- Include proper Better Auth / guest-mode checks
 - Add loading state for API call
 ```
 
 ### Suggestions
+
 ```markdown
 💡 **Suggestions for improvement:**
+
 - Consider extracting this logic to a custom hook
 - Could benefit from memoization for performance
 - Add unit tests for this utility function
@@ -345,10 +387,10 @@ npm run check     # Full validation
 npx tsc --noEmit  # Verify types
 
 # Test different modes
-# With Supabase
-VITE_SUPABASE_URL=xxx VITE_SUPABASE_ANON_KEY=yyy npm run dev
+# With login enforced (production-like)
+VITE_FORCE_LOGIN=true npm run dev
 
-# Without Supabase
+# With guest bypass available (default for `npm run dev`)
 npm run dev
 ```
 

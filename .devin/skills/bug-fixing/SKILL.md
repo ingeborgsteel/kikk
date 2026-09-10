@@ -1,4 +1,5 @@
 ---
+name: bug-fixing
 description: Systematic approach to debugging and fixing issues in kikk
 ---
 
@@ -39,7 +40,7 @@ ln -s /Users/ingeborgsteel/dev/kikk/.env /Users/ingeborgsteel/dev/kikk-your-fix/
    # Test in different environments:
    # - Desktop vs mobile viewport
    # - Light vs dark mode
-   # - With vs without Supabase
+   # - With login enforced vs with guest bypass enabled
    # - Different browsers if possible
    ```
 
@@ -67,10 +68,10 @@ ln -s /Users/ingeborgsteel/dev/kikk/.env /Users/ingeborgsteel/dev/kikk-your-fix/
    - Is data being transformed incorrectly?
 
 3. **Common failure points**
-   - **Authentication**: `isSupabaseConfigured()` checks
+   - **Authentication**: Better Auth session and guest bypass behavior
    - **State Management**: Context vs TanStack Query usage
    - **API Integration**: Error handling, loading states
-   - **Storage**: localStorage vs Supabase dual-mode
+   - **Storage**: localStorage fallback and guest-mode data isolation
    - **Responsive Design**: Mobile viewport issues
    - **Theming**: Dark mode CSS classes
 
@@ -84,9 +85,9 @@ console.log("Observations:", localStorage.getItem("kikk_observations"));
 console.log("Theme:", localStorage.getItem("kikk_theme"));
 console.log("Map Layer:", localStorage.getItem("kikk-map-layer"));
 
-// Check Supabase configuration
-console.log("Supabase URL:", import.meta.env.VITE_SUPABASE_URL);
-console.log("Supabase configured:", isSupabaseConfigured());
+// Check Better Auth / guest configuration
+console.log("Better Auth base URL:", import.meta.env.VITE_BETTER_AUTH_BASE_URL);
+console.log("Force login:", import.meta.env.VITE_FORCE_LOGIN);
 
 // Check React state
 // Add debugger statements or console.log in components
@@ -107,7 +108,7 @@ npx tsc --noEmit src/react-app/your-file.tsx
 - Check Network tab for failed API calls
 - Verify API endpoints are correct
 - Check for CORS issues
-- Verify Supabase connection if applicable
+- Verify Better Auth / Hono worker endpoints respond
 
 ## 4. Fix Implementation
 
@@ -146,8 +147,8 @@ npx tsc --noEmit src/react-app/your-file.tsx
 - [ ] **Mobile viewport** - Test on phone-sized screens
 - [ ] **Light mode** - Default theme works correctly
 - [ ] **Dark mode** - Toggle theme and verify styling
-- [ ] **With Supabase** - Set env vars and test
-- [ ] **Without Supabase** - Clear env vars and test fallback
+- [ ] **With login enforced** - Test Better Auth sign-in
+- [ ] **With guest bypass** - Test hidden guest login (triple-click the logo)
 - [ ] **Map interactions** - If map-related, test all interactions
 - [ ] **Form validation** - Test form submission and validation
 - [ ] **Data persistence** - Verify data saves/loads correctly
@@ -311,4 +312,4 @@ npx eslint file.tsx      # Check specific file
 localStorage.clear()     # Clear all local storage
 ```
 
-Remember: Most bugs in kikk are related to dual-mode operation (Supabase vs localStorage), responsive design, or state management. Always test these areas thoroughly!
+Remember: Most bugs in kikk are related to Better Auth / guest-mode fallback, localStorage persistence, responsive design, or state management. Always test these areas thoroughly!

@@ -32,7 +32,7 @@ src/
 │   ├── lib/            # Pure utility functions
 │   └── assets/         # Static assets
 └── api/                # Cloudflare Worker backend (Hono)
-    └── index.ts        # Worker entry point
+    └── index.ts        # Worker entry point (src/api/index.ts)
 ```
 
 ## Development Commands
@@ -219,6 +219,12 @@ Document manual test steps in the PR description when adding new features.
 - Vite, React, and TypeScript are core dependencies
 - Cloudflare-specific packages required for Workers deployment
 - Avoid adding unnecessary dependencies
+
+## Pre-PR / Pre-Merge Validation
+
+Before creating a PR, pushing a feature branch to `origin`, or merging directly to `main`, invoke the `pre-pr-validation` skill (`.devin/skills/pre-pr-validation/SKILL.md`). The agent must analyze the instruction files against the current source of truth in `package.json`, `wrangler.json`, `vite.config.ts`, `src/api/index.ts`, `src/react-app/context/AuthContext.tsx`, `src/react-app/lib/guestMode.ts`, and other relevant code.
+
+Do not finalize a PR or push to `main` until the analysis shows no contradictions. If you find drift, update `AGENTS.md`, `ARCHITECTURE.md`, `.github/copilot-instructions.md`, `.devin/skills/`, or `.windsurf/` docs as needed, then re-run the analysis.
 
 ## Notes
 

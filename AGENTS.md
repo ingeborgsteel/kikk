@@ -59,7 +59,9 @@ Context providers:
 - `AuthContext` – Better Auth session and guest-mode state
 - `ThemeContext` – Light/dark mode toggle
 - `MapPreferencesContext` – Selected map layer (standard/topo/aerial)
+- `GeolocationContext` – Follow-mode geolocation state
 - `FeatureAlertsContext` – "Nytt i kikk" feature alerts and per-user dismissal state
+- `SuggestionFormContext` – Global open/close state for the suggestion ("Forslag") modal
 
 Every context must expose a custom hook (e.g., `useObservations()`) that throws an error when used outside its provider.
 
@@ -97,9 +99,9 @@ Every context must expose a custom hook (e.g., `useObservations()`) that throws 
 
 - **Modal** (`src/react-app/components/ui/Modal.tsx`): universal modal/dialog component — consistent header, ESC-to-close, click-outside-to-close, optional submit on Enter, configurable `maxWidth`. Used by ExportDialog, MapClickDialog, etc.
 - **Combobox** (`src/react-app/components/ui/combobox.tsx`): shadcn-style searchable dropdown (Radix Popover + cmdk) supporting grouped options and free-text custom entries; the standard replacement for native `<select>`.
-- **NavMenu** (`src/react-app/components/NavMenu.tsx`): single dropdown menu in the header (Radix Popover, desktop only) for all app navigation — Kart, Kikket på, Statistikk, Nyheter, Admin, Profil, Logg ut. On mobile, the BottomNav "Meny" button opens the `/menu` page (`components/MenuPage.tsx`) instead. Both surfaces share item definitions from `hooks/useNavMenuItems.tsx` — add new top-level destinations there, not as new header buttons.
-- **BottomNav** (`src/react-app/components/BottomNav.tsx`): mobile-only floating glass pill — Kart, Kikket på, Meny/Slutt. Collapsed it is a round button showing the current page's icon (right-anchored); expanding morphs it leftward into a full-width pill (fixed height, width transition only). No collapse button — any `pointerdown` outside the nav collapses it; nav clicks keep it open. `pointer-events-none` on the nav wrapper so the empty strip never blocks map taps. Keep it below the map's action-button column (`fixed bottom-20 right-4`) so they never overlap.
-- **Floating glass surfaces** (`src/react-app/lib/glass.ts`): shared `glassSurface` style for the BottomNav pill, the map's floating action buttons (follow-me, uncertainty, atlas) and "Last ned område" — use it for any floating overlay so they read as one design system. The "Forslag" button lives in the Header (all viewports); Header owns its modal state.
+- **NavMenu** (`src/react-app/components/NavMenu.tsx`): single dropdown menu in the header (Radix Popover, desktop only) for all app navigation — Kart, Kikket på, Statistikk, Nyheter, Admin, Profil, Logg ut. On mobile, the BottomNav "Meny" button opens the `/menu` page (`components/MenuPage.tsx`) instead. Both surfaces share item definitions from `hooks/useNavMenuItems.tsx` — add new top-level destinations there, not as new header buttons. The menu also holds "Forslag…" — a dialog action (ellipsis marks it as non-navigating) opening the suggestion modal owned by `SuggestionFormContext`; the login screen keeps its own separate suggestion button.
+- **BottomNav** (`src/react-app/components/BottomNav.tsx`): mobile-only floating glass pill — Kart, Kikket på, Meny/Slutt. Collapsed it is a round button showing the current page's icon (right-anchored); expanding morphs it leftward into a full-width pill (fixed height, width transition only). No collapse button — any `pointerdown` outside the nav collapses it; nav clicks keep it open. `pointer-events-none` on the nav wrapper so the empty strip never blocks map taps. Pages without a permanent slot (Statistikk, Nyheter, Profil, Admin) get a temporary item inserted before Meny that persists until the pill collapses. Keep it below the map's action-button column (`fixed bottom-20 right-4`) so they never overlap.
+- **Floating glass surfaces** (`src/react-app/lib/glass.ts`): shared `glassSurface` style for the BottomNav pill, the map's floating action buttons (follow-me, uncertainty, atlas) and "Last ned område" — use it for any floating overlay so they read as one design system.
 - **Leaflet overrides** (`index.css`): `.leaflet-*` rules must live OUTSIDE `@layer` — Tailwind v3 tree-shakes `@layer` rules whose selectors never appear in scanned content files, and leaflet classes only exist in the runtime DOM. The scale sits `bottomleft`, offset right of "Last ned område" on the same baseline via `.leaflet-bottom.leaflet-left` positioning; corners are forced to z-400 so they stay under the z-500 nav.
 - **Header** (`src/react-app/components/Header.tsx`): the title is a button that navigates to `/` — never add per-page "Tilbake til kart" buttons. Desktop also gets icon quick-links for Kart and Kikket på (with observation-count badge); active destination is highlighted.
 - **Marker Icons** (`src/react-app/lib/markerIcons.ts`): `createSelectionIcon()` (rust, selections/editable positions), `createObservationIcon()` (forest green, observations), `createUserLocationIcon()` (purple, saved locations)
@@ -115,7 +117,7 @@ The app still stores observations and locations in `localStorage` for offline us
 - `isLoginRequired()` returns `true` in production builds unless `VITE_FORCE_LOGIN=false` is set.
 - `bypassGuestLogin()` creates an isolated guest session that does not mix with authenticated users' data.
 
-localStorage keys: `kikk-guest-user-id`, `kikk-guest-created-at`, `kikk_observations`, `kikk_user_locations`, `kikk_theme`, `kikk-map-layer`, `kikk_dismissed_feature_alerts`
+localStorage keys: `kikk-guest-user-id`, `kikk-guest-created-at`, `kikk_observations`, `kikk_user_locations`, `kikk_theme`, `kikk-map-layer`, `kikk-query-cache`, `kikk_dismissed_feature_alerts`
 
 Never store sensitive data (tokens, passwords) in localStorage or Context.
 

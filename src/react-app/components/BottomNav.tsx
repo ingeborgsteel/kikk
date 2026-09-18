@@ -117,7 +117,7 @@ export function BottomNav({ currentView }: BottomNavProps) {
   return (
     <nav
       ref={navRef}
-      className="md:hidden fixed bottom-4 right-4 left-4 z-[900] flex justify-end pb-[env(safe-area-inset-bottom)] pointer-events-none"
+      className="md:hidden fixed bottom-6 right-4 left-4 z-[900] flex justify-end pb-[env(safe-area-inset-bottom)] pointer-events-none"
     >
       {/* Single glass pill: collapsed it is a round button showing the current
           page icon (right edge anchored); expanded it morphs leftward into a

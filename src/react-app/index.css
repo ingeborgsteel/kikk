@@ -92,11 +92,13 @@
    floating nav shares the bottom-right corner zone). */
 .leaflet-control-scale {
   pointer-events: none;
+  margin: 0;
 }
 
-/* The scale control sits bottom-left, on the same baseline row as the
-   "Last ned område" button — shifted right so it clears the button. */
+/* The scale control sits bottom-left, lifted off the bottom edge so it reads
+   as part of the same floating-control system as the other map overlays. */
 .leaflet-bottom.leaflet-left {
-  left: 165px;
-  bottom: 16px;
+  left: 0rem;
+  bottom: 0;
+  margin: 0;
 }

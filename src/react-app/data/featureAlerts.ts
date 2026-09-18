@@ -22,4 +22,12 @@ export const featureAlerts: FeatureAlert[] = [
     link: { url: "/news", label: "Se nyhetene" },
     screenshot: "/feature-alerts/nyheter-modal.png",
   },
+  {
+    id: "2026-09-navigation",
+    title: "Enklere navigasjon",
+    description:
+      "På mobil ligger navigasjonen i en svevende knapp nederst til høyre — trykk for å åpne den, og «Meny» tar deg til alle sidene. På web er alt samlet i rullegardinmenyen øverst. «Forslag» har også flyttet inn i menyen.",
+    publishedAt: "2026-09-18",
+    screenshot: "/feature-alerts/nav-mobil.jpg",
+  },
 ];

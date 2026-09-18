@@ -6,7 +6,7 @@ import {
   useState,
 } from "react";
 
-type MapLayer = "standard" | "topo" | "aerial";
+export type MapLayer = "standard" | "topo" | "aerial";
 
 interface MapPreferencesContextType {
   currentLayer: MapLayer;

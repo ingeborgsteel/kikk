@@ -26,6 +26,8 @@ import {
   createUserLocationIcon,
 } from "./lib/markerIcons.ts";
 import { getAtlasGridLines } from "./lib/atlasGrid.ts";
+import { glassSurface } from "./lib/glass.ts";
+import { MapLayerSwitcher } from "./components/MapLayerSwitcher.tsx";
 import { useMapPreferences } from "./context/MapPreferencesContext.tsx";
 import { useGeolocation } from "./context/GeolocationContext.tsx";
 
@@ -168,12 +170,8 @@ function Map({
   const [showCenteredMessage, setShowCenteredMessage] = useState(false);
   const [currentZoom, setCurrentZoom] = useState(DEFAULT_ZOOM);
   const hasAutoLocatedRef = useRef(false);
-  const {
-    currentLayer,
-    setCurrentLayer,
-    showUncertaintyOverlay,
-    showAtlasSquares,
-  } = useMapPreferences();
+  const { currentLayer, showUncertaintyOverlay, showAtlasSquares } =
+    useMapPreferences();
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   const atlasGridLayerRef = useRef<L.Polyline | null>(null);
 
@@ -250,7 +248,7 @@ function Map({
     }).addTo(map.current);
 
     L.control
-      .scale({ imperial: false, position: "bottomright" })
+      .scale({ imperial: false, position: "bottomleft" })
       .addTo(map.current);
 
     // Ensure the map container is properly sized
@@ -668,41 +666,7 @@ function Map({
         </div>
       )}
       {/* Layer Control */}
-      <div className="absolute top-md right-md z-[500] flex flex-col gap-2">
-        <button
-          onClick={() => setCurrentLayer("standard")}
-          className={`px-3 py-2 rounded-lg shadow-custom-lg font-medium text-sm transition-all ${
-            currentLayer === "standard"
-              ? "bg-moss text-sand border-2 border-sand"
-              : "bg-sand dark:bg-bark text-bark dark:text-sand border-2 border-moss hover:bg-moss dark:hover:bg-moss"
-          }`}
-          title="Standard kart"
-        >
-          Kartverket
-        </button>
-        <button
-          onClick={() => setCurrentLayer("topo")}
-          className={`px-3 py-2 rounded-lg shadow-custom-lg font-medium text-sm transition-all ${
-            currentLayer === "topo"
-              ? "bg-moss text-sand border-2 border-sand"
-              : "bg-sand dark:bg-bark text-bark dark:text-sand border-2 border-moss hover:bg-moss dark:hover:bg-moss"
-          }`}
-          title="Standard kart"
-        >
-          Kart
-        </button>
-        <button
-          onClick={() => setCurrentLayer("aerial")}
-          className={`px-3 py-2 rounded-lg shadow-custom-lg font-medium text-sm transition-all ${
-            currentLayer === "aerial"
-              ? "bg-moss text-sand border-2 border-sand"
-              : "bg-sand dark:bg-bark text-bark dark:text-sand border-2 border-moss hover:bg-moss dark:hover:bg-moss"
-          }`}
-          title="Flyfoto"
-        >
-          Flyfoto
-        </button>
-      </div>
+      <MapLayerSwitcher />
       {isLocating && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[500] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-lg rounded-lg shadow-custom-2xl flex flex-col items-center gap-md font-medium text-bark dark:text-sand border-2 border-moss">
           <div className="w-10 h-10 border-4 border-slate-border border-t-rust rounded-full animate-spin"></div>
@@ -756,7 +720,9 @@ function Map({
       {/* Download area button */}
       <div className="absolute bottom-md left-md z-[500]">
         {downloadProgress ? (
-          <div className="bg-sand dark:bg-bark text-bark dark:text-sand text-xs font-medium px-3 py-2 rounded-lg shadow-custom-lg border-2 border-moss flex items-center gap-2">
+          <div
+            className={`${glassSurface} text-bark dark:text-sand text-xs font-medium px-3 py-2 rounded-full flex items-center gap-2`}
+          >
             <div className="w-3 h-3 border-2 border-moss border-t-transparent rounded-full animate-spin" />
             {downloadProgress.done >= downloadProgress.total
               ? "Nedlasting fullført!"
@@ -766,7 +732,7 @@ function Map({
           <button
             onClick={downloadCurrentLayer}
             disabled={!isOnline}
-            className="bg-sand dark:bg-bark text-bark dark:text-sand text-xs font-medium px-3 py-2 rounded-lg shadow-custom-lg border-2 border-moss hover:bg-moss dark:hover:bg-moss transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
+            className={`${glassSurface} text-bark dark:text-sand text-xs font-medium px-3 py-2 rounded-full hover:bg-white/90 dark:hover:bg-bark/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1`}
             title="Last ned kartfliser for dette området for offline bruk"
           >
             <svg

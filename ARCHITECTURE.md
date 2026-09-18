@@ -35,7 +35,7 @@ Cloudflare Worker / D1 / Better Auth
 
 | Mechanism           | Purpose                                              | Examples                                                                                      |
 | ------------------- | ---------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| **React Context**   | App-wide domain state shared by many components      | `ObservationsContext`, `LocationsContext`, `AuthContext`                                      |
+| **React Context**   | App-wide domain state shared by many components      | `ObservationsContext`, `LocationsContext`, `AuthContext`, `FeatureAlertsContext`              |
 | **TanStack Query**  | Server cache with automatic refetch and invalidation | `useObservation`, `useUserLocation`, `useSpeciesSearch`, `useExports`                         |
 | **`localStorage`**  | Offline/fallback persistence and user preferences    | Observations & locations (guest mode / offline), theme, map layer, guest user id, query cache |
 | **Component state** | Ephemeral UI state scoped to a single component      | Form field values, open/closed toggles                                                        |
@@ -48,16 +48,19 @@ Defined in `src/react-app/main.tsx`:
 QueryClientProvider          ← TanStack Query (5-min staleTime, 1 retry)
   AuthProvider               ← Better Auth session + guest bypass
     ThemeProvider             ← Light/dark theme
-      MapPreferencesProvider  ← Map layer preference
-        LocationsProvider     ← Saved user locations
-          ObservationsProvider ← Observation records
-            BrowserRouter
-              App
+      BrowserRouter
+        LoginGate             ← Blocks app until session or guest bypass
+          GeolocationProvider   ← Follow-mode geolocation state
+            MapPreferencesProvider  ← Map layer preference
+              LocationsProvider     ← Saved user locations
+                ObservationsProvider  ← Observation records
+                  FeatureAlertsProvider ← "Nytt i kikk" alert dismissal state
+                    App
 ```
 
 ### Dual-Mode Storage
 
-Contexts use the current auth state (`isGuest` from `useAuth`) and `isLoginRequired()` to decide where to read/write data. Guest sessions store data locally under keys such as `kikk-guest-user-id`, `kikk_observations`, `kikk_user_locations`, `kikk_theme`, `kikk-map-layer`, and `kikk-query-cache`. Authenticated users persist data via the Hono API and D1 database. This lets the app work fully without a backend for guests.
+Contexts use the current auth state (`isGuest` from `useAuth`) and `isLoginRequired()` to decide where to read/write data. Guest sessions store data locally under keys such as `kikk-guest-user-id`, `kikk_observations`, `kikk_user_locations`, `kikk_theme`, `kikk-map-layer`, `kikk-query-cache`, `kikk_dismissed_feature_alerts`, and `kikk-guest-created-at`. Authenticated users persist data via the Hono API and D1 database. This lets the app work fully without a backend for guests.
 
 ## API Integration
 
@@ -86,6 +89,7 @@ src/
 │   ├── context/        # React Context providers for domain state
 │   ├── queries/        # TanStack Query hooks (useQuery / useMutation wrappers)
 │   ├── types/          # TypeScript interfaces and type definitions
+│   ├── data/           # Static registries (e.g. feature alerts)
 │   ├── lib/            # Pure utility functions and configuration
 │   ├── assets/         # Static images and icons
 │   ├── App.tsx         # Route definitions and top-level state coordination
@@ -121,5 +125,5 @@ src/
 - **React Hook Form** with `Controller` for all forms (`ObservationForm`, `LocationForm`, `LoginForm`).
 - **Optional authentication** – Better Auth is required in production builds; the hidden guest bypass lets local development and branch previews work without credentials.
 - **Leaflet map** – `Map.tsx` handles click-to-select, markers, and layer switching. `LocationEditor` is a smaller embedded map for forms. Both share the layer preference via `MapPreferencesContext`.
-- **Routing** – `react-router-dom` with four routes: `/` (map), `/observations`, `/stats`, `/profile`. Mobile uses `BottomNav`; desktop uses header buttons.
+- **Routing** – `react-router-dom` with routes: `/` (map), `/observations`, `/stats`, `/news`, `/profile`, `/admin`, `/menu`, `/reset-password`. Desktop navigates via the `NavMenu` header dropdown (plus Kart/Kikket på quick links); mobile uses the floating `BottomNav` pill and the `/menu` page. Shared items come from `hooks/useNavMenuItems.tsx`.
 - **Styling** – Tailwind CSS utility classes with custom design tokens (`forest`, `sand`, `bark`). Use the `dark:` prefix for dark mode.

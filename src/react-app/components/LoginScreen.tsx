@@ -115,11 +115,7 @@ export function LoginScreen({ allowBypass, onBypass }: LoginScreenProps) {
             />
           </svg>
         </div>
-        <GitHubSuggestionButton
-          onClick={() => setShowIssueForm(true)}
-          floating={false}
-          showTooltip={false}
-        />
+        <GitHubSuggestionButton onClick={() => setShowIssueForm(true)} />
       </div>
 
       <GitHubIssueForm

@@ -3,11 +3,7 @@ import { reverseGeocode } from "../api/nominatim.ts";
 
 export const REVERSE_GEOCODE_QUERY_KEY = "reverse-geocode";
 
-export const useReverseGeocode = (
-  lat: number,
-  lng: number,
-  enabled = true,
-) => {
+export const useReverseGeocode = (lat: number, lng: number, enabled = true) => {
   return useQuery<string | null, Error>({
     queryKey: [REVERSE_GEOCODE_QUERY_KEY, lat, lng],
     queryFn: () => reverseGeocode(lat, lng),

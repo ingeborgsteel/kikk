@@ -153,6 +153,22 @@ export const userAccesses = sqliteTable("user_accesses", {
   created_at: text("created_at").notNull(),
 });
 
+export const featureAlertDismissals = sqliteTable(
+  "feature_alert_dismissals",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull(),
+    alertId: text("alert_id").notNull(),
+    dismissedAt: text("dismissed_at").notNull(),
+  },
+  (table) => [
+    uniqueIndex("feature_alert_dismissals_user_alert_uidx").on(
+      table.userId,
+      table.alertId,
+    ),
+  ],
+);
+
 export type Observation = typeof observations.$inferSelect;
 export type InsertObservation = typeof observations.$inferInsert;
 export type Species = typeof species.$inferSelect;
@@ -163,3 +179,6 @@ export type User = typeof user.$inferSelect;
 export type Session = typeof session.$inferSelect;
 export type UserAccess = typeof userAccesses.$inferSelect;
 export type InsertUserAccess = typeof userAccesses.$inferInsert;
+export type FeatureAlertDismissal = typeof featureAlertDismissals.$inferSelect;
+export type InsertFeatureAlertDismissal =
+  typeof featureAlertDismissals.$inferInsert;

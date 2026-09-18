@@ -60,11 +60,6 @@
     color: #f2efea;
   }
 
-  .leaflet-container .leaflet-top,
-  .leaflet-container .leaflet-control {
-    z-index: 400 !important;
-  }
-
   @media (prefers-color-scheme: dark) {
     :root {
       color: #f2efea;
@@ -81,4 +76,29 @@
       color: #f2efea;
     }
   }
+}
+
+/* Leaflet overrides must live OUTSIDE @layer — Tailwind v3 tree-shakes @layer
+   rules whose selectors don't appear in scanned content files, and .leaflet-*
+   classes only exist in Leaflet's runtime DOM. Unlayered rules are always
+   emitted; the more specific selector + later source order beat leaflet.css. */
+.leaflet-container .leaflet-top,
+.leaflet-container .leaflet-bottom,
+.leaflet-container .leaflet-control {
+  z-index: 400 !important;
+}
+
+/* Display-only indicator — must never intercept pointer events (the mobile
+   floating nav shares the bottom-right corner zone). */
+.leaflet-control-scale {
+  pointer-events: none;
+  margin: 0;
+}
+
+/* The scale control sits bottom-left, lifted off the bottom edge so it reads
+   as part of the same floating-control system as the other map overlays. */
+.leaflet-bottom.leaflet-left {
+  left: 0rem;
+  bottom: 0;
+  margin: 0;
 }

@@ -8,11 +8,7 @@ import { UserLocation } from "../types/location";
 import { LocationForm } from "./LocationForm.tsx";
 import Header from "./Header.tsx";
 
-interface UserProfileProps {
-  onBack: () => void;
-}
-
-export function UserProfile({ onBack }: UserProfileProps) {
+export function UserProfile() {
   const { locations, deleteLocation } = useLocations();
   const { observations } = useObservations();
   const { isImpersonating } = useAuth();
@@ -70,14 +66,6 @@ export function UserProfile({ onBack }: UserProfileProps) {
       <Header title={"profil"} />
 
       <div className="max-w-4xl mx-auto p-lg md:p-xl">
-        <div className="mb-lg">
-          <div className="hidden md:block">
-            <Button onClick={onBack} variant="outline">
-              ← Tilbake til kart
-            </Button>
-          </div>
-        </div>
-
         {/* My Locations Section */}
         <div className="mb-xxl">
           <h2 className="text-2xl font-bold text-bark dark:text-sand mb-lg">

@@ -89,7 +89,7 @@ export function GitHubIssueForm({ onClose, showForm }: GitHubIssueFormProps) {
   return (
     <form onSubmit={handleSubmit}>
       <Modal
-        title="Forslag til forbedring"
+        title="Forslag"
         icon={<MessageSquare size={24} />}
         isOpen={showForm}
         onClose={onClose}

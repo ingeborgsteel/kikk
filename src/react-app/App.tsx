@@ -1,22 +1,23 @@
 // src/App.tsx
 
 import { useState } from "react";
-import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { Route, Routes, useLocation } from "react-router-dom";
 import Map from "./Map";
 import MyObservations from "./components/MyObservations";
-import { Button } from "./components/ui/button";
 import { useObservations } from "./context/ObservationsContext";
 import { useLocations } from "./context/LocationsContext";
 import ObservationForm from "./components/ObservationForm.tsx";
 import { ResetPassword } from "./components/ResetPassword.tsx";
 import { BottomNav } from "./components/BottomNav";
+import { MapToggleButton } from "./components/MapToggleButton.tsx";
 import { UserProfile } from "./components/UserProfile.tsx";
+import { NewsPage } from "./components/NewsPage.tsx";
+import { MenuPage } from "./components/MenuPage.tsx";
+import { FeatureAlertsModal } from "./components/FeatureAlertsModal.tsx";
 import { MapClickDialog } from "./components/MapClickDialog.tsx";
 import { LocationObservationsDialog } from "./components/LocationObservationsDialog.tsx";
 import { LocationForm } from "./components/LocationForm.tsx";
 import { KikkemodusToggle } from "./components/KikkemodusToggle.tsx";
-import { GitHubSuggestionButton } from "./components/GitHubSuggestionButton.tsx";
-import { GitHubIssueForm } from "./components/GitHubIssueForm.tsx";
 import { StatsDashboard } from "./components/StatsDashboard.tsx";
 import { AdminDashboard } from "./components/AdminDashboard.tsx";
 import { UserLocation } from "./types/location.ts";
@@ -25,12 +26,12 @@ import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { useMapPreferences } from "./context/MapPreferencesContext.tsx";
 import { useGeolocation } from "./context/GeolocationContext.tsx";
-import { CircleDashed, Grid3x3, Navigation, Shield } from "lucide-react";
+import { CircleDashed, Grid3x3, Navigation } from "lucide-react";
 import Header from "./components/Header.tsx";
 import { useAuth } from "./context/AuthContext.tsx";
+import { SuggestionFormProvider } from "./context/SuggestionFormContext.tsx";
 
 function App() {
-  const navigate = useNavigate();
   const location = useLocation();
   const [selectedLocation, setSelectedLocation] = useState<{
     lat: number;
@@ -47,7 +48,6 @@ function App() {
     null,
   );
   const [kikkemodusActive, setKikkemodusActive] = useState(false);
-  const [showGitHubIssueForm, setShowGitHubIssueForm] = useState(false);
   const [showLocationObservations, setShowLocationObservations] =
     useState(false);
   const [selectedUserLocation, setSelectedUserLocation] =
@@ -65,7 +65,7 @@ function App() {
     showAtlasSquares,
     setShowAtlasSquares,
   } = useMapPreferences();
-  const { isAdmin, isImpersonating } = useAuth();
+  const { isImpersonating } = useAuth();
 
   dayjs.extend(utc);
   dayjs.extend(timezone);
@@ -206,72 +206,40 @@ function App() {
     | "map"
     | "observations"
     | "stats"
+    | "news"
     | "profile"
-    | "admin" => {
+    | "admin"
+    | "menu" => {
     if (location.pathname === "/observations") return "observations";
     if (location.pathname === "/stats") return "stats";
+    if (location.pathname === "/news") return "news";
     if (location.pathname === "/profile") return "profile";
     if (location.pathname === "/admin") return "admin";
+    if (location.pathname === "/menu") return "menu";
     return "map";
   };
 
   return (
-    <>
+    <SuggestionFormProvider>
       <Routes>
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route
-          path="/profile"
-          element={<UserProfile onBack={() => navigate("/")} />}
-        />
-        <Route
-          path="/stats"
-          element={<StatsDashboard onBack={() => navigate("/")} />}
-        />
-        <Route
-          path="/observations"
-          element={<MyObservations onBack={() => navigate("/")} />}
-        />
-        <Route
-          path="/admin"
-          element={<AdminDashboard onBack={() => navigate("/")} />}
-        />
+        <Route path="/profile" element={<UserProfile />} />
+        <Route path="/stats" element={<StatsDashboard />} />
+        <Route path="/news" element={<NewsPage />} />
+        <Route path="/menu" element={<MenuPage />} />
+        <Route path="/observations" element={<MyObservations />} />
+        <Route path="/admin" element={<AdminDashboard />} />
         <Route
           path="/"
           element={
-            <div className="w-full min-h-screen p-0 flex flex-col bg-sand dark:bg-bark pb-16 md:pb-0">
+            <div className="w-full min-h-screen p-0 flex flex-col bg-sand dark:bg-bark md:pb-0">
               <Header
                 title={"kikk"}
-                openProfilePage={() => navigate("/profile")}
                 leftButton={
                   <KikkemodusToggle
                     kikkemodusActive={kikkemodusActive}
                     onToggle={() => setKikkemodusActive(!kikkemodusActive)}
                   />
-                }
-                navButtons={
-                  <>
-                    <Button
-                      onClick={() => navigate("/observations")}
-                      variant="secondary"
-                    >
-                      Kikket på ({observations.length})
-                    </Button>
-                    <Button
-                      onClick={() => navigate("/stats")}
-                      variant="secondary"
-                    >
-                      Statistikk
-                    </Button>
-                    {isAdmin && (
-                      <Button
-                        onClick={() => navigate("/admin")}
-                        variant="secondary"
-                      >
-                        <Shield size={16} />
-                        Admin
-                      </Button>
-                    )}
-                  </>
                 }
               />
               <Map
@@ -349,71 +317,35 @@ function App() {
           }
         />
       </Routes>
-      <GitHubIssueForm
-        onClose={() => setShowGitHubIssueForm(false)}
-        showForm={showGitHubIssueForm}
-      />
-      <div className="fixed bottom-20 md:bottom-14 right-6 z-[500] flex flex-col gap-3 items-end">
+      <FeatureAlertsModal />
+      <div className="fixed bottom-20 md:bottom-14 right-4 md:right-6 z-[500] flex flex-col gap-3 items-end">
         {getCurrentView() === "map" && (
           <>
-            <div className="relative group">
-              <span className="hidden md:block absolute right-full mr-3 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-md bg-sand/95 dark:bg-bark/95 px-3 py-1.5 text-sm font-medium text-bark dark:text-sand shadow-custom-lg border border-moss/30 opacity-0 translate-x-1 pointer-events-none transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0">
-                Følg meg
-              </span>
-              <Button
-                onClick={() => setFollowMode(!followMode)}
-                size="icon"
-                variant={followMode ? "secondary" : "outline"}
-                className="h-10 w-10 box-border shadow-custom-xl hover:shadow-custom-2xl hover:translate-y-0 active:translate-y-0"
-                aria-label="Veksle følg meg"
-                title="Følg meg"
-              >
-                <Navigation size={20} />
-              </Button>
-            </div>
-            <div className="relative group">
-              <span className="hidden md:block absolute right-full mr-3 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-md bg-sand/95 dark:bg-bark/95 px-3 py-1.5 text-sm font-medium text-bark dark:text-sand shadow-custom-lg border border-moss/30 opacity-0 translate-x-1 pointer-events-none transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0">
-                Usikkerhet
-              </span>
-              <Button
-                onClick={() =>
-                  setShowUncertaintyOverlay(!showUncertaintyOverlay)
-                }
-                size="icon"
-                variant={showUncertaintyOverlay ? "secondary" : "outline"}
-                className="h-10 w-10 box-border shadow-custom-xl hover:shadow-custom-2xl hover:translate-y-0 active:translate-y-0"
-                aria-label="Veksle nøyaktighet"
-                title="Nøyaktighet"
-              >
-                <CircleDashed size={20} />
-              </Button>
-            </div>
-            <div className="relative group">
-              <span className="hidden md:block absolute right-full mr-3 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-md bg-sand/95 dark:bg-bark/95 px-3 py-1.5 text-sm font-medium text-bark dark:text-sand shadow-custom-lg border border-moss/30 opacity-0 translate-x-1 pointer-events-none transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0">
-                Atlas-ruter
-              </span>
-              <Button
-                onClick={() => setShowAtlasSquares(!showAtlasSquares)}
-                size="icon"
-                variant={showAtlasSquares ? "secondary" : "outline"}
-                className="h-10 w-10 box-border shadow-custom-xl hover:shadow-custom-2xl hover:translate-y-0 active:translate-y-0"
-                aria-label="Veksle Atlas-ruter"
-                title="Atlas-ruter"
-              >
-                <Grid3x3 size={20} />
-              </Button>
-            </div>
+            <MapToggleButton
+              icon={Navigation}
+              label="Følg meg"
+              pressed={followMode}
+              onClick={() => setFollowMode(!followMode)}
+            />
+            <MapToggleButton
+              icon={CircleDashed}
+              label="Usikkerhet"
+              pressed={showUncertaintyOverlay}
+              onClick={() => setShowUncertaintyOverlay(!showUncertaintyOverlay)}
+            />
+            <MapToggleButton
+              icon={Grid3x3}
+              label="Atlas-ruter"
+              pressed={showAtlasSquares}
+              onClick={() => setShowAtlasSquares(!showAtlasSquares)}
+            />
           </>
         )}
-        <GitHubSuggestionButton
-          onClick={() => setShowGitHubIssueForm(true)}
-          floating={false}
-        />
       </div>
       {location.pathname !== "/reset-password" && (
         <BottomNav currentView={getCurrentView()} />
       )}
-    </>
+    </SuggestionFormProvider>
   );
 }
 

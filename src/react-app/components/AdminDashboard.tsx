@@ -8,16 +8,12 @@ import {
 import { Button } from "./ui/button";
 import Header from "./Header";
 
-interface AdminDashboardProps {
-  onBack: () => void;
-}
-
 function formatDate(iso: string | null | undefined) {
   if (!iso) return "—";
   return new Date(iso).toLocaleDateString("no-NO");
 }
 
-export function AdminDashboard({ onBack }: AdminDashboardProps) {
+export function AdminDashboard() {
   const { isAdmin, user } = useAuth();
   const { data: users, isPending, error } = useAdminUsers();
   const reset = useSendAdminPasswordReset();
@@ -41,12 +37,6 @@ export function AdminDashboard({ onBack }: AdminDashboardProps) {
       <Header title="admin" />
 
       <div className="max-w-4xl mx-auto p-lg md:p-xl space-y-lg">
-        <div className="hidden md:block">
-          <Button onClick={onBack} variant="outline">
-            ← Tilbake til kart
-          </Button>
-        </div>
-
         <div className="bg-white dark:bg-[#2c2c2c] rounded-lg border-2 border-moss/30 p-md">
           <h2 className="text-lg font-bold text-bark dark:text-sand mb-md flex items-center gap-sm">
             <Shield size={20} className="text-moss" />

@@ -276,6 +276,9 @@ export function loadObservations(): Observation[] {
    - Separate larger fixes into smaller issues
    - Document technical debt discovered during debugging
 
+4. **Ask about a feature alert**
+   - Always ask the user whether the fix warrants a "Nytt i kikk" feature alert (see `.devin/skills/feature-alert/SKILL.md`) — the user decides, don't assume either way.
+
 ## 8. Prevention Strategies
 
 1. **Code review checklist**

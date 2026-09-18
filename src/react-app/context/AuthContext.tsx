@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, ReactNode } from "react";
+import dayjs from "dayjs";
 import type { User } from "better-auth";
 import { betterAuthClient } from "../lib/auth";
 import { useUserAccesses as useUserAccess } from "../queries/useUserAccesses";
@@ -46,6 +47,19 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const GUEST_USER_ID_KEY = "kikk-guest-user-id";
+const GUEST_CREATED_AT_KEY = "kikk-guest-created-at";
+
+/**
+ * ISO date the current guest id was created, or null for guests that existed
+ * before this key was introduced (legacy guests — treated as existing users).
+ */
+export function getGuestCreatedAt(): string | null {
+  try {
+    return localStorage.getItem(GUEST_CREATED_AT_KEY);
+  } catch {
+    return null;
+  }
+}
 
 function makeGuestUser(id: string): AppUser {
   return {
@@ -72,6 +86,7 @@ function loadSavedGuestId(): string | null {
 function clearGuest() {
   try {
     localStorage.removeItem(GUEST_USER_ID_KEY);
+    localStorage.removeItem(GUEST_CREATED_AT_KEY);
   } catch {
     // ignore
   }
@@ -136,8 +151,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (isLoginRequired()) return;
     let id: string;
     try {
-      id = localStorage.getItem(GUEST_USER_ID_KEY) || crypto.randomUUID();
+      const existingId = localStorage.getItem(GUEST_USER_ID_KEY);
+      id = existingId ?? crypto.randomUUID();
       localStorage.setItem(GUEST_USER_ID_KEY, id);
+      // Only stamp brand-new guests — an existing id without a creation date
+      // is a legacy user who should keep seeing past feature alerts.
+      if (!existingId && !localStorage.getItem(GUEST_CREATED_AT_KEY)) {
+        localStorage.setItem(
+          GUEST_CREATED_AT_KEY,
+          dayjs().format("YYYY-MM-DD"),
+        );
+      }
     } catch {
       id = crypto.randomUUID();
     }

@@ -77,10 +77,7 @@ locationsApp.put("/:id", async (c) => {
 locationsApp.delete("/:id", async (c) => {
   const db = drizzle(c.env.DB);
   const id = c.req.param("id");
-  await db
-    .delete(schema.locations)
-    .where(eq(schema.locations.id, id))
-    .run();
+  await db.delete(schema.locations).where(eq(schema.locations.id, id)).run();
   return c.json({ success: true });
 });
 

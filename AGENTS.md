@@ -29,6 +29,7 @@ src/
 │   ├── hooks/          # Custom React hooks
 │   ├── api/            # Plain async functions (no React imports)
 │   ├── types/          # TypeScript type definitions (one interface per domain concept)
+│   ├── data/           # Static registries (e.g. feature alerts)
 │   ├── lib/            # Pure utility functions
 │   └── assets/         # Static assets
 └── api/                # Cloudflare Worker backend (Hono)
@@ -58,6 +59,7 @@ Context providers:
 - `AuthContext` – Better Auth session and guest-mode state
 - `ThemeContext` – Light/dark mode toggle
 - `MapPreferencesContext` – Selected map layer (standard/topo/aerial)
+- `FeatureAlertsContext` – "Nytt i kikk" feature alerts and per-user dismissal state
 
 Every context must expose a custom hook (e.g., `useObservations()`) that throws an error when used outside its provider.
 
@@ -95,6 +97,11 @@ Every context must expose a custom hook (e.g., `useObservations()`) that throws 
 
 - **Modal** (`src/react-app/components/ui/Modal.tsx`): universal modal/dialog component — consistent header, ESC-to-close, click-outside-to-close, optional submit on Enter, configurable `maxWidth`. Used by ExportDialog, MapClickDialog, etc.
 - **Combobox** (`src/react-app/components/ui/combobox.tsx`): shadcn-style searchable dropdown (Radix Popover + cmdk) supporting grouped options and free-text custom entries; the standard replacement for native `<select>`.
+- **NavMenu** (`src/react-app/components/NavMenu.tsx`): single dropdown menu in the header (Radix Popover, desktop only) for all app navigation — Kart, Kikket på, Statistikk, Nyheter, Admin, Profil, Logg ut. On mobile, the BottomNav "Meny" button opens the `/menu` page (`components/MenuPage.tsx`) instead. Both surfaces share item definitions from `hooks/useNavMenuItems.tsx` — add new top-level destinations there, not as new header buttons.
+- **BottomNav** (`src/react-app/components/BottomNav.tsx`): mobile-only floating glass pill — Kart, Kikket på, Meny/Slutt. Collapsed it is a round button showing the current page's icon (right-anchored); expanding morphs it leftward into a full-width pill (fixed height, width transition only). No collapse button — any `pointerdown` outside the nav collapses it; nav clicks keep it open. `pointer-events-none` on the nav wrapper so the empty strip never blocks map taps. Keep it below the map's action-button column (`fixed bottom-20 right-4`) so they never overlap.
+- **Floating glass surfaces** (`src/react-app/lib/glass.ts`): shared `glassSurface` style for the BottomNav pill, the map's floating action buttons (follow-me, uncertainty, atlas) and "Last ned område" — use it for any floating overlay so they read as one design system. The "Forslag" button lives in the Header (all viewports); Header owns its modal state.
+- **Leaflet overrides** (`index.css`): `.leaflet-*` rules must live OUTSIDE `@layer` — Tailwind v3 tree-shakes `@layer` rules whose selectors never appear in scanned content files, and leaflet classes only exist in the runtime DOM. The scale sits `bottomleft`, offset right of "Last ned område" on the same baseline via `.leaflet-bottom.leaflet-left` positioning; corners are forced to z-400 so they stay under the z-500 nav.
+- **Header** (`src/react-app/components/Header.tsx`): the title is a button that navigates to `/` — never add per-page "Tilbake til kart" buttons. Desktop also gets icon quick-links for Kart and Kikket på (with observation-count badge); active destination is highlighted.
 - **Marker Icons** (`src/react-app/lib/markerIcons.ts`): `createSelectionIcon()` (rust, selections/editable positions), `createObservationIcon()` (forest green, observations), `createUserLocationIcon()` (purple, saved locations)
 - **Map Components**: `Map.tsx` (full-page map with layer switching) and `LocationEditor` (embedded 300px editor for forms, no controls) — both share layer preference via `MapPreferencesContext`, persisted to localStorage and synced across tabs
 
@@ -108,7 +115,7 @@ The app still stores observations and locations in `localStorage` for offline us
 - `isLoginRequired()` returns `true` in production builds unless `VITE_FORCE_LOGIN=false` is set.
 - `bypassGuestLogin()` creates an isolated guest session that does not mix with authenticated users' data.
 
-localStorage keys: `kikk-guest-user-id`, `kikk_observations`, `kikk_user_locations`, `kikk_theme`, `kikk-map-layer`
+localStorage keys: `kikk-guest-user-id`, `kikk-guest-created-at`, `kikk_observations`, `kikk_user_locations`, `kikk_theme`, `kikk-map-layer`, `kikk_dismissed_feature_alerts`
 
 Never store sensitive data (tokens, passwords) in localStorage or Context.
 
@@ -144,12 +151,13 @@ kikk is built as an installable PWA with offline map support.
 3. Queries → wrap API functions in `queries/` with TanStack Query
 4. Context → create a provider only if state is shared app-wide
 5. Components → build UI using the unified components above
-6. Ensure TypeScript compilation succeeds: `npm run build`
-7. Run linter before committing: `npm run lint`, and format with `npm run format`
-8. Run critical-path e2e tests with `npx playwright test` when the change affects UI, forms, navigation, maps, or localStorage
-9. Test locally with `npm run dev`
-10. Verify responsive design and both light/dark themes
-11. Don't break local storage functionality or backward compatibility with existing observations data
+6. Feature alert → if the change is user-facing, add an entry to `src/react-app/data/featureAlerts.ts` (see `.devin/skills/feature-alert/SKILL.md`)
+7. Ensure TypeScript compilation succeeds: `npm run build`
+8. Run linter before committing: `npm run lint`, and format with `npm run format`
+9. Run critical-path e2e tests with `npx playwright test` when the change affects UI, forms, navigation, maps, or localStorage
+10. Test locally with `npm run dev`
+11. Verify responsive design and both light/dark themes
+12. Don't break local storage functionality or backward compatibility with existing observations data
 
 ## Common Pitfalls to Avoid
 

@@ -45,15 +45,15 @@ Run this skill at the end of a feature, after the implementation and tests are c
 
 ## Common updates to make
 
-| Gap | Likely place to update |
-|---|---|
-| Missing or changed pattern | `AGENTS.md` or `ARCHITECTURE.md` |
-| Outdated step in a workflow | Relevant `.devin/skills/*/SKILL.md` |
-| New env var, dependency, or build step | `AGENTS.md` and `.devin/skills/deployment/SKILL.md` |
-| New auth / guest mode edge case | `AGENTS.md` Dual-Mode Operation and `.devin/skills/bug-fixing/SKILL.md` |
-| New UI primitive or component pattern | `AGENTS.md` UI Components / shadcn pattern |
-| New map / offline behavior | `AGENTS.md` PWA & Offline Features and `.devin/skills/feature-development/SKILL.md` |
-| New validation or doc-ownership category | `.devin/skills/pre-pr-validation/SKILL.md` |
+| Gap                                      | Likely place to update                                                              |
+| ---------------------------------------- | ----------------------------------------------------------------------------------- |
+| Missing or changed pattern               | `AGENTS.md` or `ARCHITECTURE.md`                                                    |
+| Outdated step in a workflow              | Relevant `.devin/skills/*/SKILL.md`                                                 |
+| New env var, dependency, or build step   | `AGENTS.md` and `.devin/skills/deployment/SKILL.md`                                 |
+| New auth / guest mode edge case          | `AGENTS.md` Dual-Mode Operation and `.devin/skills/bug-fixing/SKILL.md`             |
+| New UI primitive or component pattern    | `AGENTS.md` UI Components / shadcn pattern                                          |
+| New map / offline behavior               | `AGENTS.md` PWA & Offline Features and `.devin/skills/feature-development/SKILL.md` |
+| New validation or doc-ownership category | `.devin/skills/pre-pr-validation/SKILL.md`                                          |
 
 ## Agent rule
 

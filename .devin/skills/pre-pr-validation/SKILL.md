@@ -36,6 +36,7 @@ Run this skill before you create a PR, push a feature branch to `origin`, or mer
 | `src/react-app/components/ui/*` or new shadcn-style primitive                                             | `AGENTS.md` UI Components / shadcn pattern, relevant skills                                           |
 | `src/react-app/api/*` or new external service integration                                                 | `ARCHITECTURE.md` API integration, `.devin/skills/feature-development/SKILL.md`                       |
 | `src/react-app/types/*` or domain model change                                                            | `ARCHITECTURE.md` conventions, `AGENTS.md` types                                                      |
+| `src/react-app/data/featureAlerts.ts` or feature-alert components                                         | `.devin/skills/feature-alert/SKILL.md`, `AGENTS.md` (contexts, localStorage keys)                     |
 | `src/react-app/Map.tsx` or map/offline changes                                                            | `AGENTS.md` PWA & Offline Features, `ARCHITECTURE.md` map patterns                                    |
 | New `.devin/skills/*`                                                                                     | `AGENTS.md` if skills are referenced                                                                  |
 | `tailwind.config.js` / tokens or styling changes                                                          | `AGENTS.md` styling / design tokens                                                                   |
@@ -50,7 +51,7 @@ For any instruction file you touched, confirm:
 - **Worker / backend** — matches `wrangler.json` and `src/api/index.ts`. No `src/worker/index.ts` unless it exists.
 - **Env vars** — match `.env.example`.
 - **PWA & offline** — match `vite.config.ts`, `public/manifest.json`, `src/react-app/main.tsx`, `src/react-app/Map.tsx`.
-- **localStorage keys** — include `kikk-guest-user-id`, `kikk_observations`, `kikk_user_locations`, `kikk_theme`, `kikk-map-layer`, `kikk-query-cache` as applicable.
+- **localStorage keys** — include `kikk-guest-user-id`, `kikk-guest-created-at`, `kikk_observations`, `kikk_user_locations`, `kikk_theme`, `kikk-map-layer`, `kikk-query-cache`, `kikk_dismissed_feature_alerts` as applicable.
 
 ## Agent rule
 

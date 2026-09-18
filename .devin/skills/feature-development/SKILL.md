@@ -30,6 +30,7 @@ ln -s /Users/ingeborgsteel/dev/kikk/.env /Users/ingeborgsteel/dev/kikk-your-feat
    - When requirements are ambiguous or incomplete, ask the user before making assumptions
    - Examples: "Should the coordinates be shortened to 2 or 4 decimals?", "What color should the badge be?"
    - Better to wait for clarification than to guess and rework
+   - **Always ask whether the change warrants a "Nytt i kikk" feature alert** (see the feature-alert skill) — the user decides, don't assume either way. This applies to fixes too, not just new features.
 
 2. **Define the feature scope**
    - What user problem are you solving?
@@ -254,6 +255,7 @@ Before considering a feature complete:
 - [ ] Data persistence verified
 - [ ] Backward compatibility maintained
 - [ ] Documentation updated
+- [ ] Asked the user whether the change warrants a feature alert; if yes, entry added in `src/react-app/data/featureAlerts.ts` (see feature-alert skill)
 - [ ] Feature retrospective completed (`.devin/skills/feature-retrospective/SKILL.md`)
 
 ## Feature Retrospective

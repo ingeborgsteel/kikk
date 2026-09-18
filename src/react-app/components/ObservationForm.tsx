@@ -23,7 +23,7 @@ import { Modal } from "./ui/Modal.tsx";
 import { TaxonRecord } from "../types/artsdatabanken.ts";
 import { CreateSpecies } from "../api/observations.ts";
 import SpeciesItem from "./SpeciesItem.tsx";
-import { Check, MapPinned, Search, User } from "lucide-react";
+import { MapPinned, Search, User } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 import dayjs from "dayjs";
 import { DatePicker } from "./ui/date-picker.tsx";
@@ -177,10 +177,6 @@ const ObservationForm = ({
   const [currentLocation, setCurrentLocation] = useState(location);
   const [geocodeLocation, setGeocodeLocation] = useState(location);
   const autoSuggestedNameRef = useRef<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [successTimeout, setSuccessTimeout] = useState<ReturnType<
-    typeof setTimeout
-  > | null>(null);
   const [visibleRecentSpeciesCount, setVisibleRecentSpeciesCount] =
     useState(10);
   const [showInlineMap, setShowInlineMap] = useState(false);
@@ -303,13 +299,6 @@ const ObservationForm = ({
     },
     [currentLocation, setValue, setGeocodeLocation, linkedLocation],
   );
-
-  // Cleanup success message timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (successTimeout) clearTimeout(successTimeout);
-    };
-  }, [successTimeout]);
 
   // Reset dirty state after mount for new observations
   // so prefilled defaults don't trigger "unsaved changes" warning
@@ -558,61 +547,6 @@ const ObservationForm = ({
     ],
   );
 
-  const saveAndAddAnother = useCallback(
-    (data: Observation) => {
-      const startDate =
-        toStorageDateTimeValue(data.startDate, startTimeEnabled) ||
-        dayjs().format(DATE_TIME_STORAGE_FORMAT);
-      const endDate = toStorageDateTimeValue(data.endDate, endTimeEnabled);
-
-      if (data.observerName) sessionObserverName = data.observerName;
-      addObservation({
-        ...data,
-        species: sortSpeciesByTaxonGroupAndName(data.species),
-        locationId: linkedLocation?.id,
-        startDate,
-        endDate,
-      });
-      setLastUsedUncertaintyRadius(data.uncertaintyRadius);
-
-      // Auto-activate kikkemodus when adding a new observation
-      if (onActivateKikkemodus) {
-        onActivateKikkemodus();
-      }
-
-      // Show success message
-      if (successTimeout) clearTimeout(successTimeout);
-      setSuccessMessage("Observasjon lagret!");
-      setSuccessTimeout(setTimeout(() => setSuccessMessage(""), 3000));
-
-      // Reset form for a new observation, keeping location and observer
-      const newStartDate = dayjs().toISOString();
-      reset({
-        startDate: newStartDate,
-        endDate: newStartDate,
-        locationName: getValues("locationName"),
-        location: linkedLocation?.location ?? currentLocation,
-        uncertaintyRadius: getValues("uncertaintyRadius"),
-        observerName: sessionObserverName,
-        species: [],
-        comment: "",
-      });
-      setSearchTerm("");
-      setShowResults(false);
-    },
-    [
-      addObservation,
-      linkedLocation,
-      reset,
-      getValues,
-      currentLocation,
-      successTimeout,
-      onActivateKikkemodus,
-      startTimeEnabled,
-      endTimeEnabled,
-    ],
-  );
-
   return (
     <form onSubmit={handleSubmit(save)}>
       <Modal
@@ -632,26 +566,10 @@ const ObservationForm = ({
         title={observation ? "Rediger kikk" : "Opprett kikk"}
         footer={
           <>
-            {successMessage && (
-              <div className="flex items-center gap-2 text-sm text-forest dark:text-moss bg-moss/10 dark:bg-moss/20 px-3 py-2 rounded-md">
-                <Check size={16} />
-                {successMessage}
-              </div>
-            )}
             <div className="flex gap-md justify-end">
               <Button type="button" variant="outline" onClick={onClose}>
                 Avbryt
               </Button>
-              {!observation && (
-                <Button
-                  type="button"
-                  variant="secondary"
-                  disabled={!isDirty || !isValid}
-                  onClick={handleSubmit(saveAndAddAnother)}
-                >
-                  Lagre og legg til ny
-                </Button>
-              )}
               <Button type="submit" disabled={!isDirty || !isValid}>
                 Lagre
               </Button>
@@ -915,8 +833,8 @@ const ObservationForm = ({
           />
 
           <div>
-            <div className="flex gap-3 items-stretch">
-              <div className="w-full">
+            <div className="flex gap-3 items-end flex-wrap">
+              <div className="w-[75%]">
                 <Controller
                   name={"locationName"}
                   control={control}
@@ -973,7 +891,7 @@ const ObservationForm = ({
                 )}
               </div>
               {!showInlineMap && (
-                <div className="w-40 flex-shrink-0 mt-6">
+                <div className="w-[20%]">
                   <LocationEditor
                     compact
                     isPresetLocation={!!linkedLocation}

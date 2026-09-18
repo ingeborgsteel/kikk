@@ -51,12 +51,18 @@ async function boolCellIn(observation: Observation, columnKey: string) {
 
 describe("generateExcelFromObservations - boolean columns", () => {
   it("renders a checked box as a visible mark", async () => {
-    const cell = await boolCellIn(makeObservation({ notFound: true }), "notFound");
+    const cell = await boolCellIn(
+      makeObservation({ notFound: true }),
+      "notFound",
+    );
     expect(cell.value).toBe("x");
   });
 
   it("renders an unchecked (false) box as a truly empty cell", async () => {
-    const cell = await boolCellIn(makeObservation({ notFound: false }), "notFound");
+    const cell = await boolCellIn(
+      makeObservation({ notFound: false }),
+      "notFound",
+    );
 
     // A falsy checkbox must produce a genuinely empty cell (value null/undefined),
     // not an empty string - Excel treats "" as populated content, which breaks

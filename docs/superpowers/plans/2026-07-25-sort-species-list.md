@@ -13,6 +13,7 @@
 ### Task 1: Add `sortSpeciesByTaxonGroupAndName` to `lib/utils.ts`
 
 **Files:**
+
 - Modify: `src/react-app/lib/utils.ts`
 - Test: `src/react-app/lib/utils.test.ts` (new file)
 
@@ -42,10 +43,22 @@ function makeSpecies(
 describe("sortSpeciesByTaxonGroupAndName", () => {
   it("orders species by taxon group order, then alphabetically within group", () => {
     const species = [
-      makeSpecies({ id: "1", species: { PrefferedPopularname: "Rådyr", TaxonGroup: "pattedyr" } }),
-      makeSpecies({ id: "2", species: { PrefferedPopularname: "Blåmeis", TaxonGroup: "fugler" } }),
-      makeSpecies({ id: "3", species: { PrefferedPopularname: "Ærfugl", TaxonGroup: "fugler" } }),
-      makeSpecies({ id: "4", species: { PrefferedPopularname: "Elg", TaxonGroup: "pattedyr" } }),
+      makeSpecies({
+        id: "1",
+        species: { PrefferedPopularname: "Rådyr", TaxonGroup: "pattedyr" },
+      }),
+      makeSpecies({
+        id: "2",
+        species: { PrefferedPopularname: "Blåmeis", TaxonGroup: "fugler" },
+      }),
+      makeSpecies({
+        id: "3",
+        species: { PrefferedPopularname: "Ærfugl", TaxonGroup: "fugler" },
+      }),
+      makeSpecies({
+        id: "4",
+        species: { PrefferedPopularname: "Elg", TaxonGroup: "pattedyr" },
+      }),
     ];
 
     const sorted = sortSpeciesByTaxonGroupAndName(species);
@@ -55,8 +68,14 @@ describe("sortSpeciesByTaxonGroupAndName", () => {
 
   it("sorts species with unknown or missing taxon group last", () => {
     const species = [
-      makeSpecies({ id: "1", species: { PrefferedPopularname: "Ukjent art", TaxonGroup: undefined } }),
-      makeSpecies({ id: "2", species: { PrefferedPopularname: "Blåmeis", TaxonGroup: "fugler" } }),
+      makeSpecies({
+        id: "1",
+        species: { PrefferedPopularname: "Ukjent art", TaxonGroup: undefined },
+      }),
+      makeSpecies({
+        id: "2",
+        species: { PrefferedPopularname: "Blåmeis", TaxonGroup: "fugler" },
+      }),
     ];
 
     const sorted = sortSpeciesByTaxonGroupAndName(species);
@@ -68,11 +87,19 @@ describe("sortSpeciesByTaxonGroupAndName", () => {
     const species = [
       makeSpecies({
         id: "1",
-        species: { PrefferedPopularname: undefined, ValidScientificName: "Zeta", TaxonGroup: "fugler" },
+        species: {
+          PrefferedPopularname: undefined,
+          ValidScientificName: "Zeta",
+          TaxonGroup: "fugler",
+        },
       }),
       makeSpecies({
         id: "2",
-        species: { PrefferedPopularname: undefined, ValidScientificName: "Alfa", TaxonGroup: "fugler" },
+        species: {
+          PrefferedPopularname: undefined,
+          ValidScientificName: "Alfa",
+          TaxonGroup: "fugler",
+        },
       }),
     ];
 
@@ -83,8 +110,14 @@ describe("sortSpeciesByTaxonGroupAndName", () => {
 
   it("does not mutate the input array", () => {
     const species = [
-      makeSpecies({ id: "1", species: { PrefferedPopularname: "B", TaxonGroup: "fugler" } }),
-      makeSpecies({ id: "2", species: { PrefferedPopularname: "A", TaxonGroup: "fugler" } }),
+      makeSpecies({
+        id: "1",
+        species: { PrefferedPopularname: "B", TaxonGroup: "fugler" },
+      }),
+      makeSpecies({
+        id: "2",
+        species: { PrefferedPopularname: "A", TaxonGroup: "fugler" },
+      }),
     ];
     const original = [...species];
 
@@ -131,7 +164,8 @@ export function sortSpeciesByTaxonGroupAndName(species: Species[]): Species[] {
     s.species.PrefferedPopularname || s.species.ValidScientificName || "";
 
   return [...species].sort((a, b) => {
-    const groupDiff = groupIndex(a.species.TaxonGroup) - groupIndex(b.species.TaxonGroup);
+    const groupDiff =
+      groupIndex(a.species.TaxonGroup) - groupIndex(b.species.TaxonGroup);
     if (groupDiff !== 0) return groupDiff;
     return nameOf(a).localeCompare(nameOf(b), "no");
   });
@@ -155,6 +189,7 @@ git commit -m "Add sortSpeciesByTaxonGroupAndName helper"
 ### Task 2: Add manual "Sorter" button to ObservationForm
 
 **Files:**
+
 - Modify: `src/react-app/components/ObservationForm.tsx:637-646`
 
 - [ ] **Step 1: Import the helper**
@@ -228,6 +263,7 @@ git commit -m "Add manual sort button for species list in ObservationForm"
 ### Task 3: Auto-sort species on save
 
 **Files:**
+
 - Modify: `src/react-app/components/ObservationForm.tsx:327-420` (the `save` and `saveAndAddAnother` callbacks)
 
 - [ ] **Step 1: Update `save`**

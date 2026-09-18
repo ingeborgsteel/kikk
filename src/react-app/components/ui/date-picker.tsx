@@ -55,7 +55,12 @@ const DatePicker = ({
           {variant !== "ghost" && (
             <CalendarIcon size={16} className="shrink-0 opacity-50" />
           )}
-          <span className={cn("truncate flex-1 text-left", !selected && "text-slate")}>
+          <span
+            className={cn(
+              "truncate flex-1 text-left",
+              !selected && "text-slate",
+            )}
+          >
             {selected ? dayjs(selected).format("DD.MM.YYYY") : placeholder}
           </span>
           {onClear && selected && (

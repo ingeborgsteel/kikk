@@ -155,7 +155,9 @@ export function getMethodOptionsForTaxonGroup(
 }
 
 export function getTopMethodsForTaxonGroup(
-  observations: Array<{ species: Array<{ species: { TaxonGroup?: string }; method?: string }> }>,
+  observations: Array<{
+    species: Array<{ species: { TaxonGroup?: string }; method?: string }>;
+  }>,
   taxonGroup: string,
   topN = 6,
 ): MethodOption[] {

@@ -1,85 +1,183 @@
-import { BarChart3, Binoculars, EyeOff, Map, Shield, User } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { glassSurface } from "../lib/glass";
+import {
+  BarChart3,
+  Binoculars,
+  EyeOff,
+  Map,
+  Menu,
+  Newspaper,
+  Shield,
+  User,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
+type View =
+  | "map"
+  | "observations"
+  | "stats"
+  | "news"
+  | "profile"
+  | "admin"
+  | "menu";
+
 interface BottomNavProps {
-  currentView: "map" | "observations" | "stats" | "profile" | "admin";
+  currentView: View;
+}
+
+const viewIcons: Record<View, React.ReactNode> = {
+  map: <Map size={20} />,
+  observations: <Binoculars size={20} />,
+  stats: <BarChart3 size={20} />,
+  news: <Newspaper size={20} />,
+  profile: <User size={20} />,
+  admin: <Shield size={20} />,
+  menu: <Menu size={20} />,
+};
+
+/** Pages that have no permanent slot in the nav — they appear as a temporary
+ *  middle item while you are on them. */
+const temporaryItems: Partial<
+  Record<View, { icon: React.ReactNode; label: string; to: string }>
+> = {
+  stats: { icon: <BarChart3 size={20} />, label: "Statistikk", to: "/stats" },
+  news: { icon: <Newspaper size={20} />, label: "Nyheter", to: "/news" },
+  profile: { icon: <User size={20} />, label: "Profil", to: "/profile" },
+  admin: { icon: <Shield size={20} />, label: "Admin", to: "/admin" },
+};
+
+function NavButton({
+  icon,
+  label,
+  active,
+  onClick,
+  ariaLabel,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  active?: boolean;
+  onClick: () => void;
+  ariaLabel: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex flex-1 flex-col items-center justify-center gap-0.5 h-full rounded-full transition-colors whitespace-nowrap ${
+        active ? "text-rust" : "text-bark dark:text-sand"
+      }`}
+      aria-label={ariaLabel}
+    >
+      {icon}
+      <span className="text-xs font-medium">{label}</span>
+    </button>
+  );
 }
 
 export function BottomNav({ currentView }: BottomNavProps) {
   const navigate = useNavigate();
-  const { user, isAdmin, isImpersonating, stopImpersonating } = useAuth();
+  const { isImpersonating, stopImpersonating } = useAuth();
+  const [expanded, setExpanded] = useState(true);
+  const currentTemp = temporaryItems[currentView];
+  // The temporary item stays in the nav after leaving its page, until the
+  // pill is collapsed — then the slot resets to whatever page you are on.
+  const [stickyTemp, setStickyTemp] = useState<{
+    icon: React.ReactNode;
+    label: string;
+    to: string;
+  } | null>(null);
+  const [prevTemp, setPrevTemp] = useState(currentTemp);
+  const [prevExpanded, setPrevExpanded] = useState(expanded);
 
-  const handleProfile = () => {
-    if (user) {
-      navigate("/profile");
-    }
-  };
+  if (prevTemp !== currentTemp) {
+    setPrevTemp(currentTemp);
+    if (currentTemp) setStickyTemp(currentTemp);
+  }
+  if (prevExpanded !== expanded) {
+    setPrevExpanded(expanded);
+    if (!expanded) setStickyTemp(null);
+  }
+
+  const temporaryItem = currentTemp ?? stickyTemp;
+  const navRef = useRef<HTMLElement>(null);
+
+  // Collapse on any interaction outside the nav. Taps on nav items keep it
+  // open so the active destination stays highlighted.
+  useEffect(() => {
+    if (!expanded) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (navRef.current && !navRef.current.contains(e.target as Node)) {
+        setExpanded(false);
+      }
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [expanded]);
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-rust z-[500] safe-area-bottom">
-      <div className="flex justify-around items-center h-16">
-        <button
-          onClick={() => navigate("/")}
-          className={`flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors ${
-            currentView === "map" ? "text-sunlit" : "text-sand"
-          }`}
-          aria-label="Map"
-        >
-          <Map size={24} />
-          <span className="text-xs font-medium">Kart</span>
-        </button>
-        <button
-          onClick={() => navigate("/observations")}
-          className={`flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors ${
-            currentView === "observations" ? "text-sunlit" : "text-sand"
-          }`}
-          aria-label="Observations"
-        >
-          <Binoculars size={24} />
-          <span className="text-xs font-medium">Kikket på</span>
-        </button>
-        <button
-          onClick={() => navigate("/stats")}
-          className={`flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors ${
-            currentView === "stats" ? "text-sunlit" : "text-sand"
-          }`}
-          aria-label="Statistics"
-        >
-          <BarChart3 size={24} />
-          <span className="text-xs font-medium">Statistikk</span>
-        </button>
-        {isAdmin && !isImpersonating && (
-          <button
-            onClick={() => navigate("/admin")}
-            className={`flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors ${
-              currentView === "admin" ? "text-sunlit" : "text-sand"
-            }`}
-            aria-label="Admin"
-          >
-            <Shield size={24} />
-            <span className="text-xs font-medium">Admin</span>
-          </button>
-        )}
-        {isImpersonating ? (
-          <button
-            onClick={stopImpersonating}
-            className="flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors text-sunlit"
-            aria-label="Slutt å se som bruker"
-          >
-            <EyeOff size={24} />
-            <span className="text-xs font-medium">Slutt</span>
-          </button>
+    <nav
+      ref={navRef}
+      className="md:hidden fixed bottom-4 right-4 left-4 z-[900] flex justify-end pb-[env(safe-area-inset-bottom)] pointer-events-none"
+    >
+      {/* Single glass pill: collapsed it is a round button showing the current
+          page icon (right edge anchored); expanded it morphs leftward into a
+          full-width bar. Fixed height so the morph never moves vertically.
+          Sits below the map's action-button column so the two never overlap. */}
+      <div
+        className={`h-12 overflow-hidden rounded-full ${glassSurface} transition-[width] duration-300 ease-in-out pointer-events-auto ${
+          expanded ? "w-full" : "w-12"
+        }`}
+      >
+        {expanded ? (
+          <div className="flex h-full items-center gap-1 px-2">
+            <NavButton
+              icon={<Map size={20} />}
+              label="Kart"
+              active={currentView === "map"}
+              onClick={() => navigate("/")}
+              ariaLabel="Map"
+            />
+            <NavButton
+              icon={<Binoculars size={20} />}
+              label="Kikket på"
+              active={currentView === "observations"}
+              onClick={() => navigate("/observations")}
+              ariaLabel="Observations"
+            />
+            {temporaryItem && (
+              <NavButton
+                icon={temporaryItem.icon}
+                label={temporaryItem.label}
+                active={temporaryItem === currentTemp}
+                onClick={() => navigate(temporaryItem.to)}
+                ariaLabel={temporaryItem.label}
+              />
+            )}
+            {isImpersonating ? (
+              <NavButton
+                icon={<EyeOff size={20} />}
+                label="Slutt"
+                onClick={stopImpersonating}
+                ariaLabel="Slutt å se som bruker"
+              />
+            ) : (
+              <NavButton
+                icon={<Menu size={20} />}
+                label="Meny"
+                active={currentView === "menu"}
+                onClick={() => navigate("/menu")}
+                ariaLabel="Meny"
+              />
+            )}
+          </div>
         ) : (
           <button
-            onClick={handleProfile}
-            className={`flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors ${
-              currentView === "profile" ? "text-sunlit" : "text-sand"
-            }`}
-            aria-label="Profil"
+            onClick={() => setExpanded(true)}
+            className="h-full w-full flex items-center justify-center text-bark dark:text-sand"
+            aria-label="Vis meny"
+            aria-expanded={false}
           >
-            <User size={24} />
-            <span className="text-xs font-medium">Profil</span>
+            {viewIcons[currentView]}
           </button>
         )}
       </div>

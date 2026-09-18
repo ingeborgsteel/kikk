@@ -61,10 +61,6 @@ function formatShortDate(dateString: string) {
   });
 }
 
-interface StatsDashboardProps {
-  onBack: () => void;
-}
-
 interface LocationStat {
   locationId: string | undefined;
   locationName: string;
@@ -208,7 +204,7 @@ function SimpleBarChart({ data }: { data: MonthStat[] }) {
   );
 }
 
-export function StatsDashboard({ onBack }: StatsDashboardProps) {
+export function StatsDashboard() {
   const { observations } = useObservations();
   const { locations } = useLocations();
   const { requestCurrentPosition } = useGeolocation();
@@ -359,11 +355,6 @@ export function StatsDashboard({ onBack }: StatsDashboardProps) {
       <div className="w-full min-h-screen bg-sand dark:bg-bark pb-16 md:pb-0">
         <Header title={"statistikk"} />
         <div className="max-w-4xl mx-auto p-lg md:p-xl">
-          <div className="hidden md:block mb-lg">
-            <Button onClick={onBack} variant="outline">
-              ← Tilbake til kart
-            </Button>
-          </div>
           <div className="text-center py-xxl">
             <BarChart3 size={48} className="mx-auto text-slate mb-md" />
             <p className="text-lg text-slate">Ingen observasjoner ennå</p>
@@ -381,12 +372,6 @@ export function StatsDashboard({ onBack }: StatsDashboardProps) {
       <Header title={"statistikk"} />
 
       <div className="max-w-4xl mx-auto p-lg md:p-xl space-y-lg">
-        <div className="hidden md:block">
-          <Button onClick={onBack} variant="outline">
-            ← Tilbake til kart
-          </Button>
-        </div>
-
         {/* Summary cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-md">
           <div className="bg-white dark:bg-[#2c2c2c] rounded-lg border-2 border-moss/30 p-md text-center">

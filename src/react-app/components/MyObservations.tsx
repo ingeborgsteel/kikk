@@ -24,11 +24,7 @@ import { getUnexportedCount } from "../queries/useExports";
 import Header from "./Header.tsx";
 import { twMerge } from "tailwind-merge";
 
-interface MyObservationsProps {
-  onBack: () => void;
-}
-
-function MyObservations({ onBack }: MyObservationsProps) {
+function MyObservations() {
   const { observations, deleteObservation } = useObservations();
   const { locations } = useLocations();
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -170,12 +166,6 @@ function MyObservations({ onBack }: MyObservationsProps) {
       <Header title={"kikket på"} />
       <div className="mx-auto max-w-full p-lg md:p-xl">
         <div className="mb-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-md flex-wrap">
-          <div className="hidden md:block">
-            <Button onClick={onBack} variant="outline">
-              ← Tilbake til kart
-            </Button>
-          </div>
-
           <div className="flex flex-wrap items-center gap-2 flex-1">
             {/* Location search */}
             {locationSuggestions.length > 0 && (

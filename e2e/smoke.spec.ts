@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { featureAlerts } from "../src/react-app/data/featureAlerts";
 
 test.beforeEach(async ({ page }) => {
   await page.route("https://nominatim.openstreetmap.org/reverse**", (route) =>
@@ -30,9 +31,13 @@ test.beforeEach(async ({ page }) => {
   );
 
   const resetKey = `__e2e_reset=${Date.now()}`;
+  const dismissedAlerts = JSON.stringify({
+    "e2e-guest": featureAlerts.map((alert) => alert.id),
+  });
   await page.addInitScript(`
     localStorage.clear();
     localStorage.setItem("kikk-guest-user-id", "e2e-guest");
+    localStorage.setItem("kikk_dismissed_feature_alerts", '${dismissedAlerts}');
   `);
   await page.goto(`/?${resetKey}`);
 });
@@ -43,12 +48,16 @@ test("loads the map view", async ({ page }) => {
 });
 
 test("navigates between main views", async ({ page }) => {
-  await page.getByRole("button", { name: /Kikket på/i }).click();
+  // Quick-access icon button in the header.
+  await page.getByRole("button", { name: "Kikket på" }).click();
   await expect(page.getByRole("heading", { name: /kikket på/i })).toBeVisible();
   await expect(page.getByText("Ingen observasjoner ennå")).toBeVisible();
 
-  await page.goto("/");
+  // Header title navigates back to the map.
+  await page.locator("h1").getByRole("button").click();
+  await expect(page.locator(".leaflet-container")).toBeVisible();
 
+  await page.getByRole("button", { name: "Meny" }).click();
   await page.getByRole("button", { name: /Statistikk/i }).click();
   await expect(
     page.getByRole("heading", { name: /statistikk/i }),

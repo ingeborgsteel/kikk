@@ -709,7 +709,7 @@ function Map({
         </div>
       )}
       {/* Download area button */}
-      <div className="absolute bottom-6 md:bottom-14 left-md z-[500]">
+      <div className="absolute bottom-8 md:bottom-4 left-md z-[500]">
         {downloadProgress ? (
           <div
             className={`${glassSurface} text-bark dark:text-sand text-xs font-medium px-3 py-2 rounded-full flex items-center gap-2`}

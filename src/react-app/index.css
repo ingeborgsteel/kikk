@@ -95,10 +95,14 @@
   margin: 0;
 }
 
-/* The scale control sits bottom-left, lifted off the bottom edge so it reads
-   as part of the same floating-control system as the other map overlays. */
+/* The scale control sits horizontally centered at the bottom edge, reading as
+   part of the same floating-control system as the other map overlays. Leaflet
+   only supports corner positions, so the corner itself is centered — it only
+   ever contains the scale, and both corner and control are pointer-events:none
+   so map taps pass through. */
 .leaflet-bottom.leaflet-left {
-  left: 0rem;
+  left: 50%;
+  transform: translateX(-50%);
   bottom: 0;
   margin: 0;
 }

@@ -13,13 +13,7 @@ import { useObservations } from "./context/ObservationsContext";
 // Fix for default marker icons in Leaflet with bundlers
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
-import {
-  kartverketAttribution,
-  kartverketTopo,
-  mapboxAttribution,
-  mapboxSatellite,
-  mapboxTopo,
-} from "./lib/mapUtils.ts";
+import { kartverketTopo, mapboxSatellite, mapboxTopo } from "./lib/mapUtils.ts";
 import {
   createObservationIconWithInitials,
   createSelectionIcon,
@@ -49,14 +43,14 @@ L.Marker.prototype.options.icon = DefaultIcon;
  */
 const getTileLayerConfig = (
   layer: "standard" | "topo" | "aerial",
-): { url: string; attribution: string } => {
+): { url: string } => {
   switch (layer) {
     case "aerial":
-      return { url: mapboxSatellite, attribution: mapboxAttribution };
+      return { url: mapboxSatellite };
     case "topo":
-      return { url: mapboxTopo, attribution: mapboxAttribution };
+      return { url: mapboxTopo };
     default:
-      return { url: kartverketTopo, attribution: kartverketAttribution };
+      return { url: kartverketTopo };
   }
 };
 
@@ -234,17 +228,15 @@ function Map({
     const defaultCenter: [number, number] = [59.9139, 10.7522];
     const defaultZoom = DEFAULT_ZOOM;
 
-    map.current = L.map(mapContainer.current).setView(
-      defaultCenter,
-      defaultZoom,
-    );
+    map.current = L.map(mapContainer.current, {
+      attributionControl: false,
+    }).setView(defaultCenter, defaultZoom);
 
     // Add initial tile layer (standard OpenStreetMap)
-    const { url, attribution } = getTileLayerConfig(currentLayer);
+    const { url } = getTileLayerConfig(currentLayer);
     tileLayerRef.current = L.tileLayer(url, {
       maxZoom: 20,
       maxNativeZoom: currentLayer === "standard" ? 18 : undefined,
-      attribution,
     }).addTo(map.current);
 
     L.control
@@ -566,13 +558,12 @@ function Map({
     tileLayerRef.current.remove();
 
     // Get tile layer configuration
-    const { url, attribution } = getTileLayerConfig(currentLayer);
+    const { url } = getTileLayerConfig(currentLayer);
 
     // Add new layer
     tileLayerRef.current = L.tileLayer(url, {
       maxZoom: 20,
       maxNativeZoom: currentLayer === "standard" ? 18 : undefined,
-      attribution,
     }).addTo(map.current);
   }, [currentLayer]);
 

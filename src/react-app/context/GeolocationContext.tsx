@@ -50,7 +50,7 @@ const LOCATION_WATCH_OPTIONS: PositionOptions = {
 function normalizeGeolocationError(error: GeolocationPositionError): string {
   switch (error.code) {
     case error.PERMISSION_DENIED:
-      return "Plasseringstillatelse nektet. Vennligst aktiver posisjonstilgang i nettleserinnstillingene dine.";
+      return "Plasseringstillatelse nektet.";
     case error.POSITION_UNAVAILABLE:
       return "Posisjonsinformasjon er ikke tilgjengelig.";
     case error.TIMEOUT:
@@ -135,21 +135,6 @@ export function GeolocationProvider({ children }: { children: ReactNode }) {
     if (!("geolocation" in navigator)) {
       setLocationError("Geolokalisering støttes ikke av nettleseren din.");
       return null;
-    }
-
-    // Check permission state before calling — avoids a browser prompt if already denied,
-    // and skips the loading spinner if already granted (position resolves silently).
-    if ("permissions" in navigator) {
-      const perm = await navigator.permissions.query({
-        name: "geolocation" as PermissionName,
-      });
-      if (perm.state === "denied") {
-        setLocationError(
-          "Plasseringstillatelse nektet. Vennligst aktiver posisjonstilgang i nettleserinnstillingene dine.",
-        );
-        setFollowMode(false);
-        return null;
-      }
     }
 
     setIsLocating(true);

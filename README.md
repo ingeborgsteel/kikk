@@ -19,8 +19,9 @@ Built with modern web technologies for a fast, responsive experience:
 - [**Leaflet**](https://leafletjs.com/) - Interactive mapping
 - [**Hono**](https://hono.dev/) - Lightweight backend framework
 - [**Cloudflare Workers**](https://developers.cloudflare.com/workers/) - Edge deployment
+- [**Cloudflare D1**](https://developers.cloudflare.com/d1/) - Serverless SQL database (via Drizzle ORM)
+- [**Better Auth**](https://www.better-auth.com/) - Email/password authentication
 - [**Tailwind CSS**](https://tailwindcss.com/) - Utility-first styling
-- [**Supabase**](https://supabase.com/) - Optional authentication backend
 
 ### ✨ Features
 
@@ -28,11 +29,16 @@ Built with modern web technologies for a fast, responsive experience:
 - 🔍 **Species Search** - Search species using Artsdatabanken (Norwegian Biodiversity Information Centre) database
 - 📝 **Detailed Observations** - Record species, gender, count, location uncertainty, and field notes
 - 📋 **Observation Management** - View, edit, and delete your observation records
-- 📊 **Excel Export** - Export observations to Excel spreadsheets with complete metadata
+- � **Saved Locations** - Save and name your favourite observation spots
+- �📊 **Statistics** - Dashboard with stats over your observations
+- 📤 **Excel Export** - Export observations to Excel spreadsheets with complete metadata
 - 🏷️ **Export Tracking** - Track which observations have been exported and when
-- 📥 **Export History** - View and re-download previous exports (with Supabase)
-- 💾 **Local Storage** - Your observations are stored locally in your browser
-- 🔐 **Optional Authentication** - Sign in with email and password for enhanced features
+- ☁️ **Cloud Sync + Offline** - Observations sync to your account; offline work is queued locally and synced on reconnect
+- 📶 **Offline Maps** - Installable PWA with downloadable map tiles for field use
+- 🗻 **Map Layers** - Norgeskart, Kart (topo), and Flyfoto (aerial)
+- � **Kikkemodus** - Binocular mode that filters the map to observations only
+- 🔐 **Authentication** - Email/password sign-in via Better Auth (required in production; hidden guest bypass in dev and branch previews)
+- 🌙 **Dark Mode** - Light and dark themes
 - 💡 **GitHub Suggestions** - Submit feature requests and bug reports directly from the app
 - 📱 **Responsive Design** - Works seamlessly on desktop and mobile devices
 
@@ -40,7 +46,7 @@ Built with modern web technologies for a fast, responsive experience:
 
 ### Prerequisites
 
-- Node.js 18+ installed
+- Node.js 20+ installed
 - npm or compatible package manager
 
 ### Development
@@ -51,29 +57,14 @@ Install dependencies:
 npm install
 ```
 
-#### Optional: Supabase Authentication Setup
-
-To enable authentication features, you'll need to set up Supabase:
-
-1. Create a free account at [Supabase](https://supabase.com/)
-2. Create a new project
-3. Go to Project Settings > API
-4. Copy your project URL and anon/public key
-5. Create a `.env` file in the project root (copy from `.env.example`):
+Set up environment files:
 
 ```bash
-VITE_SUPABASE_URL=your_supabase_project_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+cp .env.example .env            # client env vars (all optional for local dev)
+cp .dev.vars.example .dev.vars  # worker secrets — set BETTER_AUTH_SECRET for auth to work locally
 ```
 
-6. In your Supabase project, configure Email Auth:
-   - Go to Authentication > Providers
-   - Enable Email provider
-   - Disable "Confirm email" if you want to allow immediate login without email confirmation
-
-The app works fully without authentication - it's completely optional. Local storage will continue to work whether
-you're logged in or not. Export functionality works locally without Supabase, but export logs and file storage require
-Supabase.
+In local development the login gate allows a hidden guest bypass: triple-click the logo on the login screen to enter without an account.
 
 #### Optional: GitHub Issue Creation Setup
 
@@ -128,15 +119,14 @@ npm run preview
 
 Production deployments and branch previews are handled by Cloudflare Workers Builds (the `Workers Builds: kikk` check). The GitHub Actions workflows that previously ran `wrangler deploy` are no longer needed because Cloudflare already builds and deploys after each push.
 
+Branch previews use [Worker Previews](https://developers.cloudflare.com/workers/previews/) (`wrangler preview`): each branch gets a stable Preview URL that always points to its latest deployment, and Cloudflare posts the URL as a comment on each pull request.
+
 `wrangler.json` defines:
 
 - Top-level `DB` binding with `database_id` → `kikk-db` (production traffic)
-- `env.preview.DB` binding with `database_id` → `kikk-db-test` (branch previews)
+- `previews.d1_databases` `DB` binding with `database_id` → `kikk-db-test` (all branch previews share the test database)
 
-For **branch previews** to use the test database, the build must be made with `CLOUDFLARE_ENV=preview`. The dashboard has two command fields:
-
-- **Build/deploy command** — runs on `main` (production)
-- **Version command** — runs on every non-`main` branch (previews)
+Previews do not inherit production settings — the `previews` block must redeclare every binding the Worker needs (`assets`, `compatibility_date`, and `compatibility_flags` stay top-level only).
 
 The preview build also needs `VITE_FORCE_LOGIN=false` so branch previews allow the hidden guest bypass.
 
@@ -144,20 +134,34 @@ The preview build also needs `VITE_FORCE_LOGIN=false` so branch previews allow t
 
 Set these in the Cloudflare dashboard under **Workers & Pages → kikk → Settings → Builds**:
 
-| Field                                     | Command                                                               |
-| ----------------------------------------- | --------------------------------------------------------------------- |
-| Build/deploy command (production, `main`) | `npm run build && npm run deploy`                                     |
-| Version command (branch previews / PRs)   | `npm run build:preview && npx wrangler versions upload --env preview` |
+| Field                                     | Command                                         |
+| ----------------------------------------- | ----------------------------------------------- |
+| Build/deploy command (production, `main`) | `npm run build && npm run deploy`               |
+| Preview command (branch previews / PRs)   | `npm run build:preview && npx wrangler preview` |
 
-`npm run build:preview` sets `CLOUDFLARE_ENV=preview` and `VITE_FORCE_LOGIN=false`, which builds against `env.preview`. The upload uses `--env preview` so the preview version is bound to `kikk-db-test`.
+`npm run build:preview` sets `VITE_FORCE_LOGIN=false` so the preview bundle enables the hidden guest bypass. `npx wrangler preview` creates or updates the Preview named after the current git branch and binds `DB` to `kikk-db-test` via the `previews` block.
 
-If the dashboard lets you set build environment variables per trigger, you can keep the default build commands and set `CLOUDFLARE_ENV=preview` and `VITE_FORCE_LOGIN=false` there instead.
+If the Worker was connected to Builds before Worker Previews existed, the dashboard shows a **Set up Worker Previews** banner under **Settings → Builds** — complete that one-time switch first (it is not reversible).
+
+### Preview secrets
+
+Secrets are not inherited by Previews. Set shared secrets once in the Previews Base configuration so every new branch Preview gets them:
+
+```bash
+npx wrangler preview base-config secret put BETTER_AUTH_SECRET
+# optionally, for password-reset emails in previews:
+npx wrangler preview base-config secret put RESEND_API_KEY
+```
+
+`RESEND_FROM_EMAIL` is not sensitive — it lives in `vars`/`previews.vars` in `wrangler.json`, not in secrets. `VITE_*` variables (`VITE_MAPBOX_TOKEN`, `VITE_GITHUB_TOKEN`) are build-time only: set them under **Settings → Builds → Variables and secrets**, never in `vars`.
+
+Base secrets apply only to Previews created afterwards. To change a secret on an existing Preview: `npx wrangler preview secret put SECRET_NAME --name <branch>`.
 
 ### Migrations
 
 Migrations run as separate GitHub Actions workflows so they are visible in the PR / `main` checks:
 
-- `.github/workflows/migrate-preview.yml` runs on PRs and `main` pushes, applying migrations to `kikk-db-test` via `wrangler d1 migrations apply DB --remote --env preview`.
+- `.github/workflows/migrate-preview.yml` runs on PRs and `main` pushes, applying migrations to `kikk-db-test` via `wrangler d1 migrations apply kikk-db-test --remote`.
 - `.github/workflows/migrate-prod.yml` runs on `main` pushes, applying migrations to `kikk-db`.
 
 ### Manual commands
@@ -168,10 +172,16 @@ Deploy to production locally (use with care):
 npm run db:migrate:prod && npm run deploy
 ```
 
-Create a one-off preview version bound to the test database:
+Create or update the Preview for the current branch, bound to the test database:
 
 ```bash
 npm run deploy:preview
+```
+
+Delete a Preview (e.g. after merging a branch):
+
+```bash
+npx wrangler preview delete --name <branch>
 ```
 
 Monitor a deployed worker:
@@ -191,7 +201,7 @@ npx wrangler tail
    - Add location uncertainty radius in meters
    - Set observation date and time
    - Add field notes and per-species comments
-3. **Save**: Your observation is stored locally
+3. **Save**: Your observation is saved to your account (queued locally and synced later when offline)
 4. **View**: Click "Kikket på" to see all your recorded observations
 5. **Manage**: Edit or delete observations as needed
 
@@ -210,8 +220,6 @@ The app provides Excel export functionality to help you share and analyze your o
 - Observations are marked with "Ny" (new) badge if never exported
 - Previously exported observations show last export date and count
 - Excel files include all observation details: location, species, dates, comments, and export history
-- With Supabase configured: Export logs are saved and can be re-downloaded later
-- Without Supabase: Exports work locally, but history is not saved
 
 ## Additional Resources
 

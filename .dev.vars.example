@@ -1,1 +1,5 @@
 BETTER_AUTH_SECRET=your-256-bit-secret-here
+
+# Optional: password-reset emails via Resend
+# RESEND_API_KEY=re_...
+# RESEND_FROM_EMAIL=local-noreply@kikk.steel.no

@@ -14,6 +14,9 @@
     }
   },
   "upload_source_maps": true,
+  "vars": {
+    "RESEND_FROM_EMAIL": "noreply@kikk.steel.no"
+  },
   "assets": {
     "directory": "./dist/client",
     "not_found_handling": "single-page-application"
@@ -27,22 +30,17 @@
       "migrations_dir": "migrations"
     }
   ],
-  "env": {
-    "preview": {
-      "compatibility_date": "2025-10-08",
-      "compatibility_flags": ["nodejs_compat"],
-      "assets": {
-        "directory": "./dist/client",
-        "not_found_handling": "single-page-application"
-      },
-      "d1_databases": [
-        {
-          "binding": "DB",
-          "database_name": "kikk-db-test",
-          "migrations_dir": "migrations",
-          "database_id": "afcde3ed-721b-4d0b-b33d-67b7eb01b0f6"
-        }
-      ]
-    }
+  "previews": {
+    "vars": {
+      "RESEND_FROM_EMAIL": "test-noreply@kikk.steel.no"
+    },
+    "d1_databases": [
+      {
+        "binding": "DB",
+        "database_name": "kikk-db-test",
+        "migrations_dir": "migrations",
+        "database_id": "afcde3ed-721b-4d0b-b33d-67b7eb01b0f6"
+      }
+    ]
   }
 }

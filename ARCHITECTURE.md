@@ -125,5 +125,5 @@ src/
 - **React Hook Form** with `Controller` for all forms (`ObservationForm`, `LocationForm`, `LoginForm`).
 - **Optional authentication** – Better Auth is required in production builds; the hidden guest bypass lets local development and branch previews work without credentials.
 - **Leaflet map** – `Map.tsx` handles click-to-select, markers, and layer switching. `LocationEditor` is a smaller embedded map for forms. Both share the layer preference via `MapPreferencesContext`.
-- **Routing** – `react-router-dom` with routes: `/` (map), `/observations`, `/stats`, `/news`, `/profile`, `/admin`, `/menu`, `/reset-password`. Desktop navigates via the `NavMenu` header dropdown (plus Kart/Kikket på quick links); mobile uses the floating `BottomNav` pill and the `/menu` page. Shared items come from `hooks/useNavMenuItems.tsx`.
+- **Routing** – `react-router-dom` with routes: `/` (map), `/observations`, `/stats`, `/news`, `/locations`, `/admin`, `/menu`, `/reset-password`. Desktop navigates via the `NavMenu` header dropdown (plus Kart/Kikket på quick links); mobile uses the floating `BottomNav` pill and the `/menu` page. Shared items come from `hooks/useNavMenuItems.tsx`.
 - **Styling** – Tailwind CSS utility classes with custom design tokens (`forest`, `sand`, `bark`). Use the `dark:` prefix for dark mode.

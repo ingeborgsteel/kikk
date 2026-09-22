@@ -4,6 +4,23 @@ import { Menu } from "lucide-react";
 import { NavMenuItemDef, useNavMenuItems } from "../hooks/useNavMenuItems";
 import { Button } from "./ui/button";
 
+function ToggleSwitch({ active }: { active: boolean }) {
+  return (
+    <span
+      className={`relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors ${
+        active ? "bg-moss" : "bg-bark/20 dark:bg-sand/20"
+      }`}
+      aria-hidden="true"
+    >
+      <span
+        className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${
+          active ? "left-[18px]" : "left-0.5"
+        }`}
+      />
+    </span>
+  );
+}
+
 function NavMenuItem({
   item,
   onSelect,
@@ -14,6 +31,8 @@ function NavMenuItem({
   return (
     <button
       onClick={onSelect}
+      role={item.active !== undefined ? "switch" : undefined}
+      aria-checked={item.active}
       className="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-sm font-medium text-bark dark:text-sand hover:bg-moss/10 dark:hover:bg-moss/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-moss"
     >
       {item.icon}
@@ -23,6 +42,7 @@ function NavMenuItem({
           {item.badge}
         </span>
       )}
+      {item.active !== undefined && <ToggleSwitch active={item.active} />}
     </button>
   );
 }
@@ -34,10 +54,11 @@ function NavMenuItem({
  */
 export function NavMenu() {
   const [open, setOpen] = useState(false);
-  const { destinations, account, feedback } = useNavMenuItems();
+  const { destinations, account } = useNavMenuItems();
 
   const select = (item: NavMenuItemDef) => {
-    setOpen(false);
+    // Toggle items keep the menu open so the new state is visible.
+    if (item.active === undefined) setOpen(false);
     item.action();
   };
 
@@ -69,14 +90,6 @@ export function NavMenu() {
           ))}
           <div className="my-1 border-t border-moss/30" />
           {account.map((item) => (
-            <NavMenuItem
-              key={item.label}
-              item={item}
-              onSelect={() => select(item)}
-            />
-          ))}
-          <div className="my-1 border-t border-moss/30" />
-          {feedback.map((item) => (
             <NavMenuItem
               key={item.label}
               item={item}

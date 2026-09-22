@@ -77,9 +77,16 @@ test("mobile bottom nav opens the /menu page with all options", async ({
   await page.getByRole("button", { name: "Skjønner!" }).click();
   await page.setViewportSize({ width: 390, height: 844 });
 
+  // No header on mobile — the map fills the viewport.
+  await expect(page.locator("header")).toBeHidden();
+
   // Clicking outside collapses the pill to the round current-page button.
-  await page.locator("header").click({ position: { x: 200, y: 45 } });
+  // A map tap also opens the click dialog, which we dismiss with ESC.
+  await page
+    .locator(".leaflet-container")
+    .click({ position: { x: 200, y: 400 } });
   await expect(page.locator("nav > div").first()).toHaveCSS("width", "48px");
+  await page.keyboard.press("Escape");
 
   // Tapping it expands again — clicking a nav item keeps the pill open.
   await page.getByRole("button", { name: "Vis meny" }).click();
@@ -87,7 +94,8 @@ test("mobile bottom nav opens the /menu page with all options", async ({
     .locator("nav")
     .getByRole("button", { name: "Meny", exact: true })
     .click();
-  await expect(page.getByRole("heading", { name: "meny" })).toBeVisible();
+  // No header on mobile — the menu page sections serve as headings.
+  await expect(page.getByRole("heading", { name: "Navigasjon" })).toBeVisible();
   await expect(page.locator("nav > div").first()).not.toHaveCSS(
     "width",
     "48px",
@@ -97,7 +105,7 @@ test("mobile bottom nav opens the /menu page with all options", async ({
     "Kikket på",
     "Statistikk",
     "Nyheter",
-    "Profil",
+    "Mine lokaliteter",
     "Logg ut",
   ]) {
     await expect(
@@ -105,10 +113,15 @@ test("mobile bottom nav opens the /menu page with all options", async ({
     ).toBeVisible();
   }
 
+  // The theme toggle lives in the menu's Innstillinger section.
+  const themeSwitch = page.getByRole("switch", { name: "Mørk modus" });
+  await expect(themeSwitch).toBeVisible();
+  await expect(themeSwitch).toHaveAttribute("aria-checked", "false");
+  await themeSwitch.click();
+  await expect(themeSwitch).toHaveAttribute("aria-checked", "true");
+
   await page.getByRole("button", { name: "Statistikk", exact: true }).click();
-  await expect(
-    page.getByRole("heading", { name: /statistikk/i }),
-  ).toBeVisible();
+  await expect(page.getByText("Ingen observasjoner ennå")).toBeVisible();
 });
 
 test("new users do not see alerts that predate them", async ({ page }) => {

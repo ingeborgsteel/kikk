@@ -8,7 +8,7 @@ import { UserLocation } from "../types/location";
 import { LocationForm } from "./LocationForm.tsx";
 import Header from "./Header.tsx";
 
-export function UserProfile() {
+export function MyLocations() {
   const { locations, deleteLocation } = useLocations();
   const { observations } = useObservations();
   const { isImpersonating } = useAuth();
@@ -62,8 +62,8 @@ export function UserProfile() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-sand dark:bg-bark pb-16 md:pb-0">
-      <Header title={"profil"} />
+    <div className="w-full min-h-screen bg-sand dark:bg-bark pb-16 md:pb-0 pt-[env(safe-area-inset-top)]">
+      <Header title={"mine lokaliteter"} />
 
       <div className="max-w-4xl mx-auto p-lg md:p-xl">
         {/* My Locations Section */}

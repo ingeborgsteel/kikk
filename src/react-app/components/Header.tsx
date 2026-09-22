@@ -49,7 +49,7 @@ const Header = ({ title, leftButton = <ThemeToggle /> }: HeaderProps) => {
   const { observations } = useObservations();
 
   return (
-    <header className="bg-forest text-sand p-md sticky top-0 z-[1000]">
+    <header className="bg-forest text-sand p-md sticky top-0 z-[1000] hidden md:block">
       <div className="max-w-4xl mx-auto ml-16">
         <h1 className="text-sand m-0 text-[clamp(2rem,6vw,3rem)] tracking-wider">
           <button

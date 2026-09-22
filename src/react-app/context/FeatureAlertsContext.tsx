@@ -6,6 +6,10 @@ import {
   useDismissedFeatureAlerts,
   useDismissFeatureAlert,
 } from "../queries/useFeatureAlertDismissals";
+import {
+  readDismissedFeatureAlerts,
+  writeDismissedFeatureAlerts,
+} from "../lib/featureAlertStorage";
 import { useAuth, getGuestCreatedAt } from "./AuthContext";
 
 interface FeatureAlertsContextType {
@@ -69,6 +73,14 @@ export function FeatureAlertsProvider({ children }: { children: ReactNode }) {
   );
 
   const dismissAlerts = (ids: string[]) => {
+    // Guest dismissals persist in localStorage — write synchronously so they
+    // survive an immediate reload/tab close instead of racing the async
+    // mutation (which also writes, idempotently).
+    if (isGuest && user) {
+      writeDismissedFeatureAlerts(user.id, [
+        ...new Set([...readDismissedFeatureAlerts(user.id), ...ids]),
+      ]);
+    }
     ids.forEach((id) => dismiss(id));
   };
 

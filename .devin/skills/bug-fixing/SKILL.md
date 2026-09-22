@@ -221,6 +221,8 @@ export async function yourApiFunction(params: YourParams): Promise<YourResult> {
 
 ### Storage Issues
 
+**Problem**: localStorage looks correct but the UI shows stale data after a quick reload — the persisted TanStack Query cache (`kikk-query-cache`) hydrated a stale copy that counts as fresh within `staleTime`, so the `queryFn` never re-reads localStorage. Queries whose `queryFn` reads a dedicated localStorage key (e.g. `feature-alert-dismissals`) must be excluded via `dehydrateOptions.shouldDehydrateQuery` in `main.tsx`, and their localStorage writes should happen synchronously in the user action rather than only inside an async mutation.
+
 **Problem**: localStorage data corruption
 
 ```typescript

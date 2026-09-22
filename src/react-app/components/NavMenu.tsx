@@ -54,7 +54,7 @@ function NavMenuItem({
  */
 export function NavMenu() {
   const [open, setOpen] = useState(false);
-  const { destinations, settings, account, feedback } = useNavMenuItems();
+  const { destinations, account } = useNavMenuItems();
 
   const select = (item: NavMenuItemDef) => {
     // Toggle items keep the menu open so the new state is visible.
@@ -89,23 +89,7 @@ export function NavMenu() {
             />
           ))}
           <div className="my-1 border-t border-moss/30" />
-          {settings.map((item) => (
-            <NavMenuItem
-              key={item.label}
-              item={item}
-              onSelect={() => select(item)}
-            />
-          ))}
-          <div className="my-1 border-t border-moss/30" />
           {account.map((item) => (
-            <NavMenuItem
-              key={item.label}
-              item={item}
-              onSelect={() => select(item)}
-            />
-          ))}
-          <div className="my-1 border-t border-moss/30" />
-          {feedback.map((item) => (
             <NavMenuItem
               key={item.label}
               item={item}

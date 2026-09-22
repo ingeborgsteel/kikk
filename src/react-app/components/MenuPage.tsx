@@ -51,7 +51,7 @@ function MenuRow({ item }: { item: NavMenuItemDef }) {
  * with the desktop header dropdown via useNavMenuItems().
  */
 export function MenuPage() {
-  const { destinations, settings, account, feedback } = useNavMenuItems();
+  const { destinations, account } = useNavMenuItems();
 
   return (
     <div className="w-full min-h-screen bg-sand dark:bg-bark pb-16 md:pb-0 pt-[env(safe-area-inset-top)]">
@@ -68,22 +68,10 @@ export function MenuPage() {
         </div>
 
         <h2 className="text-lg font-bold text-bark dark:text-sand mb-3">
-          Innstillinger
-        </h2>
-        <div className="space-y-3 mb-xxl">
-          {settings.map((item) => (
-            <MenuRow key={item.label} item={item} />
-          ))}
-        </div>
-
-        <h2 className="text-lg font-bold text-bark dark:text-sand mb-3">
           Konto
         </h2>
         <div className="space-y-3 mb-xxl">
           {account.map((item) => (
-            <MenuRow key={item.label} item={item} />
-          ))}
-          {feedback.map((item) => (
             <MenuRow key={item.label} item={item} />
           ))}
         </div>

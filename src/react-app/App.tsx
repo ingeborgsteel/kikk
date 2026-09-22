@@ -10,7 +10,6 @@ import ObservationForm from "./components/ObservationForm.tsx";
 import { ResetPassword } from "./components/ResetPassword.tsx";
 import { BottomNav } from "./components/BottomNav";
 import { MapToggleButton } from "./components/MapToggleButton.tsx";
-import { UserProfile } from "./components/UserProfile.tsx";
 import { NewsPage } from "./components/NewsPage.tsx";
 import { MenuPage } from "./components/MenuPage.tsx";
 import { FeatureAlertsModal } from "./components/FeatureAlertsModal.tsx";
@@ -30,6 +29,7 @@ import { CircleDashed, Grid3x3, Navigation } from "lucide-react";
 import Header from "./components/Header.tsx";
 import { useAuth } from "./context/AuthContext.tsx";
 import { SuggestionFormProvider } from "./context/SuggestionFormContext.tsx";
+import { MyLocations } from "./components/MyLocations.tsx";
 
 function App() {
   const location = useLocation();
@@ -207,13 +207,13 @@ function App() {
     | "observations"
     | "stats"
     | "news"
-    | "profile"
+    | "locations"
     | "admin"
     | "menu" => {
     if (location.pathname === "/observations") return "observations";
     if (location.pathname === "/stats") return "stats";
     if (location.pathname === "/news") return "news";
-    if (location.pathname === "/profile") return "profile";
+    if (location.pathname === "/locations") return "locations";
     if (location.pathname === "/admin") return "admin";
     if (location.pathname === "/menu") return "menu";
     return "map";
@@ -223,7 +223,8 @@ function App() {
     <SuggestionFormProvider>
       <Routes>
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/profile" element={<UserProfile />} />
+        <Route path="/locations" element={<MyLocations />} />
+        <Route path="/profile" element={<Navigate to="/locations" replace />} />
         <Route path="/stats" element={<StatsDashboard />} />
         <Route path="/news" element={<NewsPage />} />
         <Route path="/menu" element={<MenuPage />} />

@@ -5,10 +5,10 @@ import {
   Binoculars,
   EyeOff,
   Map,
+  MapPin,
   Menu,
   Newspaper,
   Shield,
-  User,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -18,7 +18,7 @@ type View =
   | "observations"
   | "stats"
   | "news"
-  | "profile"
+  | "locations"
   | "admin"
   | "menu";
 
@@ -31,7 +31,7 @@ const viewIcons: Record<View, React.ReactNode> = {
   observations: <Binoculars size={20} />,
   stats: <BarChart3 size={20} />,
   news: <Newspaper size={20} />,
-  profile: <User size={20} />,
+  locations: <MapPin size={20} />,
   admin: <Shield size={20} />,
   menu: <Menu size={20} />,
 };
@@ -43,7 +43,11 @@ const temporaryItems: Partial<
 > = {
   stats: { icon: <BarChart3 size={20} />, label: "Statistikk", to: "/stats" },
   news: { icon: <Newspaper size={20} />, label: "Nyheter", to: "/news" },
-  profile: { icon: <User size={20} />, label: "Profil", to: "/profile" },
+  locations: {
+    icon: <MapPin size={20} />,
+    label: "Mine lokaliteter",
+    to: "/locations",
+  },
   admin: { icon: <Shield size={20} />, label: "Admin", to: "/admin" },
 };
 

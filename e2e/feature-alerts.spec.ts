@@ -105,7 +105,7 @@ test("mobile bottom nav opens the /menu page with all options", async ({
     "Kikket på",
     "Statistikk",
     "Nyheter",
-    "Profil",
+    "Mine lokaliteter",
     "Logg ut",
   ]) {
     await expect(

@@ -15,6 +15,7 @@ import { MapPreferencesProvider } from "./context/MapPreferencesContext.tsx";
 import { GeolocationProvider } from "./context/GeolocationContext.tsx";
 import { FeatureAlertsProvider } from "./context/FeatureAlertsContext.tsx";
 import { LoginGate } from "./components/LoginGate.tsx";
+import { SplashScreen } from "./components/SplashScreen.tsx";
 import "dayjs/locale/nb";
 
 const queryClient = new QueryClient({
@@ -36,7 +37,17 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <PersistQueryClientProvider
       client={queryClient}
-      persistOptions={{ persister, maxAge: 1000 * 60 * 60 * 24 * 7 }}
+      persistOptions={{
+        persister,
+        maxAge: 1000 * 60 * 60 * 24 * 7,
+        dehydrateOptions: {
+          // Dismissals have their own localStorage key (guests) / server
+          // endpoint (auth) — a persisted copy could hydrate stale and shadow
+          // the real store without a refetch (still within staleTime).
+          shouldDehydrateQuery: (query) =>
+            query.queryKey[0] !== "feature-alert-dismissals",
+        },
+      }}
     >
       <AuthProvider>
         <ThemeProvider>
@@ -54,6 +65,7 @@ createRoot(document.getElementById("root")!).render(
                 </MapPreferencesProvider>
               </GeolocationProvider>
             </LoginGate>
+            <SplashScreen />
           </BrowserRouter>
         </ThemeProvider>
       </AuthProvider>

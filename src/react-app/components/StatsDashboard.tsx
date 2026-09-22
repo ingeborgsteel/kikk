@@ -352,7 +352,7 @@ export function StatsDashboard() {
 
   if (observations.length === 0) {
     return (
-      <div className="w-full min-h-screen bg-sand dark:bg-bark pb-16 md:pb-0">
+      <div className="w-full min-h-screen bg-sand dark:bg-bark pb-16 md:pb-0 pt-[env(safe-area-inset-top)]">
         <Header title={"statistikk"} />
         <div className="max-w-4xl mx-auto p-lg md:p-xl">
           <div className="text-center py-xxl">
@@ -368,7 +368,7 @@ export function StatsDashboard() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-sand dark:bg-bark pb-16 md:pb-0">
+    <div className="w-full min-h-screen bg-sand dark:bg-bark pb-16 md:pb-0 pt-[env(safe-area-inset-top)]">
       <Header title={"statistikk"} />
 
       <div className="max-w-4xl mx-auto p-lg md:p-xl space-y-lg">

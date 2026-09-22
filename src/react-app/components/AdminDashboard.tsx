@@ -21,7 +21,7 @@ export function AdminDashboard() {
 
   if (!isAdmin) {
     return (
-      <div className="w-full min-h-screen bg-sand dark:bg-bark pb-16 md:pb-0">
+      <div className="w-full min-h-screen bg-sand dark:bg-bark pb-16 md:pb-0 pt-[env(safe-area-inset-top)]">
         <Header title="admin" />
         <div className="max-w-4xl mx-auto p-lg md:p-xl">
           <p className="text-bark dark:text-sand">
@@ -33,7 +33,7 @@ export function AdminDashboard() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-sand dark:bg-bark pb-16 md:pb-0">
+    <div className="w-full min-h-screen bg-sand dark:bg-bark pb-16 md:pb-0 pt-[env(safe-area-inset-top)]">
       <Header title="admin" />
 
       <div className="max-w-4xl mx-auto p-lg md:p-xl space-y-lg">

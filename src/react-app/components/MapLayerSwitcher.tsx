@@ -93,7 +93,7 @@ export function MapLayerSwitcher() {
     LAYERS.find((layer) => layer.id === currentLayer)?.icon ?? Mountain;
 
   return (
-    <div ref={ref} className="absolute top-md right-md z-[500]">
+    <div ref={ref} className="relative">
       {/* Collapsed: round button showing the active layer icon. Expanded:
           morphs downward into a panel listing every layer plus a Kartinfo
           row, which swaps the panel to attribution details. */}

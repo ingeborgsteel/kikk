@@ -7,6 +7,7 @@ import {
   LogOut,
   Map as MapIcon,
   MessageSquare,
+  Moon,
   Newspaper,
   Shield,
   User,
@@ -15,6 +16,7 @@ import { useAuth } from "../context/AuthContext";
 import { useObservations } from "../context/ObservationsContext";
 import { useFeatureAlerts } from "../context/FeatureAlertsContext";
 import { useSuggestionForm } from "../context/SuggestionFormContext";
+import { useTheme } from "../context/ThemeContext";
 
 export interface NavMenuItemDef {
   label: string;
@@ -22,6 +24,9 @@ export interface NavMenuItemDef {
   badge?: number;
   /** True when the item opens a dialog/modal rather than navigating. */
   opensDialog?: boolean;
+  /** When set, the item is an on/off toggle and renders a switch showing
+   *  this state instead of a chevron/link affordance. */
+  active?: boolean;
   action: () => void;
 }
 
@@ -31,11 +36,13 @@ export interface NavMenuItemDef {
  *
  * - `destinations`: main app pages (Kart, Kikket på, Statistikk, Nyheter,
  *   Admin for admins).
+ * - `settings`: on/off preferences (Mørk modus).
  * - `account`: Profil + Logg ut, or "Slutt å se som X" while impersonating.
  * - `feedback`: actions that open a dialog rather than a page (Forslag).
  */
 export function useNavMenuItems(): {
   destinations: NavMenuItemDef[];
+  settings: NavMenuItemDef[];
   account: NavMenuItemDef[];
   feedback: NavMenuItemDef[];
 } {
@@ -45,6 +52,7 @@ export function useNavMenuItems(): {
   const { observations } = useObservations();
   const { undismissedAlerts } = useFeatureAlerts();
   const openSuggestionForm = useSuggestionForm();
+  const { theme, toggleTheme } = useTheme();
 
   const destinations: NavMenuItemDef[] = [
     {
@@ -99,6 +107,15 @@ export function useNavMenuItems(): {
         },
       ];
 
+  const settings: NavMenuItemDef[] = [
+    {
+      icon: <Moon size={18} />,
+      label: "Mørk modus",
+      active: theme === "dark",
+      action: toggleTheme,
+    },
+  ];
+
   const feedback: NavMenuItemDef[] = [
     {
       icon: <MessageSquare size={18} />,
@@ -108,5 +125,5 @@ export function useNavMenuItems(): {
     },
   ];
 
-  return { destinations, account, feedback };
+  return { destinations, settings, account, feedback };
 }

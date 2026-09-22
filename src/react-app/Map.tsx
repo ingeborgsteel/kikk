@@ -21,7 +21,9 @@ import {
 } from "./lib/markerIcons.ts";
 import { getAtlasGridLines } from "./lib/atlasGrid.ts";
 import { glassSurface } from "./lib/glass.ts";
+import { Binoculars, MapPin } from "lucide-react";
 import { MapLayerSwitcher } from "./components/MapLayerSwitcher.tsx";
+import { MapToggleButton } from "./components/MapToggleButton.tsx";
 import { useMapPreferences } from "./context/MapPreferencesContext.tsx";
 import { useGeolocation } from "./context/GeolocationContext.tsx";
 
@@ -133,6 +135,8 @@ interface MapProps {
   onObservationClick?: (observationId: string) => void;
   userLocations?: UserLocation[];
   onUserLocationClick?: (locationId: string) => void;
+  kikkemodusActive?: boolean;
+  onKikkemodusToggle?: () => void;
 }
 
 function Map({
@@ -141,6 +145,8 @@ function Map({
   onObservationClick,
   userLocations = [],
   onUserLocationClick,
+  kikkemodusActive = false,
+  onKikkemodusToggle,
 }: MapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
@@ -156,6 +162,7 @@ function Map({
     total: number;
   } | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
+  const isProgrammaticMoveRef = useRef(false);
   const observationMarkersRef = useRef<L.Marker[]>([]);
   const observationCirclesRef = useRef<L.Circle[]>([]);
   const userLocationsMarkersRef = useRef<L.Marker[]>([]);
@@ -211,7 +218,11 @@ function Map({
   const recenterMapTo = useCallback(
     (lat: number, lng: number, zoom: number) => {
       if (!map.current) return;
+      // Leaflet fires zoomstart synchronously inside setView — flag
+      // programmatic moves so they don't disable follow mode.
+      isProgrammaticMoveRef.current = true;
       map.current.setView([lat, lng], zoom);
+      isProgrammaticMoveRef.current = false;
     },
     [],
   );
@@ -281,16 +292,27 @@ function Map({
       setFollowMode(false);
     };
 
+    // User-initiated zoom (wheel/pinch/buttons/dblclick) leaves the position
+    // marker off-center while follow mode stays on — drop follow mode so a
+    // single tap on "Følg meg" recenters instead of toggling off first.
+    const handleZoomStart = () => {
+      if (!isProgrammaticMoveRef.current) {
+        setFollowMode(false);
+      }
+    };
+
     const handleZoomEnd = () => {
       setCurrentZoom(mapInstance.getZoom());
     };
 
     mapInstance.on("dragstart", handleDragStart);
+    mapInstance.on("zoomstart", handleZoomStart);
     mapInstance.on("zoomend", handleZoomEnd);
 
     // Cleanup
     return () => {
       mapInstance.off("dragstart", handleDragStart);
+      mapInstance.off("zoomstart", handleZoomStart);
       mapInstance.off("zoomend", handleZoomEnd);
       if (map.current) {
         map.current.remove();
@@ -630,7 +652,7 @@ function Map({
   }, [showAtlasSquares]);
 
   return (
-    <div className="w-full h-[calc(100vh-80px)] relative flex-1 overflow-hidden bg-forest">
+    <div className="w-full h-dvh md:h-[calc(100vh-80px)] relative flex-1 overflow-hidden bg-forest">
       {!isOnline && (
         <div className="absolute top-0 left-0 right-0 z-[600] bg-bark text-sand text-xs font-semibold text-center py-1 px-2 flex items-center justify-center gap-1">
           <svg
@@ -656,8 +678,21 @@ function Map({
             : ""}
         </div>
       )}
-      {/* Layer Control */}
-      <MapLayerSwitcher />
+      {/* Top-right controls: kikkemodus (mobile only — on desktop it lives
+          in the header) stacked above the layer switcher */}
+      <div className="absolute right-md top-[calc(1rem+env(safe-area-inset-top))] z-[500] flex flex-col items-end gap-3">
+        {onKikkemodusToggle && (
+          <div className="md:hidden">
+            <MapToggleButton
+              icon={kikkemodusActive ? Binoculars : MapPin}
+              label="Kikkemodus"
+              pressed={kikkemodusActive}
+              onClick={onKikkemodusToggle}
+            />
+          </div>
+        )}
+        <MapLayerSwitcher />
+      </div>
       {isLocating && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[500] bg-sand dark:bg-[rgba(44,44,44,0.95)] p-lg rounded-lg shadow-custom-2xl flex flex-col items-center gap-md font-medium text-bark dark:text-sand border-2 border-moss">
           <div className="w-10 h-10 border-4 border-slate-border border-t-rust rounded-full animate-spin"></div>
@@ -745,7 +780,7 @@ function Map({
       </div>
       <div
         ref={mapContainer}
-        className="absolute inset-0 w-full h-full border-none rounded-t-lg overflow-hidden"
+        className="absolute inset-0 w-full h-full border-none md:rounded-t-lg overflow-hidden"
       />
 
       {/* Active medobservatør badge (above download button) */}

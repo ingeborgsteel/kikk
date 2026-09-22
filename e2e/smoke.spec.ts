@@ -65,6 +65,47 @@ test("navigates between main views", async ({ page }) => {
   await expect(page.getByText("Ingen observasjoner ennå")).toBeVisible();
 });
 
+test("mobile: headerless map with floating kikkemodus button", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+
+  // No header on mobile — the map is full-screen.
+  await expect(page.locator("header")).toBeHidden();
+  await expect(page.locator(".leaflet-container")).toBeVisible();
+
+  // Kikkemodus is a floating glass button above the layer switcher.
+  const kikkemodus = page.getByRole("button", { name: "Kikkemodus" });
+  await expect(kikkemodus).toBeVisible();
+  await kikkemodus.click();
+  await expect(kikkemodus).toHaveAttribute("aria-pressed", "true");
+
+  // With kikkemodus active, a map tap goes straight to the observation form.
+  await page
+    .locator(".leaflet-container")
+    .click({ position: { x: 200, y: 300 } });
+  await expect(page.getByText("Opprett kikk")).toBeVisible();
+});
+
+test("zooming the map disables follow mode", async ({ page, context }) => {
+  const map = page.locator(".leaflet-container");
+  await map.waitFor();
+
+  // Geolocation is denied by default in tests, which also disables follow
+  // mode — grant it with a mock position, then enable follow manually.
+  await context.grantPermissions(["geolocation"]);
+  await context.setGeolocation({ latitude: 59.9139, longitude: 10.7522 });
+  const follow = page.getByRole("button", { name: "Følg meg" });
+  await follow.click();
+  await expect(follow).toHaveAttribute("aria-pressed", "true");
+
+  // A user-initiated wheel zoom drops follow mode — a single tap on the
+  // button then recenters instead of toggling off first.
+  await map.hover({ position: { x: 300, y: 300 } });
+  await page.mouse.wheel(0, -240);
+  await expect(follow).toHaveAttribute("aria-pressed", "false");
+});
+
 test("opens the new observation form from the map", async ({ page }) => {
   const map = page.locator(".leaflet-container");
   await map.waitFor();

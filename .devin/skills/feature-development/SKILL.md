@@ -274,7 +274,7 @@ This captures gaps that made the feature harder than it should have been, so the
 ### Common Issues
 
 1. **TypeScript errors**: Check types in `types/` directory
-2. **Build failures**: Verify all imports are correct
+2. **Build failures**: Verify all imports are correct — the editor prunes unused imports on save, so add an import together with its usage (or re-add it afterwards) if a name you just imported is reported missing
 3. **Responsive issues**: Check Tailwind breakpoints
 4. **Dark mode problems**: Ensure `dark:` variants are used
 5. **localStorage issues**: Verify dual-mode logic

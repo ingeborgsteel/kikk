@@ -254,6 +254,10 @@ function App() {
                 onUserLocationClick={
                   isImpersonating ? undefined : handleUserLocationClick
                 }
+                kikkemodusActive={kikkemodusActive}
+                onKikkemodusToggle={() =>
+                  setKikkemodusActive(!kikkemodusActive)
+                }
               />
 
               {(editingObservation?.location || selectedLocation) &&

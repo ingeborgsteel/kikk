@@ -162,7 +162,7 @@ function MyObservations() {
   const editingObservation = observations.find((obs) => obs.id === editingId);
 
   return (
-    <div className="w-full min-h-screen bg-sand dark:bg-bark pb-16 md:pb-0">
+    <div className="w-full min-h-screen bg-sand dark:bg-bark pb-16 md:pb-0 pt-[env(safe-area-inset-top)]">
       <Header title={"kikket på"} />
       <div className="mx-auto max-w-full p-lg md:p-xl">
         <div className="mb-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-md flex-wrap">
@@ -253,7 +253,7 @@ function MyObservations() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="flex w-full items-center justify-between">
             <div className="flex items-center border-2 border-moss rounded-md overflow-hidden">
               <button
                 type="button"
@@ -293,7 +293,7 @@ function MyObservations() {
                 Eksporter til Excel
                 {unexportedCount > 0 && (
                   <span className="ml-2 px-2 py-0.5 bg-moss text-white text-xs rounded-full">
-                    {unexportedCount} nye
+                    {unexportedCount}
                   </span>
                 )}
               </Button>

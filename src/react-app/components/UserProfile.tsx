@@ -62,7 +62,7 @@ export function UserProfile() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-sand dark:bg-bark pb-16 md:pb-0">
+    <div className="w-full min-h-screen bg-sand dark:bg-bark pb-16 md:pb-0 pt-[env(safe-area-inset-top)]">
       <Header title={"profil"} />
 
       <div className="max-w-4xl mx-auto p-lg md:p-xl">

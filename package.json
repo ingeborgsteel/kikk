@@ -73,7 +73,7 @@
     "deploy": "wrangler deploy --env=\"\"",
     "dev": "vite",
     "db:migrate:local": "wrangler d1 migrations apply kikk-db --local",
-    "db:migrate:preview": "wrangler d1 migrations apply kikk-db-test --remote",
+    "db:migrate:preview": "wrangler d1 migrations apply DB --remote --preview",
     "db:migrate:prod": "wrangler d1 migrations apply kikk-db --remote",
     "deploy:preview": "npm run build:preview && npm run db:migrate:preview && npx wrangler preview",
     "migrate:supabase-to-d1:local": "tsx scripts/migrate-supabase-to-d1.ts --local --apply",

@@ -161,7 +161,7 @@ Base secrets apply only to Previews created afterwards. To change a secret on an
 
 Migrations run as separate GitHub Actions workflows so they are visible in the PR / `main` checks:
 
-- `.github/workflows/migrate-preview.yml` runs on PRs and `main` pushes, applying migrations to `kikk-db-test` via `wrangler d1 migrations apply kikk-db-test --remote`.
+- `.github/workflows/migrate-preview.yml` runs on PRs and `main` pushes, applying migrations to `kikk-db-test` via `wrangler d1 migrations apply DB --remote --preview` (the `--preview` flag targets the top-level binding's `preview_database_id`, which is `kikk-db-test`).
 - `.github/workflows/migrate-prod.yml` runs on `main` pushes, applying migrations to `kikk-db`.
 
 ### Manual commands

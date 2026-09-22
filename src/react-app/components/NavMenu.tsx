@@ -57,7 +57,8 @@ export function NavMenu() {
   const { destinations, settings, account, feedback } = useNavMenuItems();
 
   const select = (item: NavMenuItemDef) => {
-    setOpen(false);
+    // Toggle items keep the menu open so the new state is visible.
+    if (item.active === undefined) setOpen(false);
     item.action();
   };
 

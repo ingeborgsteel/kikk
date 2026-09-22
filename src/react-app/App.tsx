@@ -1,7 +1,7 @@
 // src/App.tsx
 
 import { useState } from "react";
-import { Route, Routes, useLocation } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import Map from "./Map";
 import MyObservations from "./components/MyObservations";
 import { useObservations } from "./context/ObservationsContext";

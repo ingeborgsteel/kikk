@@ -3,7 +3,6 @@ import { glassSurface } from "../lib/glass";
 import {
   BarChart3,
   Binoculars,
-  EyeOff,
   Map,
   MapPin,
   Menu,
@@ -11,7 +10,6 @@ import {
   Shield,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
 
 type View =
   | "map"
@@ -80,7 +78,6 @@ function NavButton({
 
 export function BottomNav({ currentView }: BottomNavProps) {
   const navigate = useNavigate();
-  const { isImpersonating, stopImpersonating } = useAuth();
   const [expanded, setExpanded] = useState(true);
   const currentTemp = temporaryItems[currentView];
   // The temporary item stays in the nav after leaving its page, until the
@@ -157,22 +154,13 @@ export function BottomNav({ currentView }: BottomNavProps) {
                 ariaLabel={temporaryItem.label}
               />
             )}
-            {isImpersonating ? (
-              <NavButton
-                icon={<EyeOff size={20} />}
-                label="Slutt"
-                onClick={stopImpersonating}
-                ariaLabel="Slutt å se som bruker"
-              />
-            ) : (
-              <NavButton
-                icon={<Menu size={20} />}
-                label="Meny"
-                active={currentView === "menu"}
-                onClick={() => navigate("/menu")}
-                ariaLabel="Meny"
-              />
-            )}
+            <NavButton
+              icon={<Menu size={20} />}
+              label="Meny"
+              active={currentView === "menu"}
+              onClick={() => navigate("/menu")}
+              ariaLabel="Meny"
+            />
           </div>
         ) : (
           <button

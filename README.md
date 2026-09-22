@@ -46,7 +46,7 @@ Built with modern web technologies for a fast, responsive experience:
 
 ### Prerequisites
 
-- Node.js 20+ installed
+- Node.js 22+ installed
 - npm or compatible package manager
 
 ### Development

@@ -40,7 +40,7 @@
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "1.15.3",
+    "@cloudflare/vite-plugin": "1.57.2",
     "@eslint/js": "9.39.1",
     "@playwright/test": "^1.62.1",
     "@types/node": "24.10.1",
@@ -62,20 +62,20 @@
     "vite": "^6.0.0",
     "vite-plugin-pwa": "^1.3.0",
     "vitest": "^4.1.10",
-    "wrangler": "4.56.0"
+    "wrangler": "4.136.2"
   },
   "private": true,
   "scripts": {
     "build": "tsc -b && vite build",
-    "build:preview": "CLOUDFLARE_ENV=preview VITE_FORCE_LOGIN=false npm run build",
+    "build:preview": "VITE_FORCE_LOGIN=false npm run build",
     "cf-typegen": "wrangler types",
     "check": "tsc && vite build && wrangler deploy --dry-run --env=\"\"",
     "deploy": "wrangler deploy --env=\"\"",
     "dev": "vite",
     "db:migrate:local": "wrangler d1 migrations apply kikk-db --local",
-    "db:migrate:preview": "wrangler d1 migrations apply DB --remote --env preview",
+    "db:migrate:preview": "wrangler d1 migrations apply DB --remote --preview",
     "db:migrate:prod": "wrangler d1 migrations apply kikk-db --remote",
-    "deploy:preview": "npm run build:preview && npm run db:migrate:preview && npx wrangler versions upload --env preview",
+    "deploy:preview": "npm run build:preview && npm run db:migrate:preview && npx wrangler preview",
     "migrate:supabase-to-d1:local": "tsx scripts/migrate-supabase-to-d1.ts --local --apply",
     "migrate:supabase-to-d1:remote": "tsx scripts/migrate-supabase-to-d1.ts --remote --apply",
     "lint": "eslint .",

@@ -37,6 +37,7 @@ interface AuthContextType {
     email: string,
     password: string,
     name: string,
+    turnstileToken?: string,
   ) => Promise<{ error: Error | null }>;
   sendPasswordReset: (email: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -120,11 +121,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error ? new Error(error.message) : null };
   };
 
-  const signUp = async (email: string, password: string, name: string) => {
+  const signUp = async (
+    email: string,
+    password: string,
+    name: string,
+    turnstileToken?: string,
+  ) => {
     const { error } = await betterAuthClient.signUp.email({
       email,
       password,
       name,
+      turnstileToken,
     });
     return { error: error ? new Error(error.message ?? String(error)) : null };
   };

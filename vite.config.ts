@@ -4,6 +4,11 @@ import { cloudflare } from "@cloudflare/vite-plugin";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
+  define: {
+    "import.meta.env.VITE_TURNSTILE_SITEKEY": JSON.stringify(
+      process.env.TURNSTILE_SITEKEY || "1x00000000000000000000AA",
+    ),
+  },
   plugins: [
     react(),
     cloudflare(),

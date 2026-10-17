@@ -5,17 +5,25 @@
   "compatibility_date": "2025-10-08",
   "compatibility_flags": ["nodejs_compat"],
   "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "redact_query_string": true,
     "logs": {
       "enabled": true,
-      "invocation_logs": true
+      "head_sampling_rate": 1,
+      "invocation_logs": true,
+      "persist": true
     },
     "traces": {
-      "enabled": false
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "persist": true
     }
   },
   "upload_source_maps": true,
   "vars": {
-    "RESEND_FROM_EMAIL": "noreply@kikk.steel.no"
+    "RESEND_FROM_EMAIL": "noreply@kikk.steel.no",
+    "TURNSTILE_SITEKEY": "0x4AAAAAAFZIL88FKwJQ1EFx"
   },
   "assets": {
     "directory": "./dist/client",
@@ -32,7 +40,8 @@
   ],
   "previews": {
     "vars": {
-      "RESEND_FROM_EMAIL": "test-noreply@kikk.steel.no"
+      "RESEND_FROM_EMAIL": "test-noreply@kikk.steel.no",
+      "TURNSTILE_SITEKEY": "1x00000000000000000000AA"
     },
     "d1_databases": [
       {

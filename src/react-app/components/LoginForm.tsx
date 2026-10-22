@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
-import { Lock } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input.tsx";
 import { Modal } from "./ui/Modal.tsx";
+
+// Turnstile sitekey from environment variable (configured in wrangler.json)
+const TURNSTILE_SITEKEY = import.meta.env.VITE_TURNSTILE_SITEKEY;
 
 interface LoginFormProps {
   closeLoginForm?: () => void;
@@ -19,6 +21,8 @@ export function LoginForm({ closeLoginForm, inline = false }: LoginFormProps) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (inline) return;
@@ -35,6 +39,57 @@ export function LoginForm({ closeLoginForm, inline = false }: LoginFormProps) {
     return () => document.removeEventListener("keydown", handleEscape);
   }, [closeLoginForm, inline]);
 
+  // Load Turnstile script
+  useEffect(() => {
+    if (mode !== "signup") return;
+
+    // Check if script is already loaded
+    if (window.turnstile) return;
+
+    const script = document.createElement("script");
+    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+    script.async = true;
+    script.defer = true;
+    document.body.appendChild(script);
+
+    return () => {
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
+    };
+  }, [mode]);
+
+  // Render Turnstile widget when in signup mode
+  useEffect(() => {
+    if (mode !== "signup" || !turnstileRef.current) return;
+
+    // Clear previous widget if any
+    turnstileRef.current.innerHTML = "";
+
+    const renderWidget = () => {
+      if (window.turnstile && turnstileRef.current) {
+        window.turnstile.render(turnstileRef.current, {
+          sitekey: TURNSTILE_SITEKEY,
+          callback: (token: string) => {
+            setTurnstileToken(token);
+          },
+          "error-callback": () => {
+            setTurnstileToken(null);
+          },
+        });
+      }
+    };
+
+    // Try immediately
+    renderWidget();
+
+    // If script not loaded yet, retry with a delay
+    if (!window.turnstile) {
+      const timeout = setTimeout(renderWidget, 500);
+      return () => clearTimeout(timeout);
+    }
+  }, [mode]);
+
   const resetForm = () => {
     setName("");
     setEmail("");
@@ -50,221 +105,146 @@ export function LoginForm({ closeLoginForm, inline = false }: LoginFormProps) {
     let error: Error | null = null;
 
     if (mode === "signup") {
-      const result = await signUp(email, password, name);
-      if (result.error) {
-        error = result.error;
-      } else {
-        // Auto-sign in after successful sign-up
-        const signInResult = await signInWithEmail(email, password);
-        error = signInResult.error;
-      }
+      const result = await signUp(
+        email,
+        password,
+        name,
+        turnstileToken || undefined,
+      );
+      error = result.error;
+    } else if (mode === "signin") {
+      const result = await signInWithEmail(email, password);
+      error = result.error;
     } else if (mode === "forgot") {
       const result = await sendPasswordReset(email);
-      if (result.error) {
-        error = result.error;
-      } else {
-        setMessage("Sjekk e-posten din for en tilbakestillingslenke.");
-        setLoading(false);
-        return;
-      }
-    } else {
-      const result = await signInWithEmail(email, password);
       error = result.error;
     }
 
-    if (error) {
-      const lower = error.message.toLowerCase();
-      let errorMessage = "Noe gikk galt. Prøv igjen.";
-      if (
-        lower.includes("invalid login credentials") ||
-        lower.includes("invalid email or password")
-      ) {
-        errorMessage = "Ugyldig e-post eller passord.";
-      } else if (lower.includes("email not confirmed")) {
-        errorMessage = "E-posten din er ikke bekreftet. Sjekk innboksen din.";
-      } else if (lower.includes("user already exists")) {
-        errorMessage = "En bruker med denne e-posten finnes allerede.";
-      } else if (lower.includes("rate limit")) {
-        errorMessage = "For mange forsøk. Vent litt før du prøver igjen.";
-      }
-      setMessage(errorMessage);
-    } else {
-      resetForm();
-      closeLoginForm?.();
-    }
-
     setLoading(false);
-  };
 
-  const getTitle = () => {
-    switch (mode) {
-      case "signup":
-        return "Registrer deg";
-      case "forgot":
-        return "Glemt passord";
-      default:
-        return "Logg inn";
+    if (error) {
+      setMessage(error.message);
+    } else {
+      if (mode === "signup" || mode === "signin") {
+        closeLoginForm?.();
+      } else if (mode === "forgot") {
+        setMessage("E-post sendt hvis adressen er registrert");
+      }
+      resetForm();
     }
   };
 
-  const getSubmitLabel = () => {
-    if (loading) return "Sender...";
-    switch (mode) {
-      case "signup":
-        return "Registrer deg";
-      case "forgot":
-        return "Send tilbakestillingslenke";
-      default:
-        return "Logg inn";
-    }
+  const toggleMode = () => {
+    resetForm();
+    setMode((prev) =>
+      prev === "signin" ? "signup" : prev === "signup" ? "signin" : "signin",
+    );
   };
 
-  const form = (
-    <form onSubmit={handleSubmit} className="space-y-lg">
+  const handleForgotPassword = () => {
+    resetForm();
+    setMode("forgot");
+  };
+
+  const content = (
+    <div className="space-y-4">
       {mode === "signup" && (
-        <Input
-          type="text"
-          placeholder="Navn"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          autoComplete="name"
-          name="name"
-          required
-        />
-      )}
-      <Input
-        type="email"
-        placeholder="din@epost.no"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        autoComplete="username"
-        name="email"
-        required
-      />
-      {mode !== "forgot" && (
-        <div className="relative">
-          <Lock
-            size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-bark/50 dark:text-sand/50"
-          />
+        <div>
+          <label className="block text-sm font-medium mb-1">Navn</label>
           <Input
-            type="password"
-            placeholder="Passord"
-            className={"pl-8"}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete={
-              mode === "signup" ? "new-password" : "current-password"
-            }
-            name="password"
-            required
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Ditt navn"
           />
         </div>
       )}
-      <div className="flex flex-col gap-md pt-md">
-        {mode === "signin" && (
-          <>
-            <p className="text-sm text-bark dark:text-sand">
-              <button
-                type="button"
-                onClick={() => {
-                  setMode("forgot");
-                  setMessage("");
-                }}
-                className="underline hover:text-forest dark:hover:text-sand"
-              >
-                Glemt passord?
-              </button>
-            </p>
-            <p className="text-sm text-bark dark:text-sand">
-              Har du ikke konto?{" "}
-              <button
-                type="button"
-                onClick={() => {
-                  setMode("signup");
-                  setMessage("");
-                }}
-                className="underline hover:text-forest dark:hover:text-sand"
-              >
-                Registrer deg
-              </button>
-            </p>
-          </>
-        )}
-        {mode === "signup" && (
-          <p className="text-sm text-bark dark:text-sand">
-            Har du allerede en konto?{" "}
-            <button
-              type="button"
-              onClick={() => {
-                setMode("signin");
-                setMessage("");
-              }}
-              className="underline hover:text-forest dark:hover:text-sand"
-            >
-              Logg inn
-            </button>
-          </p>
-        )}
-        {mode === "forgot" && (
-          <p className="text-sm text-bark dark:text-sand">
-            <button
-              type="button"
-              onClick={() => {
-                setMode("signin");
-                setMessage("");
-              }}
-              className="underline hover:text-forest dark:hover:text-sand"
-            >
-              Tilbake til innlogging
-            </button>
-          </p>
-        )}
-        <div className="flex gap-md justify-end">
-          {!inline && (
-            <Button
-              type="button"
-              onClick={() => {
-                closeLoginForm?.();
-                resetForm();
-              }}
-              variant="outline"
-              size="sm"
-            >
-              Avbryt
-            </Button>
-          )}
-          <Button type="submit" disabled={loading} size="sm">
-            {getSubmitLabel()}
-          </Button>
-        </div>
+      <div>
+        <label className="block text-sm font-medium mb-1">E-post</label>
+        <Input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="din@epost.no"
+        />
       </div>
+      <div>
+        <label className="block text-sm font-medium mb-1">Passord</label>
+        <Input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="••••••••"
+        />
+      </div>
+      {mode === "signup" && <div ref={turnstileRef} className="mt-4" />}
       {message && (
-        <p className="text-xs mt-1 text-bark dark:text-sand break-all">
-          {message}
-        </p>
+        <div className="text-sm text-red-600 dark:text-red-400">{message}</div>
       )}
-    </form>
+      <Button type="submit" className="w-full" disabled={loading}>
+        {loading
+          ? "Laster..."
+          : mode === "signup"
+            ? "Registrer deg"
+            : mode === "signin"
+              ? "Logg inn"
+              : "Send lenke"}
+      </Button>
+      <div className="text-sm text-center">
+        {mode === "signin" ? (
+          <>
+            <button
+              type="button"
+              onClick={toggleMode}
+              className="text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              Registrer deg
+            </button>
+            {" | "}
+            <button
+              type="button"
+              onClick={handleForgotPassword}
+              className="text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              Glemt passord?
+            </button>
+          </>
+        ) : mode === "signup" ? (
+          <button
+            type="button"
+            onClick={toggleMode}
+            className="text-blue-600 dark:text-blue-400 hover:underline"
+          >
+            Har du allerede konto? Logg inn
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={toggleMode}
+            className="text-blue-600 dark:text-blue-400 hover:underline"
+          >
+            Tilbake til innlogging
+          </button>
+        )}
+      </div>
+    </div>
   );
 
-  if (inline) {
-    return (
-      <div className="w-full">
-        <h2 className="text-2xl font-bold text-bark dark:text-sand mb-4">
-          {getTitle()}
-        </h2>
-        {form}
-      </div>
-    );
-  }
-
-  return (
+  return inline ? (
+    <form onSubmit={handleSubmit}>{content}</form>
+  ) : (
     <Modal
-      onClose={closeLoginForm ?? (() => {})}
+      title={
+        mode === "signup"
+          ? "Registrer deg"
+          : mode === "signin"
+            ? "Logg inn"
+            : "Glemt passord"
+      }
+      onClose={closeLoginForm || (() => {})}
       isOpen={true}
-      title={getTitle()}
     >
-      {form}
+      <form onSubmit={handleSubmit}>{content}</form>
     </Modal>
   );
 }

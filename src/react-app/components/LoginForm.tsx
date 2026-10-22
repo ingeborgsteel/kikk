@@ -241,7 +241,8 @@ export function LoginForm({ closeLoginForm, inline = false }: LoginFormProps) {
             ? "Logg inn"
             : "Glemt passord"
       }
-      onClose={closeLoginForm}
+      onClose={closeLoginForm || (() => {})}
+      isOpen={true}
     >
       <form onSubmit={handleSubmit}>{content}</form>
     </Modal>

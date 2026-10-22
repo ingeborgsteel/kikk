@@ -50,7 +50,7 @@ app.post("/api/auth/sign-up/email", async (c) => {
 
   // Create auth instance and call signup directly
   const auth = createAuth(c);
-  const response = await auth.api.signUp.email({
+  const response = await auth.api.createUser({
     body: authBody,
   });
 

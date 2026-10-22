@@ -131,7 +131,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email,
       password,
       name,
-      turnstileToken,
+      fetchOptions: {
+        headers: {
+          "x-captcha-response": turnstileToken,
+        },
+      },
     });
     return { error: error ? new Error(error.message ?? String(error)) : null };
   };

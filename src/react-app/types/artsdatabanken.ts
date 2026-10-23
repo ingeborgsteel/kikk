@@ -42,6 +42,20 @@ export interface TaxonRecord {
   IsDeleted?: boolean;
 }
 
+/**
+ * TaxonRecord with large nested arrays removed.
+ * This is what gets stored in D1 to avoid the 1MB row size limit.
+ */
+export type StoredTaxonRecord = Omit<
+  TaxonRecord,
+  | "DateTimeUpdated"
+  | "CategoryValue"
+  | "ParentTaxonId"
+  | "ScientificNames"
+  | "PopularNames"
+  | "TaxonTags"
+>;
+
 export interface ScientificName {
   ScientificNameId: number;
   Accepted: boolean;

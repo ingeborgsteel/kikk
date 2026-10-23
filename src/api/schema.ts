@@ -7,13 +7,15 @@ import {
 } from "drizzle-orm/sqlite-core";
 
 /**
- * Minimal TaxonRecord for database storage.
- * Only includes fields actually used by the frontend to avoid D1 row size limits.
- * The full Artsdatabanken response (with nested arrays) is too large for D1.
+ * Full TaxonRecord from Artsdatabanken API.
+ * Duplicated from frontend types due to separate TypeScript project references.
  */
-export interface MinimalTaxonRecord {
+export interface TaxonRecord {
   Id?: number;
+  DateTimeUpdated?: string;
+  CategoryValue?: number;
   TaxonId?: number;
+  ParentTaxonId?: number;
   ValidScientificNameId?: number;
   ValidScientificName?: string;
   ValidScientificNameFormatted?: string;
@@ -23,6 +25,9 @@ export interface MinimalTaxonRecord {
   TaxonGroup?: string;
   TaxonGroupId?: number;
   ExistsInCountry?: boolean;
+  ScientificNames?: ScientificName[];
+  PopularNames?: PopularName[];
+  TaxonTags?: TaxonTag[];
   Status?: string;
   StatusPrefix?: string;
   ScientificNameIdHiarchy?: number[];
@@ -38,47 +43,78 @@ export interface MinimalTaxonRecord {
   IsDeleted?: boolean;
 }
 
+export interface ScientificName {
+  ScientificNameId: number;
+  Accepted: boolean;
+  ScientificName: string;
+  ScientificNameFormatted: string;
+  ScientificNameAuthorship: string;
+}
+
+export interface PopularName {
+  vernacularNameID: number;
+  language: string;
+  Name: string;
+  Preffered: boolean;
+}
+
+export interface TaxonTag {
+  TagGroup: string;
+  Prefix: string;
+  Context: string;
+  Tag: string;
+  Url: string;
+  ScientificName: string;
+}
+
+/**
+ * TaxonRecord with large nested arrays removed for D1 storage.
+ * D1 has a 1MB row size limit, and the full Artsdatabanken response
+ * with ScientificNames, PopularNames, and TaxonTags arrays exceeds this.
+ */
+export type StoredTaxonRecord = Omit<
+  TaxonRecord,
+  | "DateTimeUpdated"
+  | "CategoryValue"
+  | "ParentTaxonId"
+  | "ScientificNames"
+  | "PopularNames"
+  | "TaxonTags"
+>;
+
 /**
  * Normalize a full Artsdatabanken TaxonRecord to a minimal version for storage.
  * Removes large nested arrays (ScientificNames, PopularNames, TaxonTags) that
  * exceed D1's row size limits.
  */
 export function normalizeTaxonRecord(
-  fullRecord: Record<string, unknown>,
-): MinimalTaxonRecord {
+  fullRecord: TaxonRecord,
+): StoredTaxonRecord {
   return {
-    Id: fullRecord.Id as number | undefined,
-    TaxonId: fullRecord.TaxonId as number | undefined,
-    ValidScientificNameId: fullRecord.ValidScientificNameId as
-      | number
-      | undefined,
-    ValidScientificName: fullRecord.ValidScientificName as string | undefined,
-    ValidScientificNameFormatted: fullRecord.ValidScientificNameFormatted as
-      | string
-      | undefined,
-    ValidScientificNameAuthorship: fullRecord.ValidScientificNameAuthorship as
-      | string
-      | undefined,
-    PrefferedPopularname: fullRecord.PrefferedPopularname as string | undefined,
-    MatchedName: fullRecord.MatchedName as string | undefined,
-    TaxonGroup: fullRecord.TaxonGroup as string | undefined,
-    TaxonGroupId: fullRecord.TaxonGroupId as number | undefined,
-    ExistsInCountry: fullRecord.ExistsInCountry as boolean | undefined,
-    Status: fullRecord.Status as string | undefined,
-    StatusPrefix: fullRecord.StatusPrefix as string | undefined,
-    ScientificNameIdHiarchy: fullRecord.ScientificNameIdHiarchy as
-      | number[]
-      | undefined,
-    TaxonIdHiarchy: fullRecord.TaxonIdHiarchy as number[] | undefined,
-    Kingdom: fullRecord.Kingdom as string | undefined,
-    Phylum: fullRecord.Phylum as string | undefined,
-    Class: fullRecord.Class as string | undefined,
-    Order: fullRecord.Order as string | undefined,
-    Family: fullRecord.Family as string | undefined,
-    Genus: fullRecord.Genus as string | undefined,
-    Species: fullRecord.Species as string | undefined,
-    SubSpecies: fullRecord.SubSpecies as string | null | undefined,
-    IsDeleted: fullRecord.IsDeleted as boolean | undefined,
+    Id: fullRecord.Id,
+    TaxonId: fullRecord.TaxonId,
+    ValidScientificNameId: fullRecord.ValidScientificNameId,
+    ValidScientificName: fullRecord.ValidScientificName,
+    ValidScientificNameFormatted: fullRecord.ValidScientificNameFormatted,
+    ValidScientificNameAuthorship: fullRecord.ValidScientificNameAuthorship,
+    PrefferedPopularname: fullRecord.PrefferedPopularname,
+    MatchedName: fullRecord.MatchedName,
+    TaxonGroup: fullRecord.TaxonGroup,
+    TaxonGroupId: fullRecord.TaxonGroupId,
+    ExistsInCountry: fullRecord.ExistsInCountry,
+    Status: fullRecord.Status,
+    StatusPrefix: fullRecord.StatusPrefix,
+    ScientificNameIdHiarchy: fullRecord.ScientificNameIdHiarchy,
+    TaxonIdHiarchy: fullRecord.TaxonIdHiarchy,
+    Kingdom: fullRecord.Kingdom,
+    Phylum: fullRecord.Phylum,
+    Class: fullRecord.Class,
+    Order: fullRecord.Order,
+    Family: fullRecord.Family,
+    Genus: fullRecord.Genus,
+    Species: fullRecord.Species,
+    SubSpecies: fullRecord.SubSpecies,
+    IsDeleted: fullRecord.IsDeleted,
   };
 }
 
@@ -119,7 +155,7 @@ export const species = sqliteTable("species", {
   observationId: text("observationId").notNull(),
   createdAt: text("createdAt").notNull(),
   species: text("species", { mode: "json" })
-    .$type<MinimalTaxonRecord>()
+    .$type<StoredTaxonRecord>()
     .notNull(),
   gender: text("gender"),
   count: integer("count"),

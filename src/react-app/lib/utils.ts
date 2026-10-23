@@ -1,7 +1,7 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { Observation, Species } from "../types/observation";
-import { TaxonRecord } from "../types/artsdatabanken";
+import { StoredTaxonRecord, TaxonRecord } from "../types/artsdatabanken";
 import { TAXON_GROUP_KEYS } from "./taxonGroups";
 
 export function cn(...inputs: ClassValue[]) {
@@ -16,10 +16,10 @@ export function getRecentSpecies(
   observations: Observation[],
   limit = 5,
   excludeIds: Set<number | string> = new Set(),
-): TaxonRecord[] {
+): StoredTaxonRecord[] {
   const speciesMap = new Map<
     number | string,
-    { species: TaxonRecord; date: string }
+    { species: StoredTaxonRecord; date: string }
   >();
 
   for (const obs of observations) {
@@ -56,7 +56,7 @@ export function getRecentSpecies(
  * Represents a single entry in a user's life list (unique species checklist).
  */
 export interface LifeListEntry {
-  species: TaxonRecord;
+  species: StoredTaxonRecord;
   totalCount: number;
   observationCount: number;
   firstSeen: string; // ISO date string
@@ -75,7 +75,7 @@ export function getLifeList(observations: Observation[]): LifeListEntry[] {
   const speciesMap = new Map<
     number | string,
     {
-      species: TaxonRecord;
+      species: StoredTaxonRecord;
       totalCount: number;
       observationCount: number;
       firstSeen: string;

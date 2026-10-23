@@ -1,9 +1,9 @@
-import { TaxonRecord } from "./artsdatabanken.ts";
+import { StoredTaxonRecord } from "./artsdatabanken.ts";
 
 export interface Species {
   id: string;
   createdAt: string;
-  species: TaxonRecord;
+  species: StoredTaxonRecord;
   gender?: string;
   count?: number;
   unit?: string; // Unit for the count (e.g., "individuals", "pairs")

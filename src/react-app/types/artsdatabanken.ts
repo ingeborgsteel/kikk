@@ -18,6 +18,8 @@ export interface TaxonRecord {
 
   ExistsInCountry?: boolean;
 
+  // These arrays are NOT stored in D1 to avoid row size limits
+  // They are only present in fresh API responses from Artsdatabanken
   ScientificNames?: ScientificName[];
   PopularNames?: PopularName[];
   TaxonTags?: TaxonTag[];

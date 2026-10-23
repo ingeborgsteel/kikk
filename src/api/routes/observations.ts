@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { drizzle } from "drizzle-orm/d1";
 import { eq, inArray, desc, isNull, sql } from "drizzle-orm";
 import * as schema from "../schema";
+import { normalizeTaxonRecord } from "../schema";
 
 type ObservationInput = Omit<
   schema.InsertObservation,
@@ -101,7 +102,7 @@ observationsApp.post("/", async (c) => {
           id: crypto.randomUUID(),
           observationId: id,
           createdAt: s.createdAt ?? now,
-          species: s.species,
+          species: normalizeTaxonRecord(s.species as Record<string, unknown>),
           gender: s.gender ?? null,
           count: s.count ?? null,
           unit: s.unit ?? null,
@@ -174,7 +175,7 @@ observationsApp.put("/:id", async (c) => {
           id: s.id ?? crypto.randomUUID(),
           observationId: id,
           createdAt: s.createdAt ?? now,
-          species: s.species,
+          species: normalizeTaxonRecord(s.species as Record<string, unknown>),
           gender: s.gender ?? null,
           count: s.count ?? null,
           unit: s.unit ?? null,

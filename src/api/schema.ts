@@ -6,6 +6,118 @@ import {
   uniqueIndex,
 } from "drizzle-orm/sqlite-core";
 
+/**
+ * Full TaxonRecord from Artsdatabanken API.
+ * Duplicated from frontend types due to separate TypeScript project references.
+ */
+export interface TaxonRecord {
+  Id?: number;
+  DateTimeUpdated?: string;
+  CategoryValue?: number;
+  TaxonId?: number;
+  ParentTaxonId?: number;
+  ValidScientificNameId?: number;
+  ValidScientificName?: string;
+  ValidScientificNameFormatted?: string;
+  ValidScientificNameAuthorship?: string;
+  PrefferedPopularname?: string;
+  MatchedName?: string;
+  TaxonGroup?: string;
+  TaxonGroupId?: number;
+  ExistsInCountry?: boolean;
+  ScientificNames?: ScientificName[];
+  PopularNames?: PopularName[];
+  TaxonTags?: TaxonTag[];
+  Status?: string;
+  StatusPrefix?: string;
+  ScientificNameIdHiarchy?: number[];
+  TaxonIdHiarchy?: number[];
+  Kingdom?: string;
+  Phylum?: string;
+  Class?: string;
+  Order?: string;
+  Family?: string;
+  Genus?: string;
+  Species?: string;
+  SubSpecies?: string | null;
+  IsDeleted?: boolean;
+}
+
+export interface ScientificName {
+  ScientificNameId: number;
+  Accepted: boolean;
+  ScientificName: string;
+  ScientificNameFormatted: string;
+  ScientificNameAuthorship: string;
+}
+
+export interface PopularName {
+  vernacularNameID: number;
+  language: string;
+  Name: string;
+  Preffered: boolean;
+}
+
+export interface TaxonTag {
+  TagGroup: string;
+  Prefix: string;
+  Context: string;
+  Tag: string;
+  Url: string;
+  ScientificName: string;
+}
+
+/**
+ * TaxonRecord with large nested arrays removed for D1 storage.
+ * D1 has a 1MB row size limit, and the full Artsdatabanken response
+ * with ScientificNames, PopularNames, and TaxonTags arrays exceeds this.
+ */
+export type StoredTaxonRecord = Omit<
+  TaxonRecord,
+  | "DateTimeUpdated"
+  | "CategoryValue"
+  | "ParentTaxonId"
+  | "ScientificNames"
+  | "PopularNames"
+  | "TaxonTags"
+>;
+
+/**
+ * Normalize a full Artsdatabanken TaxonRecord to a minimal version for storage.
+ * Removes large nested arrays (ScientificNames, PopularNames, TaxonTags) that
+ * exceed D1's row size limits.
+ */
+export function normalizeTaxonRecord(
+  fullRecord: TaxonRecord,
+): StoredTaxonRecord {
+  return {
+    Id: fullRecord.Id,
+    TaxonId: fullRecord.TaxonId,
+    ValidScientificNameId: fullRecord.ValidScientificNameId,
+    ValidScientificName: fullRecord.ValidScientificName,
+    ValidScientificNameFormatted: fullRecord.ValidScientificNameFormatted,
+    ValidScientificNameAuthorship: fullRecord.ValidScientificNameAuthorship,
+    PrefferedPopularname: fullRecord.PrefferedPopularname,
+    MatchedName: fullRecord.MatchedName,
+    TaxonGroup: fullRecord.TaxonGroup,
+    TaxonGroupId: fullRecord.TaxonGroupId,
+    ExistsInCountry: fullRecord.ExistsInCountry,
+    Status: fullRecord.Status,
+    StatusPrefix: fullRecord.StatusPrefix,
+    ScientificNameIdHiarchy: fullRecord.ScientificNameIdHiarchy,
+    TaxonIdHiarchy: fullRecord.TaxonIdHiarchy,
+    Kingdom: fullRecord.Kingdom,
+    Phylum: fullRecord.Phylum,
+    Class: fullRecord.Class,
+    Order: fullRecord.Order,
+    Family: fullRecord.Family,
+    Genus: fullRecord.Genus,
+    Species: fullRecord.Species,
+    SubSpecies: fullRecord.SubSpecies,
+    IsDeleted: fullRecord.IsDeleted,
+  };
+}
+
 const timestamp = customType<{ data: Date; driverData: string }>({
   dataType() {
     return "date";
@@ -43,7 +155,7 @@ export const species = sqliteTable("species", {
   observationId: text("observationId").notNull(),
   createdAt: text("createdAt").notNull(),
   species: text("species", { mode: "json" })
-    .$type<Record<string, unknown>>()
+    .$type<StoredTaxonRecord>()
     .notNull(),
   gender: text("gender"),
   count: integer("count"),
